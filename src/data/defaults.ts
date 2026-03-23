@@ -1,0 +1,124 @@
+// ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
+
+import type { FormData, Personnel, WorkflowStep } from '../types/form';
+
+export const SDD_VERSION = '0.7';
+
+/** 空白人員模板 */
+export const emptyPersonnel: Personnel = {
+  role: 'pi',
+  name_zh: '',
+  name_en: '',
+  title: '',
+  unit: '',
+  phone: '',
+  fax: '',
+  email: '',
+  address: '',
+  gender: '',
+  birth_date: '',
+  id_number: '',
+  official_phone: '',
+  irb_training_cert: '',
+  work_description: '',
+};
+
+/** §1.5 MVP 預設值 */
+export const defaultFormData: FormData = {
+  // 基本資訊
+  project_title_zh: '',
+  project_title_en: '',
+  project_year: String(new Date().getFullYear() - 1911), // 民國年
+  project_id: '',
+  project_type: 'new_1yr',
+  execution_start: '',
+  execution_end: '',
+  responsible_unit: '',
+  filing_date: '',
+  research_focus: '',
+  has_questionnaire: false,
+  experiment_types: [],
+  needs_funding: false,
+
+  // 人員 — 預設一位 PI
+  personnel: [{ ...emptyPersonnel, role: 'pi' }],
+
+  // 研究內容
+  purpose: '',
+  background: '',
+  methodology: '',
+  expected_outcome: '',
+  abstract_zh: '',
+  abstract_en: '',
+  keywords_zh: '',
+  keywords_en: '',
+  outcome_type: ['paper_writing'],
+  outcome_type_detail: [{ type: 'paper_writing', count: 1, note: '' }],
+  references: '',
+  gantt_chart: [],
+
+  // IRB 審查 — MVP 預設免審
+  review_type: 'exempt',
+  exempt_category: 'public_info',
+  exempt_reason: '本研究為次級資料研究，資料皆已去識別化。',
+  data_source: '本研究使用疾管署防疫資料庫，依據「衛生福利部疾病管制署防疫資料庫員工研究計畫使用申請作業說明」提出申請，並檢附本 IRB 審查通過證明文件後，依序完成資料權責單位、資訊室及企劃組審核，經一層核定後取得去識別化資料。',
+  recruit_subjects: false,
+  recruit_method: '',
+  interact_subjects: false,
+  interact_detail: '',
+  privacy_during: '本研究使用之資料庫已去除個人識別資訊，研究過程中所有資料皆儲存於符合 ISMS 資訊安全管理規範之加密環境中，僅限經授權之研究人員得以接觸分析資料。',
+  privacy_after: '研究成果僅以群體統計量呈現，不揭露任何個案資訊。原始分析資料於計畫結束後保留三年，届滿後依機關資料銷毀程序辦理。',
+  privacy_withdrawal: '本研究採用次級資料庫進行分析，無法回溯識別個別研究對象，故無中途退出之情形。',
+
+  // 機關配合協調 — MVP 預設無
+  has_coordination: false,
+
+  // 資料庫申請 — MVP 預設
+  apply_unit: '',
+  research_purpose_type: 'no_fund_research',
+  analysis_deadline: '',
+  retention_deadline: '',
+  delivery_format: 'digital',
+  analysis_location: ['office', 'personal_pc'],
+  pi_same_as_applicant: true,
+  cross_link_data_center: false,
+};
+
+/** §5.4 申請流程導引 */
+export const workflowSteps: WorkflowStep[] = [
+  {
+    step: 1,
+    title: '研究計畫上簽',
+    description: '將簽呈連同署內研究計畫書送單位主管核定',
+    documents: ['DOC-7', 'DOC-4'],
+  },
+  {
+    step: 2,
+    title: '申請 IRB 審查',
+    description: '紙本送企劃組，同時寄送 e-mail',
+    documents: ['DOC-1', 'DOC-2', 'DOC-3'],
+    contact: {
+      name: '劉兪筠',
+      unit: '企劃組',
+      email: 'yyliu7160@cdc.gov.tw',
+      phone: '(02) 2395-9825 #3022',
+    },
+  },
+  {
+    step: 3,
+    title: '申請資料庫資料',
+    description: 'IRB 通過後，填寫 DOC-6 第三節（申請使用之防疫資料庫），連同保密切結書送資訊室審核',
+    documents: ['DOC-6', 'DOC-5'],
+  },
+];
+
+/** 文件名稱對照表 */
+export const DOC_NAMES: Record<string, string> = {
+  'DOC-1': 'IRB-004 研究計畫書',
+  'DOC-2': 'IRB-012 免審申請表',
+  'DOC-3': 'IRB-018 保密切結書（研究人員）',
+  'DOC-4': '署內研究計畫書',
+  'DOC-5': '資料庫保密切結書（署內員工使用）',
+  'DOC-6': '資料庫使用申請單',
+  'DOC-7': '研究計畫簽呈（公文）',
+};
