@@ -1,7 +1,8 @@
 // ===== 第 1 頁：基本資訊 =====
 
-import { useEffect, useCallback, useRef } from 'react';
-import { Form, Input, DatePicker, Collapse } from 'antd';
+import { useCallback, useState } from 'react';
+import { Form, Input, DatePicker, Collapse, Button, Space } from 'antd';
+import { RobotOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
 import { translateTitle } from '../../api/llm';
@@ -10,26 +11,21 @@ import dayjs from 'dayjs';
 export default function Step1BasicInfo() {
   const { control, watch, setValue } = useFormStore();
   const titleZh = watch('project_title_zh');
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [translating, setTranslating] = useState(false);
 
-  // §4.2.5 計畫名稱英文翻譯 — blur 後 debounce 500ms
-  const handleTitleTranslate = useCallback(async (value: string) => {
-    if (!value || value.length < 4) return;
+  // 手動觸發翻譯
+  const handleTitleTranslate = useCallback(async () => {
+    if (!titleZh || titleZh.length < 4) return;
+    setTranslating(true);
     try {
-      const res = await translateTitle(value);
+      const res = await translateTitle(titleZh);
       setValue('project_title_en', res.project_title_en);
     } catch {
       // 翻譯失敗時靜默，使用者可手動填寫
+    } finally {
+      setTranslating(false);
     }
-  }, [setValue]);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      if (titleZh) handleTitleTranslate(titleZh);
-    }, 500);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [titleZh, handleTitleTranslate]);
+  }, [titleZh, setValue]);
 
   return (
     <div>
@@ -55,8 +51,19 @@ export default function Step1BasicInfo() {
         name="project_title_en"
         control={control}
         render={({ field }) => (
-          <Form.Item label="計畫名稱（英文）" tooltip="由 LLM 自動翻譯，可手動修改">
-            <Input.TextArea {...field} rows={2} placeholder="自動翻譯中..." />
+          <Form.Item label="計畫名稱（英文）" tooltip="點擊生成按鈕由 AI 翻譯，可手動修改">
+            <Space.Compact style={{ width: '100%' }}>
+              <Input.TextArea {...field} rows={2} placeholder="點擊右側按鈕生成，或手動填寫" style={{ flex: 1 }} />
+              <Button
+                icon={<RobotOutlined />}
+                onClick={handleTitleTranslate}
+                loading={translating}
+                disabled={!titleZh || titleZh.length < 4}
+                style={{ height: 'auto' }}
+              >
+                生成
+              </Button>
+            </Space.Compact>
           </Form.Item>
         )}
       />
