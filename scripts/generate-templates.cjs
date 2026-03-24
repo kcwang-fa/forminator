@@ -404,103 +404,201 @@ async function genDOC4() {
 }
 
 // ========================================
-// DOC-1: IRB-004 研究計畫書
+// DOC-1: IRB-004 研究計畫書（依照原始 IRB-004 表格式版面）
 // ========================================
 async function genDOC1() {
+  const LBL_W = 2200; // label column width
+  const VAL_W = 7306; // value column width
+  const FULL_W = LBL_W + VAL_W; // full table width
+  const grayBorder = { style: BorderStyle.SINGLE, size: 1, color: 'BFBFBF' };
+  const grayBorders = { top: grayBorder, bottom: grayBorder, left: grayBorder, right: grayBorder };
+  const cellM = { top: 20, bottom: 20, left: 60, right: 60 };
+
+  function lbl(text, opts = {}) {
+    return new TableCell({
+      borders: grayBorders, margins: cellM, verticalAlign: VerticalAlign.CENTER,
+      width: { size: LBL_W, type: WidthType.DXA },
+      ...opts,
+      children: [p([t(text, { size: 22 })], { spacing: { before: 20, after: 20 } })],
+    });
+  }
+  function val(content, opts = {}) {
+    const children = typeof content === 'string'
+      ? [p([t(content, { size: 22 })], { spacing: { before: 20, after: 20, line: 280 } })]
+      : content;
+    return new TableCell({
+      borders: grayBorders, margins: cellM, verticalAlign: VerticalAlign.TOP,
+      width: { size: VAL_W, type: WidthType.DXA },
+      ...opts,
+      children,
+    });
+  }
+  function sectionHeader(text) {
+    return new TableRow({ children: [
+      new TableCell({
+        borders: grayBorders, margins: cellM, verticalAlign: VerticalAlign.CENTER,
+        width: { size: FULL_W, type: WidthType.DXA }, columnSpan: 2,
+        children: [p([t(text, { bold: true, size: 24 })], { alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
+      }),
+    ]});
+  }
+  function fullRow(children, opts = {}) {
+    const content = typeof children === 'string'
+      ? [p([t(children, { size: 22 })], { spacing: { before: 20, after: 20, line: 280 } })]
+      : Array.isArray(children) ? children : [children];
+    return new TableRow({ children: [
+      new TableCell({
+        borders: grayBorders, margins: cellM, verticalAlign: VerticalAlign.CENTER,
+        width: { size: FULL_W, type: WidthType.DXA }, columnSpan: 2,
+        ...opts,
+        children: content,
+      }),
+    ]});
+  }
+
   const doc = new Document({
     styles: {
       default: { document: { run: { font: FONT, size: 24 } } },
-      paragraphStyles: [
-        { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true,
-          run: { size: 28, bold: true, font: FONT },
-          paragraph: { spacing: { before: 240, after: 160 }, outlineLevel: 0 } },
-      ],
     },
     sections: [{
       properties: {
-        page: { size: A4, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } },
-      },
-      headers: {
-        default: new Header({ children: [p([t('IRB-004', { size: 18, color: '888888' })], { alignment: AlignmentType.RIGHT })] }),
-      },
-      footers: {
-        default: new Footer({ children: [p([t('第 '), t('', { children: [PageNumber.CURRENT] }), t(' 頁')], { alignment: AlignmentType.CENTER })] }),
+        page: { size: A4, margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } },
       },
       children: [
-        p([t('衛生福利部疾病管制署', { size: 28 })], { alignment: AlignmentType.CENTER, spacing: { after: 60 } }),
-        p([t('研究計畫書', { bold: true, size: 32 })], { alignment: AlignmentType.CENTER, spacing: { after: 300 } }),
+        // 表單編號 & IRB 編號
+        p([
+          t('表單編號：', { size: 20 }),
+          t('IRB-004', { size: 20 }),
+          t('                                            ', { size: 20 }),
+          t('IRB', { bold: true, size: 20 }),
+          t('編號：', { bold: true, size: 20 }),
+        ], { spacing: { after: 60 } }),
 
-        // 基本資料表
+        // 標題
+        p([t('衛生福利部疾病管制署人體研究倫理審查會', { bold: true, size: 28 })], { alignment: AlignmentType.CENTER, spacing: { after: 60 } }),
+        p([t('研究計畫書', { bold: true, size: 28 })], { alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
+
+        // ===== 主表格 =====
         new Table({
-          width: { size: 9506, type: WidthType.DXA },
-          columnWidths: [2400, 7106],
+          width: { size: FULL_W, type: WidthType.DXA },
           rows: [
+            // --- 基本資料 ---
+            sectionHeader('基本資料'),
             new TableRow({ children: [
-              headerCell('計畫名稱（中文）', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{project_title_zh}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('計畫名稱'),
+              val('中文：{project_title_zh}'),
             ]}),
             new TableRow({ children: [
-              headerCell('計畫名稱（英文）', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{project_title_en}', { size: 22, font: FONT_EN })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl(''),
+              val('英文：{project_title_en}'),
             ]}),
             new TableRow({ children: [
-              headerCell('計畫主持人', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{pi_name_zh}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('計畫主持人'),
+              val('姓名：{pi_name_zh}'),
             ]}),
             new TableRow({ children: [
-              headerCell('服務單位/職稱', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{pi_unit} / {pi_title}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('協同主持人'),
+              val('姓名：{co_pi_names}'),
+            ]}),
+
+            // --- 研究描述 ---
+            sectionHeader('研究描述'),
+            new TableRow({ children: [
+              lbl('計畫摘要'),
+              val('{abstract_zh}'),
             ]}),
             new TableRow({ children: [
-              headerCell('聯絡電話', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{pi_phone}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('計畫背景說明'),
+              val('{background}'),
+            ]}),
+            fullRow([
+              p([t('研究計畫之經費', { size: 22 })], { spacing: { before: 20, after: 20 } }),
+              p([t('{funding_detail_text}', { size: 22 })], { spacing: { before: 20, after: 20 } }),
+            ]),
+
+            // --- 研究方法及程序 ---
+            sectionHeader('研究方法及程序'),
+            new TableRow({ children: [
+              lbl('研究設計與進行方法'),
+              val('{methodology}'),
             ]}),
             new TableRow({ children: [
-              headerCell('E-mail', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{pi_email}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('研究期限與預期進度'),
+              val('{schedule_text}'),
             ]}),
             new TableRow({ children: [
-              headerCell('執行期間', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{execution_start_roc} 至 {execution_end_roc}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('研究人力及相關設備需求'),
+              val('{personnel_equipment_text}'),
             ]}),
             new TableRow({ children: [
-              headerCell('計畫類別', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{project_type_text}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('對研究對象可能之傷害及處理'),
+              val('{harm_protection_text}'),
+            ]}),
+
+            // --- 單列勾選項 ---
+            fullRow('{specimen_text}'),
+            fullRow('{consent_form_text}'),
+            fullRow('{questionnaire_text}'),
+            fullRow('{medical_record_text}'),
+
+            // --- 其他 ---
+            sectionHeader('其他'),
+            new TableRow({ children: [
+              lbl('預期成果及主要效益'),
+              val('{expected_outcome}'),
             ]}),
             new TableRow({ children: [
-              headerCell('經費來源', { width: { size: 2400, type: WidthType.DXA } }),
-              cell([p([t('{funding_text}', { size: 22 })])], { width: { size: 7106, type: WidthType.DXA } }),
+              lbl('研發成果之歸屬及運用'),
+              val('{outcome_usage_text}'),
             ]}),
+            fullRow('{prior_research_text}'),
+            fullRow('{resource_sufficiency_text}'),
+            fullRow('計畫主持人及主要協同人員之學、經歷及其所受訓練之背景資料（請檢附）'),
           ],
         }),
 
-        new Paragraph({ children: [new PageBreak()] }),
+        // ===== 利益衝突（表格外） =====
+        p([t('研究人員利益衝突事項之揭露', { size: 22 })], { spacing: { before: 120, after: 60 } }),
+        p([t('   參與本計畫之所有研究人員、配偶及三親等之內親屬', { size: 22 })], { spacing: { after: 40 } }),
 
-        // 研究內容
-        p([t('一、研究目的', { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_1, spacing: { after: 150 } }),
-        p([t('{purpose}')], { spacing: { after: 300, line: 360 } }),
+        p([t('是否自本計畫委託或資助機構收受應申報之財務報酬？（見註二）', { size: 22 })]),
+        p([t('    □ 是，請提供相關說明資料   ■ 否', { size: 22 })], { spacing: { after: 40 } }),
+        p([t('是否持有本計畫委託或資助機構之任何股權？', { size: 22 })]),
+        p([t('    □ 是，請提供相關說明資料   ■ 否', { size: 22 })], { spacing: { after: 40 } }),
+        p([t('是否為該研究計畫所使用之智慧財產權之所有人或對該研究所使用之智慧財產權獲有授權金？', { size: 22 })]),
+        p([t('    □ 是，請提供相關說明資料   ■ 否', { size: 22 })], { spacing: { after: 40 } }),
+        p([t('是否於本研究委託或資助機構處擔任長期支薪之顧問？', { size: 22 })]),
+        p([t('    □ 是，請提供相關說明資料   ■ 否', { size: 22 })], { spacing: { after: 40 } }),
+        p([t('本研究獲得的財務價值足以影響計畫結果？', { size: 22 })]),
+        p([t('    □ 是，請提供相關說明資料   ■ 否', { size: 22 })], { spacing: { after: 40 } }),
 
-        p([t('二、背景', { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_1, spacing: { after: 150 } }),
-        p([t('{background}')], { spacing: { after: 300, line: 360 } }),
+        p([t('研究相關人員與研究計畫如具有財務利益關係，請說明如何採取減少或消除利益衝突之措施：', { size: 22 })]),
+        p([t('{conflict_measure_text}', { size: 22 })], { spacing: { after: 80 } }),
 
-        p([t('三、研究方法', { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_1, spacing: { after: 150 } }),
-        p([t('{methodology}')], { spacing: { after: 300, line: 360 } }),
+        // 其他資料
+        new Table({
+          width: { size: FULL_W, type: WidthType.DXA },
+          rows: [
+            fullRow('其他資料：■ 無       □ 有（請檢附）'),
+          ],
+        }),
 
-        p([t('四、預期成果', { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_1, spacing: { after: 150 } }),
-        p([t('{expected_outcome}')], { spacing: { after: 300, line: 360 } }),
-
-        p([t('五、研究對象之權益保護', { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_1, spacing: { after: 150 } }),
-        p([t('（一）資料來源：')], { spacing: { after: 100 } }),
-        p([t('{data_source}')], { spacing: { after: 200, line: 360 } }),
-        p([t('（二）研究期間之隱私保護：')], { spacing: { after: 100 } }),
-        p([t('{privacy_during}')], { spacing: { after: 200, line: 360 } }),
-        p([t('（三）研究結束後之隱私保護：')], { spacing: { after: 100 } }),
-        p([t('{privacy_after}')], { spacing: { after: 200, line: 360 } }),
-        p([t('（四）退出機制：')], { spacing: { after: 100 } }),
-        p([t('{privacy_withdrawal}')], { spacing: { after: 300, line: 360 } }),
-
-        p([t('六、重要參考文獻', { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_1, spacing: { after: 150 } }),
-        p([t('{references}')], { spacing: { after: 300, line: 360 } }),
+        // ===== 註 =====
+        p([t('')], { spacing: { before: 120 } }),
+        p([t('註：一、依據人體研究法第二章第六條之規定，研究計畫書應載明事項包括：', { size: 18 })]),
+        p([t('計畫名稱、主持人及研究機構。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('計畫摘要、研究對象及實施方法。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('計畫預定進度。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('研究對象權益之保障、同意之方式及內容。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('研究人力及相關設備需求。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('研究經費需求及其來源。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('預期成果及主要效益。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('研發成果之歸屬及運用。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('研究人員利益衝突事項之揭露。', { size: 18 })], { indent: { left: 480 } }),
+        p([t('')], { spacing: { before: 60 } }),
+        p([t('二、有關研究人員利益衝突事項之揭露：', { size: 18 })]),
+        p([t('應申報之財務報酬係指具貨幣價值之任何項目，', { size: 18 }), t('包括但不限於', { size: 18, bold: true }), t('，薪資或其他勞務款項（例如，顧問費、演講費、鐘點費、出席費、服務收入或類似費用、與研究相關且可能受研究結果所影響的金錢補助等）、股權（例如，股票、認股權或其他與研究相關且可能受研究結果所影響的所有權利益）、捐贈、禮品及其他具金錢價值之給付。', { size: 18 })]),
+        p([t('如屬本署署內(自行)研究計畫、並無其他委託或資助機構，此處無須揭露應申報之財務報酬，如署內薪資。', { size: 18 })]),
       ],
     }],
   });

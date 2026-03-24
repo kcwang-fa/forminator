@@ -134,6 +134,36 @@ function prepareCommonData(data: FormData) {
     cross_link_text: data.cross_link_data_center ? '是' : '否',
     db_usage_scope: '（請於列印後手動填寫）',
 
+    // DOC-1 IRB-004 專用欄位
+    co_pi_names: data.personnel
+      .filter(p => p.role === 'co_pi')
+      .map(p => p.name_zh)
+      .join('、') || '（無）',
+    funding_detail_text: data.needs_funding
+      ? `(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿`
+      : '(1)經費需求：＿＿＿千元，■不需經費\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿',
+    schedule_text: `執行期間：${toRocDate(data.execution_start)} 至 ${toRocDate(data.execution_end)}\n${
+      data.gantt_chart.length > 0
+        ? data.gantt_chart.map(g =>
+          `${g.task_name}：${g.months.map((m: boolean, i: number) => m ? `第${i + 1}月` : '').filter(Boolean).join('、')}`
+        ).join('\n')
+        : '（請參閱署內研究計畫書）'
+    }`,
+    personnel_equipment_text: data.personnel.map(p =>
+      `${ROLE_MAP[p.role] || p.role}：${p.name_zh}（${p.unit} ${p.title}）— ${p.work_description || '研究資料分析與報告撰寫'}`
+    ).join('\n'),
+    harm_protection_text: `資料來源：${data.data_source}\n研究期間之隱私保護：${data.privacy_during}\n研究結束後之隱私保護：${data.privacy_after}\n退出機制：${data.privacy_withdrawal}`,
+    specimen_text: '檢體之採集方式及人員資格■ 無     □ 有（請說明：包括檢體採集之人員資格、方法、程序、採集量）',
+    consent_form_text: '研究對象說明暨同意書格式■ 無     □ 有（請檢附）',
+    questionnaire_text: data.has_questionnaire
+      ? '問卷內容□ 無     ■ 有（請檢附）'
+      : '問卷內容■ 無     □ 有（請檢附）',
+    medical_record_text: '病歷記錄用紙之格式■ 無     □ 有（請檢附）',
+    outcome_usage_text: '本研究成果歸屬衛生福利部疾病管制署，研究成果得作為傳染病防治政策參考，並投稿學術期刊發表。',
+    prior_research_text: '前次人體研究參考資料■ 無     □ 有（請檢附）',
+    resource_sufficiency_text: '確保有無足夠資源於受試者保護□ 無     ■ 有',
+    conflict_measure_text: '（無利益衝突）',
+
     // 甘特圖文字版
     gantt_chart_text: data.gantt_chart.length > 0
       ? data.gantt_chart.map(g =>
