@@ -33,7 +33,7 @@ export default async function handler(req, res) {
           { role: 'user', content: `計畫名稱：${project_title_zh}` },
         ],
         temperature: 0.3,
-        max_tokens: 200,
+        max_tokens: 1024,
       }),
     });
 
@@ -51,7 +51,11 @@ export default async function handler(req, res) {
     }
 
     // 清除 qwen3 的 <think> 標籤，並從回應中提取 JSON
-    const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    // 清除 <think>...</think>（含未關閉的 <think>...到結尾）
+    const cleaned = content
+      .replace(/<think>[\s\S]*?<\/think>/g, '')
+      .replace(/<think>[\s\S]*/g, '')
+      .trim();
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('No JSON found in response:', cleaned);

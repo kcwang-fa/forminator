@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     }
 
     // qwen3 可能回傳 <think>...</think> 包裹的思考內容，需要清除
-    const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<think>[\s\S]*/g, '').trim();
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('No JSON found in response:', cleaned);
