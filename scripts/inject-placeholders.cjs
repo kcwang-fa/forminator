@@ -45,6 +45,49 @@ function replaceAfterLabel(xml, label, placeholder) {
   return replaceText(xml, label, label + placeholder);
 }
 
+// 在第 nth 次出現 labelText 的 cell 之後的空 cell 中插入 placeholder
+function insertInNthEmptyCell(xml, labelText, placeholder, nth = 1) {
+  const escaped = labelText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Find all positions of labelText in <w:t> nodes
+  const regex = new RegExp(escaped, 'g');
+  let match;
+  let count = 0;
+  let targetPos = -1;
+  while ((match = regex.exec(xml)) !== null) {
+    count++;
+    if (count === nth) {
+      targetPos = match.index;
+      break;
+    }
+  }
+  if (targetPos === -1) return xml;
+
+  // Find the next </w:tc> after targetPos (end of label cell)
+  const tcEnd = xml.indexOf('</w:tc>', targetPos);
+  if (tcEnd === -1) return xml;
+
+  // Find the next <w:p> in the next cell, and insert a run with the placeholder
+  // Pattern: </w:tc><w:tc>...<w:p...>...</w:p>
+  const afterTc = xml.substring(tcEnd + 7); // after </w:tc>
+  // Insert placeholder text in the first <w:p> of the next cell
+  const pMatch = afterTc.match(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*><w:pPr>[\s\S]*?<\/w:pPr>)(<\/w:p>)/);
+  if (pMatch) {
+    const insertPoint = tcEnd + 7 + pMatch.index + pMatch[1].length;
+    return xml.substring(0, insertPoint) +
+      `<w:r><w:t>${placeholder}</w:t></w:r>` +
+      xml.substring(insertPoint);
+  }
+  // Fallback: try simpler pattern without <w:pPr>
+  const pMatch2 = afterTc.match(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*?>)(<\/w:p>)/);
+  if (pMatch2) {
+    const insertPoint = tcEnd + 7 + pMatch2.index + pMatch2[1].length;
+    return xml.substring(0, insertPoint) +
+      `<w:r><w:t>${placeholder}</w:t></w:r>` +
+      xml.substring(insertPoint);
+  }
+  return xml;
+}
+
 // ========================================
 // DOC-4: 署內研究計畫書
 // ========================================
@@ -123,35 +166,62 @@ function processDOC4() {
   xml = replaceText(xml, '□人體基因重組', '{exp_gene}人體基因重組');
 
   // 執行期限 — OOO=年, OO=月/日
-  // 順序：全程起始(OOO,OO,OO)、本年度起始(OOO,OO,OO)、全程截止(OOO,OO,OO)、本年度截止(OOO,OO,OO)
+  // 模板每行排列：本年度(年,月,日) → 全程(年,月,日)，共兩行（起、止）
   // MVP 一年期計畫，全程=本年度，所以兩組用同一組 placeholder
   let oooIdx = 0;
   xml = xml.replace(/>OOO</g, () => {
     oooIdx++;
-    // 1,2 = 起始年, 3,4 = 截止年
+    // 1,2 = 起始年(本年度,全程), 3,4 = 截止年(本年度,全程)
     if (oooIdx <= 2) return '>{exec_start_y}<';
     return '>{exec_end_y}<';
   });
   let ooIdx = 0;
   xml = xml.replace(/>OO</g, () => {
     ooIdx++;
-    // 1,2=起始月, 3,4=起始日, 5,6=截止月, 7,8=截止日
-    if (ooIdx <= 2) return '>{exec_start_m}<';
-    if (ooIdx <= 4) return '>{exec_start_d}<';
-    if (ooIdx <= 6) return '>{exec_end_m}<';
-    return '>{exec_end_d}<';
+    // 每行: 本年度月,本年度日,全程月,全程日
+    // 第一行(起): 1=起月, 2=起日, 3=起月, 4=起日
+    // 第二行(止): 5=止月, 6=止日, 7=止月, 8=止日
+    const mapping = [
+      'exec_start_m', 'exec_start_d', 'exec_start_m', 'exec_start_d',
+      'exec_end_m',   'exec_end_d',   'exec_end_m',   'exec_end_d',
+    ];
+    return `>{${mapping[ooIdx - 1] || 'exec_end_d'}}<`;
   });
 
   // 經費需求 — 原始模板中無對應 checkbox，此場景固定為「無經費需求」
 
-  // 計畫主持人/計畫連絡人 — 姓名欄位用 ○○○ 佔位
-  // 第 1、2 個 ○○○ 是計畫主持人，第 3、4 個是計畫連絡人
+  // 計畫主持人/計畫連絡人 — ○○○ 佔位順序：PI姓名, PI職稱, 聯絡人姓名, 聯絡人職稱
   let circleCount = 0;
+  const circleMapping = [
+    '{pi_name_zh}', '{pi_title}', '{contact_name_zh}', '{contact_title}',
+  ];
   xml = xml.replace(/○○○/g, () => {
+    const ph = circleMapping[circleCount] || '○○○';
     circleCount++;
-    if (circleCount <= 4) return '{pi_name_zh}';
-    return '○○○';
+    return ph;
   });
+
+  // 計畫主持人/連絡人 — 電話、傳真、E-mail、連絡地址
+  // 表格結構：左 cell = 標籤, 右 cell = 值（空的）
+  // 在空的值 cell 的 <w:p> 裡插入 placeholder
+  // 使用 insertInEmptyNextCell: 找到標籤文字所在的 </w:tc>，在下一個 <w:tc> 的空 <w:p> 中插入
+  const piContactFields = [
+    // [標籤匹配文字, placeholder, 第幾次出現(1-based)]
+    ['E-mail', '{pi_email}', 1],
+    ['E-mail', '{contact_email}', 2],
+    ['連絡地址', '{pi_address}', 1],
+    ['連絡地址', '{contact_address}', 2],
+  ];
+  for (const [label, ph, nth] of piContactFields) {
+    xml = insertInNthEmptyCell(xml, label, ph, nth);
+  }
+
+  // 電話/傳真 — 標籤文字在 XML 中被拆成多個 <w:t>（「電」+空白+「話」）
+  // 用「話」和「真」作為 anchor 來找到正確的 cell
+  xml = insertInNthEmptyCell(xml, '話', '{pi_phone}', 1);
+  xml = insertInNthEmptyCell(xml, '話', '{contact_phone}', 2);
+  xml = insertInNthEmptyCell(xml, '真', '{pi_fax}', 1);
+  xml = insertInNthEmptyCell(xml, '真', '{contact_fax}', 2);
 
   // 貳、中文摘要 — 替換提示文字
   // 第一個「請摘述本計畫之目的與實施方法及關鍵詞」是中文摘要
@@ -174,6 +244,67 @@ function processDOC4() {
     /(>keywords<\/w:t>[\s\S]*?>：<\/w:t><\/w:r>[\s\S]*?<w:t[^>]*>)([\u3000]+)(<\/w:t>)/,
     '$1{keywords_en}$3'
   );
+
+  // 肆、計畫內容 — 在各節提示文字的段落末尾插入 placeholder 段落
+  // 策略：找到提示文字的最後一個 </w:p>，在後面插入一個新段落
+  const contentSections = [
+    // [anchor 文字（該節提示文字中唯一或最後的片段）, placeholder]
+    ['應避免空泛性之敘述', '{purpose}'],
+    ['本計畫與防疫工作之相關性等', '{background}'],
+    ['將實施方法及進行步驟詳細說明', '{methodology}'],
+    ['計畫之成果預估', '{expected_outcome}'],
+    ['並於計畫內容引用處標註之', '{references}'],
+  ];
+  for (const [anchor, ph] of contentSections) {
+    const anchorIdx = xml.indexOf(anchor);
+    if (anchorIdx === -1) continue;
+    // Find the end of the paragraph containing this anchor
+    const pEnd = xml.indexOf('</w:p>', anchorIdx);
+    if (pEnd === -1) continue;
+    const insertAt = pEnd + 6; // after </w:p>
+    xml = xml.substring(0, insertAt) +
+      `<w:p><w:r><w:t>${ph}</w:t></w:r></w:p>` +
+      xml.substring(insertAt);
+  }
+
+  // 伍、人力配置 — 用 docxtemplater loop 語法注入
+  // 表格結構：類別 | 姓名 | 現職 | 在本計畫內擔任之具體工作性質、項目及範圍
+  // 在表頭行後的空資料行中：第一個 cell 放 {#personnel_rows}{role_text}，
+  // 中間 cell 放 {name_zh} 和 {title}，最後 cell 放 {work_description}{/personnel_rows}
+  const personnelAnchor = '在本計畫內擔任之具體工作性質、項目及範圍';
+  const personnelIdx = xml.indexOf(personnelAnchor);
+  if (personnelIdx !== -1) {
+    // Find the end of the header row </w:tr>
+    const trEnd = xml.indexOf('</w:tr>', personnelIdx);
+    if (trEnd !== -1) {
+      const insertAt = trEnd + 7;
+      // Find the next </w:tr> (the empty data row)
+      const nextTrEnd = xml.indexOf('</w:tr>', insertAt);
+      if (nextTrEnd !== -1) {
+        let rowXml = xml.substring(insertAt, nextTrEnd + 7);
+        // Insert placeholders into each cell's empty <w:p>
+        // docxtemplater loop: {#personnel_rows} in first cell, {/personnel_rows} in last cell
+        const cellPlaceholders = [
+          '{#personnel_rows}{role_text}',
+          '{name_zh}',
+          '{title}',
+          '{work_description}{/personnel_rows}',
+        ];
+        let cellIdx = 0;
+        rowXml = rowXml.replace(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/g,
+          (match, before, after) => {
+            if (cellIdx < cellPlaceholders.length) {
+              const ph = cellPlaceholders[cellIdx];
+              cellIdx++;
+              return `${before}<w:r><w:t>${ph}</w:t></w:r>${after}`;
+            }
+            return match;
+          }
+        );
+        xml = xml.substring(0, insertAt) + rowXml + xml.substring(nextTrEnd + 7);
+      }
+    }
+  }
 
   saveDoc(zip, xml, 'DOC-4.docx');
 }

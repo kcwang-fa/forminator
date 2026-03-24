@@ -133,6 +133,27 @@ export default function Step2Personnel() {
             />
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Controller
+              name={`personnel.${index}.fax`}
+              control={control}
+              render={({ field: f }) => (
+                <Form.Item label="傳真">
+                  <Input {...f} />
+                </Form.Item>
+              )}
+            />
+            <Controller
+              name={`personnel.${index}.address`}
+              control={control}
+              render={({ field: f }) => (
+                <Form.Item label="連絡地址" tooltip="署內研究計畫書使用">
+                  <Input {...f} />
+                </Form.Item>
+              )}
+            />
+          </div>
+
           <Controller
             name={`personnel.${index}.work_description`}
             control={control}
