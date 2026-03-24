@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('No JSON found in response:', cleaned);
-      return res.status(502).json({ error: 'LLM 回應格式錯誤' });
+      return res.status(502).json({ error: `LLM 回應格式錯誤`, debug: cleaned.substring(0, 500) });
     }
     const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);

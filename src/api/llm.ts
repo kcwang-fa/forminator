@@ -24,7 +24,8 @@ export async function translateTitle(titleZh: string): Promise<TranslateTitleRes
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const msg = err.debug ? `${err.error} [${err.debug}]` : (err.error || `HTTP ${res.status}`);
+    throw new Error(msg);
   }
   return res.json();
 }
