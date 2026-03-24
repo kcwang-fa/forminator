@@ -1,7 +1,7 @@
 // ===== 第 1 頁：基本資訊 =====
 
 import { useCallback, useState } from 'react';
-import { Form, Input, DatePicker, Collapse, Button, Space } from 'antd';
+import { Form, Input, DatePicker, Collapse, Button, Space, App } from 'antd';
 import { RobotOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 
 export default function Step1BasicInfo() {
   const { control, watch, setValue } = useFormStore();
+  const { message } = App.useApp();
   const titleZh = watch('project_title_zh');
   const [translating, setTranslating] = useState(false);
 
@@ -20,12 +21,13 @@ export default function Step1BasicInfo() {
     try {
       const res = await translateTitle(titleZh);
       setValue('project_title_en', res.project_title_en);
-    } catch {
-      // 翻譯失敗時靜默，使用者可手動填寫
+    } catch (err) {
+      console.error('翻譯失敗:', err);
+      message.error('英文翻譯失敗，請確認網路連線或稍後再試');
     } finally {
       setTranslating(false);
     }
-  }, [titleZh, setValue]);
+  }, [titleZh, setValue, message]);
 
   return (
     <div>

@@ -52,6 +52,13 @@ function prepareCommonData(data: FormData) {
     responsible_unit: data.responsible_unit,
     execution_start_roc: toRocDate(data.execution_start),
     execution_end_roc: toRocDate(data.execution_end),
+    // 執行期限拆分（DOC-4 表格用）
+    exec_start_y: data.execution_start ? String(new Date(data.execution_start).getFullYear() - 1911) : '',
+    exec_start_m: data.execution_start ? String(new Date(data.execution_start).getMonth() + 1) : '',
+    exec_start_d: data.execution_start ? String(new Date(data.execution_start).getDate()) : '',
+    exec_end_y: data.execution_end ? String(new Date(data.execution_end).getFullYear() - 1911) : '',
+    exec_end_m: data.execution_end ? String(new Date(data.execution_end).getMonth() + 1) : '',
+    exec_end_d: data.execution_end ? String(new Date(data.execution_end).getDate()) : '',
     filing_date_roc: toRocDate(data.filing_date),
 
     // PI
@@ -154,9 +161,7 @@ function prepareCommonData(data: FormData) {
     personnel_equipment_text: data.personnel.map(p =>
       `${ROLE_MAP[p.role] || p.role}：${p.name_zh}（${p.unit} ${p.title}）— ${p.work_description || '研究資料分析與報告撰寫'}`
     ).join('\n'),
-    harm_protection_text: `資料來源：${data.data_source}\n研究期間之隱私保護：${data.privacy_during}\n研究結束後之隱私保護：${data.privacy_after}\n退出機制：${data.privacy_withdrawal}`,
-    specimen_text: '檢體之採集方式及人員資格■ 無     □ 有（請說明：包括檢體採集之人員資格、方法、程序、採集量）',
-    consent_form_text: '研究對象說明暨同意書格式■ 無     □ 有（請檢附）',
+    // 第 7 點「傷害及處理」、第 8 點「檢體採集」、第 9 點「同意書格式」— 保留模板原始內容，不帶入資料
     questionnaire_text: data.has_questionnaire
       ? '問卷內容□ 無     ■ 有（請檢附）'
       : '問卷內容■ 無     □ 有（請檢附）',

@@ -1,7 +1,7 @@
 // ===== 表單終結者 Forminator — 主應用 =====
 
 import { useState, useRef, useEffect } from 'react';
-import { ConfigProvider, Layout, Steps, Button, Space, message, Modal, Upload, Checkbox, Typography, Divider } from 'antd';
+import { ConfigProvider, Layout, Steps, Button, Space, message, Modal, Upload, Checkbox, Typography, Divider, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
 
@@ -255,7 +255,9 @@ function AppContent() {
 export default function App() {
   return (
     <ConfigProvider locale={zhTW}>
-      <AppContent />
+      <AntApp>
+        <AppContent />
+      </AntApp>
     </ConfigProvider>
   );
 }

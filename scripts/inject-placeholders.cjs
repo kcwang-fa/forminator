@@ -74,11 +74,7 @@ function processDOC4() {
     '$1{pi_name_zh}$3'
   );
 
-  // 封面簽名
-  xml = xml.replace(
-    /(<w:t[^>]*>\u3000簽名：<\/w:t>[\s\S]*?<w:t[^>]*>)([\u3000\s]+)(<\/w:t>)/,
-    '$1{pi_name_zh}$3'
-  );
+  // 封面簽名 — 留白，由本人親簽
 
   // 封面協同主持人（3個位置）
   let copiCount = 0;
@@ -126,23 +122,58 @@ function processDOC4() {
   xml = replaceText(xml, '□人體研究', '{exp_human}人體研究');
   xml = replaceText(xml, '□人體基因重組', '{exp_gene}人體基因重組');
 
-  // 執行期限
+  // 執行期限 — OOO=年, OO=月/日
+  // 順序：全程起始(OOO,OO,OO)、本年度起始(OOO,OO,OO)、全程截止(OOO,OO,OO)、本年度截止(OOO,OO,OO)
+  // MVP 一年期計畫，全程=本年度，所以兩組用同一組 placeholder
+  let oooIdx = 0;
+  xml = xml.replace(/>OOO</g, () => {
+    oooIdx++;
+    // 1,2 = 起始年, 3,4 = 截止年
+    if (oooIdx <= 2) return '>{exec_start_y}<';
+    return '>{exec_end_y}<';
+  });
+  let ooIdx = 0;
+  xml = xml.replace(/>OO</g, () => {
+    ooIdx++;
+    // 1,2=起始月, 3,4=起始日, 5,6=截止月, 7,8=截止日
+    if (ooIdx <= 2) return '>{exec_start_m}<';
+    if (ooIdx <= 4) return '>{exec_start_d}<';
+    if (ooIdx <= 6) return '>{exec_end_m}<';
+    return '>{exec_end_d}<';
+  });
+
+  // 經費需求 — 原始模板中無對應 checkbox，此場景固定為「無經費需求」
+
+  // 計畫主持人/計畫連絡人 — 姓名欄位用 ○○○ 佔位
+  // 第 1、2 個 ○○○ 是計畫主持人，第 3、4 個是計畫連絡人
+  let circleCount = 0;
+  xml = xml.replace(/○○○/g, () => {
+    circleCount++;
+    if (circleCount <= 4) return '{pi_name_zh}';
+    return '○○○';
+  });
+
+  // 貳、中文摘要 — 替換提示文字
+  // 第一個「請摘述本計畫之目的與實施方法及關鍵詞」是中文摘要
+  let abstractCount = 0;
+  xml = xml.replace(/請摘述本計畫之目的與實施方法及關鍵詞/g, () => {
+    abstractCount++;
+    if (abstractCount === 1) return '{abstract_zh}';
+    if (abstractCount === 2) return '{abstract_en}';
+    return '請摘述本計畫之目的與實施方法及關鍵詞';
+  });
+
+  // 中文關鍵詞
   xml = xml.replace(
-    /本年度自民國[\s\S]*?止/,
-    '本年度自民國{execution_start_roc}起至{execution_end_roc}止'
+    /(>關鍵詞：<\/w:t><\/w:r>[\s\S]*?<w:t[^>]*>)([\u3000]+)(<\/w:t>)/,
+    '$1{keywords_zh}$3'
   );
 
-  // 經費需求
-  xml = replaceText(xml, '□需經費', '{needs_funding_yes}需經費');
-  xml = replaceText(xml, '□不需經費', '{needs_funding_no}不需經費');
-
-  // 計畫主持人聯絡資訊表格
-  // These are in the 壹 table, replace field values
-  // We'll handle them via the template data mapping
-
-  // 貳、中文摘要
-  // 計畫名稱 and 關鍵詞 fields in the abstract section
-  // These will be filled by docxtemplater loops
+  // 英文 keywords
+  xml = xml.replace(
+    /(>keywords<\/w:t>[\s\S]*?>：<\/w:t><\/w:r>[\s\S]*?<w:t[^>]*>)([\u3000]+)(<\/w:t>)/,
+    '$1{keywords_en}$3'
+  );
 
   saveDoc(zip, xml, 'DOC-4.docx');
 }
@@ -230,9 +261,16 @@ function processDOC1() {
   console.log('\n📄 Processing DOC-1: IRB-004 研究計畫書');
   let { zip, xml } = readDocXml(path.join(SRC, 'DOC-1.docx'));
 
-  // 基本資料 - 在 "中文：" / "英文：" 後插入 placeholder
-  xml = replaceAfterLabel(xml, '中文：', '{project_title_zh}');
-  xml = replaceAfterLabel(xml, '英文：', '{project_title_en}');
+  // 基本資料 - 「中文」和「：」在同一個 cell 裡但被拆成兩個 run
+  // 在「：」後面的 </w:p> 前插入 placeholder run
+  xml = xml.replace(
+    /(>中文<\/w:t><\/w:r>[\s\S]*?>：<\/w:t><\/w:r>)(<\/w:p>)/,
+    '$1<w:r><w:rPr><w:rFonts w:eastAsia="DFKai-SB" w:hint="eastAsia"/></w:rPr><w:t>{project_title_zh}</w:t></w:r>$2'
+  );
+  xml = xml.replace(
+    /(>英文<\/w:t><\/w:r>[\s\S]*?>：<\/w:t><\/w:r>)(<\/w:p>)/,
+    '$1<w:r><w:rPr><w:rFonts w:eastAsia="DFKai-SB" w:hint="eastAsia"/></w:rPr><w:t>{project_title_en}</w:t></w:r>$2'
+  );
 
   // 計畫主持人姓名（"姓名：" 出現在 "計畫主持人" 的下一個 cell）
   // 第一個 "姓名：" = PI, 第二個 = co-PI
@@ -257,7 +295,7 @@ function processDOC1() {
   // "研究" + "限與預期進度"（被拆開了）
   xml = insertInNextCell(xml, '限與預期進度', '{schedule_text}');
   xml = insertInNextCell(xml, '研究人力及相關設備需求', '{personnel_equipment_text}');
-  xml = insertInNextCell(xml, '對研究對象可能之傷害及處理', '{harm_protection_text}');
+  // 第 7 點「對研究對象可能之傷害及處理」— 原始模板已有「(不適用)」，不需注入
 
   // 其他區塊
   xml = insertInNextCell(xml, '預期成果及主要效益', '{expected_outcome}');
@@ -367,10 +405,10 @@ function processDOC3() {
   xml = replaceAfterLabel(xml, '立同意書人簽名：', '{person_name_zh}');
 
   // 日期（拆成多個 run："日期：" + 空格 + "年" + 空格 + "月" + 空格 + "日"）
-  // 替換 "日期：" 後面所有 run（包含年月日），用單一 placeholder 取代
+  // 替換 "日期：" 後面所有 run 直到 "</w:p>"，重新組合
   xml = xml.replace(
-    /(日期：<\/w:t><\/w:r>)([\s\S]*?日<\/w:t><\/w:r>)/,
-    '$1<w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>{signing_date_roc}</w:t></w:r>'
+    /(日期：<\/w:t><\/w:r>)([\s\S]*?)(年<\/w:t>[\s\S]*?月<\/w:t>[\s\S]*?日<\/w:t><\/w:r>)/,
+    '$1<w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>{signing_date_roc}</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>日</w:t></w:r>'
   );
   // 如果以上 regex 沒 match，用簡單備用方案
   if (!xml.includes('{signing_date_roc}')) {
