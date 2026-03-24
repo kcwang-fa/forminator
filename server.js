@@ -45,7 +45,6 @@ app.post('/api/llm/translate-title', async (req, res) => {
         ],
         temperature: 0.3,
         max_tokens: 200,
-        response_format: { type: 'json_object' },
       }),
     });
 
@@ -61,7 +60,9 @@ app.post('/api/llm/translate-title', async (req, res) => {
       return res.status(502).json({ error: 'LLM 回應為空' });
     }
     const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(502).json({ error: 'LLM 回應格式錯誤' });
+    const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);
   } catch (err) {
     console.error('translate-title error:', err);
@@ -115,7 +116,6 @@ app.post('/api/llm/generate-abstract', async (req, res) => {
         ],
         temperature: 0.5,
         max_tokens: 2000,
-        response_format: { type: 'json_object' },
       }),
     });
 
@@ -131,11 +131,13 @@ app.post('/api/llm/generate-abstract', async (req, res) => {
       return res.status(502).json({ error: 'LLM 回應為空' });
     }
     const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(502).json({ error: 'LLM 回應格式錯誤' });
+    const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);
   } catch (err) {
     console.error('generate-abstract error:', err);
-    res.status(500).json({ error: '生成失敗' });
+    res.status(500).json({ error: `生成失敗: ${err.message}` });
   }
 });
 

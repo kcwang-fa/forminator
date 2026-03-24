@@ -51,7 +51,6 @@ export default async function handler(req, res) {
         ],
         temperature: 0.5,
         max_tokens: 2000,
-        response_format: { type: 'json_object' },
       }),
     });
 
@@ -70,7 +69,12 @@ export default async function handler(req, res) {
 
     // qwen3 可能回傳 <think>...</think> 包裹的思考內容，需要清除
     const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('No JSON found in response:', cleaned);
+      return res.status(502).json({ error: 'LLM 回應格式錯誤' });
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);
   } catch (err) {
     console.error('generate-abstract error:', err);

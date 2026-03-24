@@ -28,13 +28,12 @@ export default async function handler(req, res) {
 1. 使用公共衛生／流行病學領域的標準學術英文術語
 2. 疾病名稱依循 WHO/CDC 官方英文名稱
 3. 採用 Title Case 格式
-4. 僅輸出 JSON 格式：{ "project_title_en": "..." }`,
+4. 僅輸出 JSON，不要輸出任何其他文字：{ "project_title_en": "..." }`,
           },
           { role: 'user', content: `計畫名稱：${project_title_zh}` },
         ],
         temperature: 0.3,
         max_tokens: 200,
-        response_format: { type: 'json_object' },
       }),
     });
 
@@ -51,9 +50,14 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'LLM 回應為空' });
     }
 
-    // qwen3 可能回傳 <think>...</think> 包裹的思考內容，需要清除
+    // 清除 qwen3 的 <think> 標籤，並從回應中提取 JSON
     const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('No JSON found in response:', cleaned);
+      return res.status(502).json({ error: 'LLM 回應格式錯誤' });
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);
   } catch (err) {
     console.error('translate-title error:', err);
