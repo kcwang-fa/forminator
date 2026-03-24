@@ -367,10 +367,10 @@ function processDOC3() {
   xml = replaceAfterLabel(xml, '立同意書人簽名：', '{person_name_zh}');
 
   // 日期（拆成多個 run："日期：" + 空格 + "年" + 空格 + "月" + 空格 + "日"）
-  // 替換 "日期：" 後面所有 run 直到 "</w:p>"，重新組合
+  // 替換 "日期：" 後面所有 run（包含年月日），用單一 placeholder 取代
   xml = xml.replace(
-    /(日期：<\/w:t><\/w:r>)([\s\S]*?)(年<\/w:t>[\s\S]*?月<\/w:t>[\s\S]*?日<\/w:t><\/w:r>)/,
-    '$1<w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>{signing_date_roc}</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>日</w:t></w:r>'
+    /(日期：<\/w:t><\/w:r>)([\s\S]*?日<\/w:t><\/w:r>)/,
+    '$1<w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>{signing_date_roc}</w:t></w:r>'
   );
   // 如果以上 regex 沒 match，用簡單備用方案
   if (!xml.includes('{signing_date_roc}')) {
