@@ -1,17 +1,130 @@
 # Forminator 開發學習指南
 
 > 從「表單終結者」的開發實戰中，學到的技術選型、踩坑紀錄與工程思維。
+> 適合剛接觸前端開發或第一次碰 Word 文件自動化的人閱讀。
 
 ---
 
 ## 目錄
 
+0. [技術全景：這個專案用了什麼？](#0-技術全景這個專案用了什麼)
 1. [Office Open XML 操作](#1-office-open-xml-操作)
 2. [Template-based 文件生成](#2-template-based-文件生成)
 3. [LLM API 整合](#3-llm-api-整合)
 4. [React Hook Form 多步驟表單](#4-react-hook-form-多步驟表單)
 5. [日期處理：民國年與西元年](#5-日期處理民國年與西元年)
 6. [自動化工作流程設計](#6-自動化工作流程設計)
+
+---
+
+## 0. 技術全景：這個專案用了什麼？
+
+### 一句話說明
+
+Forminator 是一個**跑在瀏覽器裡的表單應用**，使用者填完表單後，它會在瀏覽器端直接產生 Word 文件打包下載。後端只負責呼叫 AI 做翻譯和摘要。
+
+### 技術堆疊總覽
+
+```
+┌─────────────────────────────────────────────────┐
+│  瀏覽器（前端）                                    │
+│                                                   │
+│  React ──── 畫面元件                               │
+│  TypeScript ── 型別安全的 JavaScript               │
+│  Vite ────── 開發伺服器 & 打包工具                  │
+│  Ant Design ─ UI 元件庫（按鈕、表格、日期選擇器等）  │
+│  React Hook Form ── 表單資料管理                    │
+│  docxtemplater ──── 在 Word 模板裡填入資料          │
+│  JSZip + file-saver ── 打包成 ZIP 並下載           │
+│  dayjs ──── 日期處理                               │
+│                                                   │
+├─────────────────────────────────────────────────┤
+│  伺服器（後端）                                    │
+│                                                   │
+│  Vercel Serverless Functions ── 部署在雲端          │
+│  Express（備用）── 本地開發用                       │
+│  GROQ API（qwen3-32b）── AI 翻譯 & 摘要生成       │
+│                                                   │
+├─────────────────────────────────────────────────┤
+│  開發工具                                          │
+│                                                   │
+│  Node.js 腳本 ── 在 Word 模板 XML 裡注入佔位符     │
+│  Python（輔助）── 分析 .docx 內部 XML 結構          │
+│  Git + GitHub ── 版本控制                          │
+└─────────────────────────────────────────────────┘
+```
+
+### 每個技術是什麼？為什麼選它？
+
+#### 前端
+
+| 技術 | 它是什麼 | 為什麼用它 | 新手學習建議 |
+|------|---------|-----------|------------|
+| **React** | Facebook 開發的 UI 框架，用「元件」組合畫面 | 生態系最大、文件最多、找人接手最容易 | 先學 [官方教學](https://react.dev/learn)，理解 JSX、state、props |
+| **TypeScript** | JavaScript 的超集，加上型別檢查 | 表單欄位 30+ 個，沒型別會搞混；IDE 自動補全超好用 | 不用一開始就學完，先看懂 `interface` 和 `: string` 就夠 |
+| **Vite** | 新一代前端打包工具，取代 Webpack | 啟動快（<1秒）、設定簡單、HMR 即時更新 | `npm run dev` 就對了，設定幾乎不用碰 |
+| **Ant Design** | 螞蟻金服出的 UI 元件庫 | 內建中文 locale、表單元件齊全、企業風格 | 到 [元件文件](https://ant.design/components/overview-cn/) 找需要的元件，複製範例改 |
+| **React Hook Form** | 表單狀態管理函式庫 | 效能好（不會每打一個字就 re-render 整頁）、驗證簡單 | 先理解 `useForm()`、`Controller`、`watch()` 三個 API |
+| **docxtemplater** | 在 .docx 模板中填入資料的函式庫 | 不需要後端，瀏覽器直接生成 Word | 看 [官方 demo](https://docxtemplater.com/demo/) 跑一次就懂了 |
+| **JSZip** | 在瀏覽器裡建立 ZIP 檔案 | 7 份文件打包成一個 ZIP 下載 | API 很簡單：`zip.file('name.docx', blob)` |
+| **dayjs** | 輕量日期處理（2KB） | Ant Design DatePicker 需要 | 類似 moment.js 但小很多 |
+
+#### 後端
+
+| 技術 | 它是什麼 | 為什麼用它 |
+|------|---------|-----------|
+| **Vercel** | 前端部署平台，支援 Serverless Functions | 免費 tier 夠用、從 GitHub push 自動部署 |
+| **Express** | Node.js 的 Web 框架 | 本地開發用，一個 `server.js` 搞定 |
+| **GROQ API** | LLM 推論平台（跑 qwen3-32b 模型） | 免費額度高、回應快、OpenAI 相容格式 |
+
+#### 開發工具
+
+| 技術 | 它是什麼 | 為什麼用它 |
+|------|---------|-----------|
+| **Node.js** | 在伺服器端跑 JavaScript | 注入腳本用 JS 寫，跟前端同語言 |
+| **Python** | 通用程式語言 | 快速分析 .docx 的 XML 結構（`zipfile` 模組方便） |
+| **Git** | 版本控制系統 | 追蹤每次修改、可以回滾 |
+
+### 新手 FAQ
+
+**Q: 我需要全部學完才能改這個專案嗎？**
+A: 不用。看你要改什麼：
+- 改表單欄位 → 只需要懂 React + Ant Design + React Hook Form
+- 改文件生成 → 只需要懂 docxtemplater + `docgen.ts`
+- 改模板注入 → 只需要懂 Node.js + XML 基礎
+- 改 AI 功能 → 只需要懂 `fetch` API + JSON
+
+**Q: 為什麼文件生成不在後端做？**
+A: 因為不需要。docxtemplater 跑在瀏覽器裡就好，省掉伺服器成本，也不用處理檔案上傳下載。使用者的資料完全不離開瀏覽器（除了 AI 翻譯/摘要功能）。
+
+**Q: 為什麼不用 Google Docs API 或 Microsoft Graph？**
+A: CDC 的表單必須是特定格式的 `.docx`，用 API 反而要處理格式轉換。直接操作 Word 模板最保險。
+
+**Q: 專案怎麼跑起來？**
+```bash
+# 1. 安裝依賴
+npm install
+
+# 2. 啟動開發伺服器（前端）
+npm run dev
+# → 瀏覽器開 http://localhost:5173
+
+# 3.（選用）如果要用 AI 功能，設定環境變數
+export GROQ_API_KEY=your-key-here
+npm start
+# → 後端跑在 http://localhost:3000
+```
+
+### 延伸閱讀（新手起步路線）
+
+如果你是完全的新手，建議按這個順序學習：
+
+1. **JavaScript 基礎** → [MDN JavaScript Guide](https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/Guide)
+2. **React 入門** → [React 官方教學](https://react.dev/learn)
+3. **TypeScript 基礎** → [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+4. **Ant Design 元件** → [Ant Design 文件](https://ant.design/components/overview-cn/)
+5. **React Hook Form** → [官方入門](https://react-hook-form.com/get-started)
+6. **docxtemplater** → [官方 Demo](https://docxtemplater.com/demo/)
 
 ---
 
