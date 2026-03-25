@@ -6,8 +6,10 @@ import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, Ar
 import zhTW from 'antd/locale/zh_TW';
 
 import { FormContext, useCreateFormStore } from './hooks/useFormStore';
+import { useLLMSettings } from './hooks/useLLMSettings';
 import DataLossWarning from './components/common/DataLossWarning';
 import FeedbackButton from './components/common/FeedbackButton';
+import LLMSettingsPanel from './components/common/LLMSettingsPanel';
 import Step1BasicInfo from './components/wizard/Step1BasicInfo';
 import Step2Personnel from './components/wizard/Step2Personnel';
 import Step3Research from './components/wizard/Step3Research';
@@ -35,6 +37,7 @@ const ALL_DOCS = Object.keys(DOC_NAMES);
 
 function AppContent() {
   const form = useCreateFormStore();
+  const { settings: llmSettings, setSettings: setLLMSettings } = useLLMSettings();
   const [currentStep, setCurrentStep] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<string[]>(ALL_DOCS);
@@ -150,6 +153,7 @@ function AppContent() {
             <Text type="secondary" style={{ fontSize: 12 }}>Forminator v{SDD_VERSION}</Text>
           </div>
           <Space>
+            <LLMSettingsPanel settings={llmSettings} onSave={setLLMSettings} />
             <Upload
               accept=".json"
               showUploadList={false}
