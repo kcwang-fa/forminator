@@ -430,13 +430,13 @@ function processDOC4() {
       if (tocIdx < tocSections.length) {
         const bmName = tocSections[tocIdx][1];
         tocIdx++;
-        return '<w:t></w:t></w:r>' +
+        return '<w:t>(</w:t></w:r>' +
           '<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
           `<w:r><w:instrText xml:space="preserve"> PAGEREF ${bmName} \\h </w:instrText></w:r>` +
           '<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
           '<w:r><w:t>?</w:t></w:r>' +
           '<w:r><w:fldChar w:fldCharType="end"/></w:r>' +
-          '<w:r><w:t></w:t>';
+          '<w:r><w:t>)</w:t>';
       }
       return match;
     });
