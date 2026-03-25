@@ -135,7 +135,7 @@ export default function Step3Research() {
           </span>
         )}
         <p style={{ color: '#666', fontSize: 12, marginTop: 8, marginBottom: 0 }}>
-          將傳送研究內容至 AI 服務（Groq）生成摘要。機密研究請勿使用此功能。
+          將傳送研究內容至 AI 服務生成摘要（可於右上角「AI 設定」切換 Groq / Gemini）。機密研究請勿使用此功能。
         </p>
       </div>
 

@@ -1,31 +1,7 @@
 // Vercel Serverless Function — 摘要與關鍵字生成
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+import { GoogleGenAI } from '@google/genai';
 
-  const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-  const GROQ_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3-32b';
-
-  try {
-    const { purpose, background, methodology, expected_outcome } = req.body;
-    if (!purpose || !background || !methodology || !expected_outcome) {
-      return res.status(400).json({ error: '缺少必要欄位' });
-    }
-    if (!GROQ_API_KEY) return res.status(500).json({ error: 'GROQ_API_KEY 未設定' });
-
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: `你是一位公共衛生研究計畫撰寫助手，專門協助疾管署研究人員撰寫計畫摘要。
+const SYSTEM_PROMPT = `你是一位公共衛生研究計畫撰寫助手，專門協助疾管署研究人員撰寫計畫摘要。
 請根據以下研究內容，生成中文摘要、英文摘要、中文關鍵詞與英文關鍵詞。
 
 重要：所有中文內容必須使用「繁體中文」與「台灣用語」（例如：資料庫而非数据库、軟體而非软件、程式而非程序）。
@@ -42,36 +18,75 @@ export default async function handler(req, res) {
   "abstract_en": "...",
   "keywords_zh": "...",
   "keywords_en": "..."
-}`,
-          },
-          {
-            role: 'user',
-            content: `研究目的：\n${purpose}\n\n背景分析：\n${background}\n\n研究方法：\n${methodology}\n\n預期成果：\n${expected_outcome}`,
-          },
-        ],
-        temperature: 0.5,
-        max_tokens: 2000,
-      }),
-    });
+}`;
 
-    if (!response.ok) {
-      const errBody = await response.text();
-      console.error('GROQ API error:', response.status, errBody);
-      return res.status(502).json({ error: `GROQ API 錯誤: ${response.status}` });
+async function callGroq(apiKey, userPrompt) {
+  const model = 'qwen/qwen3-32b';
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.5,
+      max_tokens: 2000,
+    }),
+  });
+  if (!response.ok) {
+    const errBody = await response.text();
+    console.error('GROQ API error:', response.status, errBody);
+    throw new Error(`Groq API 錯誤: ${response.status}`);
+  }
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('LLM 回應為空');
+  return content.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<think>[\s\S]*/g, '').trim();
+}
+
+async function callGemini(apiKey, userPrompt) {
+  const ai = new GoogleGenAI({ apiKey });
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.1-flash-lite-preview',
+    config: {
+      systemInstruction: SYSTEM_PROMPT,
+    },
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+  });
+  const content = response.text;
+  if (!content) throw new Error('LLM 回應為空');
+  return content.trim();
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { purpose, background, methodology, expected_outcome, provider, apiKey } = req.body;
+    if (!purpose || !background || !methodology || !expected_outcome) {
+      return res.status(400).json({ error: '缺少必要欄位' });
+    }
+    if (!apiKey) return res.status(400).json({ error: '請先設定 API Key' });
+
+    const userPrompt = `研究目的：\n${purpose}\n\n背景分析：\n${background}\n\n研究方法：\n${methodology}\n\n預期成果：\n${expected_outcome}`;
+
+    let content;
+    if (provider === 'gemini') {
+      content = await callGemini(apiKey, userPrompt);
+    } else {
+      content = await callGroq(apiKey, userPrompt);
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) {
-      console.error('Empty LLM response:', JSON.stringify(data));
-      return res.status(502).json({ error: 'LLM 回應為空' });
-    }
-
-    // qwen3 可能回傳 <think>...</think> 包裹的思考內容，需要清除
-    const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<think>[\s\S]*/g, '').trim();
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error('No JSON found in response:', cleaned);
+      console.error('No JSON found in response:', content);
       return res.status(502).json({ error: 'LLM 回應格式錯誤' });
     }
     const parsed = JSON.parse(jsonMatch[0]);
