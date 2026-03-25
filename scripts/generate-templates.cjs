@@ -50,10 +50,8 @@ async function genDOC7() {
         children: [
           p([t('簽', { bold: true, size: 36 })], { alignment: AlignmentType.CENTER, spacing: { after: 300 } }),
           p([t('主旨：', { bold: true }), t('{responsible_unit}擬執行{project_year}年度無經費需求署內自行研究計畫一件，簽請鑒核。')], { spacing: { after: 300 } }),
-          p([t('說明：', { bold: true })], { spacing: { after: 100 } }),
-          p([t('本研究計畫名稱為「{project_title_zh}」，研究計畫書內容詳如附件。')], { indent, spacing: { after: 300 } }),
-          p([t('擬辦：', { bold: true })], { spacing: { after: 100 } }),
-          p([t('奉核後據以辦理相關後續事宜。')], { indent }),
+          p([t('說明：', { bold: true }), t('本研究計畫名稱為「{project_title_zh}」，研究計畫書內容詳如附件。')], { spacing: { after: 300 } }),
+          p([t('擬辦：', { bold: true }), t('奉核後據以辦理相關後續事宜。')], {}),
         ],
       },
       // ---- 第二頁：公文系統操作說明 ----
