@@ -1,73 +1,95 @@
-# React + TypeScript + Vite
+# 研究計畫表單終結者 Forminator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> "I'll be back... with all 7 forms."
 
-Currently, two official plugins are available:
+疾管署（CDC）研究計畫申請表單自動化工具。研究人員填寫一次表單，即可打包下載 7 份 Word 文件。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+目前僅支援**署內無經費研究**之免審申請表單生成。
 
-## React Compiler
+## 功能
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 5 步驟引導式表單（基本資料 → 人員 → 研究內容 → IRB → 資料庫）
+- AI 自動翻譯計畫名稱（中→英）
+- AI 自動生成中英文摘要與關鍵詞
+- 自動產生甘特圖（依執行期程）
+- 一鍵打包下載 7 份 Word 文件 ZIP
+- 表單草稿匯出/匯入（JSON）
+- 頁面內嵌意見回饋表單
 
-## Expanding the ESLint configuration
+## 產出文件
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| 編號 | 文件名稱 | 來源 |
+|------|---------|------|
+| DOC-1 | IRB-004 研究計畫書 | CDC 原始模板 |
+| DOC-2 | IRB-012 免審申請表 | CDC 原始模板 |
+| DOC-3 | IRB-018 保密切結書（研究人員） | CDC 原始模板 |
+| DOC-4 | 署內研究計畫書 | CDC 原始模板 |
+| DOC-5 | 資料庫保密切結書（署內員工使用） | CDC 原始模板 |
+| DOC-6 | 資料庫使用申請單 | CDC 原始模板 |
+| DOC-7 | 研究計畫簽呈（含公文系統操作說明） | 程式生成 |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+> DOC-1～6 使用 CDC/IRB 官方 Word 模板注入佔位符；DOC-7 由程式碼從零生成。
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 快速開始
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 安裝
+
+```bash
+git clone https://github.com/kcwang-fa/forminator.git
+cd forminator
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 開發
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+### 環境變數
+
+AI 功能需要設定 GROQ API Key：
+
+```bash
+export GROQ_API_KEY=your_key_here
+export GROQ_MODEL=qwen/qwen3-32b  # 可選，預設值
+```
+
+### 部署
+
+專案部署於 Vercel，推送至 `main` 分支即自動部署。
+
+## 技術架構
+
+```
+瀏覽器（前端）
+├── React + TypeScript + Vite
+├── Ant Design（UI 元件）
+├── React Hook Form（表單狀態管理）
+├── docxtemplater（Word 模板填入）
+├── JSZip + file-saver（ZIP 打包下載）
+└── dayjs（日期處理）
+
+伺服器（後端）
+├── Vercel Serverless Functions（正式環境）
+├── Express（本地開發）
+└── GROQ API / qwen3-32b（AI 翻譯 & 摘要）
+```
+
+## 模板維護
+
+DOC-1～6 的模板注入流程：
+
+1. 將 CDC 原始 `.docx` 放入 `/tmp/forminator-templates/`
+2. 執行 `node scripts/inject-placeholders.cjs`
+3. 輸出至 `public/templates/DOC-*.docx`
+
+DOC-7 由程式碼生成：
+
+```bash
+node scripts/generate-templates.cjs
+```
+
+## 授權
+
+MIT
