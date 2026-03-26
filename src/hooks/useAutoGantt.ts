@@ -20,5 +20,6 @@ export function useAutoGantt() {
         }
       }
     }
-  }, [executionStart, executionEnd, setValue, getValues]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [executionStart, executionEnd]);
 }

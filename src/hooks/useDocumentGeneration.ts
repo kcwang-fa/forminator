@@ -27,7 +27,6 @@ export function useDocumentGeneration() {
       }
     } catch (err) {
       message.error(err instanceof Error ? err.message : '文件生成失敗');
-      console.error(err);
     } finally {
       setGenerating(false);
     }

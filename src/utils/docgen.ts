@@ -359,7 +359,6 @@ export async function generateAllDocuments(
         zip.file(`${docName}.docx`, blob);
       }
     } catch (err) {
-      console.error(`生成 ${docId} 失敗:`, err);
       throw new Error(`生成 ${DOC_NAMES[docId] || docId} 失敗：${err instanceof Error ? err.message : String(err)}`);
     }
   }

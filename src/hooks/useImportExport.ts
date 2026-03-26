@@ -33,7 +33,7 @@ export function useImportExport() {
       reset(result.data);
       message.success('匯入成功！');
     }
-  }, [getValues, reset]);
+  }, [reset]);
 
   return { handleExport, handleImport };
 }
