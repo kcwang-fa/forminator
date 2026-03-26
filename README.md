@@ -9,11 +9,12 @@
 ## 功能
 
 - 5 步驟引導式表單（基本資料 → 人員 → 研究內容 → IRB → 資料庫）
-- AI 自動翻譯計畫名稱（中→英）
+- AI 自動翻譯計畫名稱（中→英），支援 Groq / Google Gemini
 - AI 自動生成中英文摘要與關鍵詞
 - 自動產生甘特圖（依執行期程）
 - 一鍵打包下載 7 份 Word 文件 ZIP
-- 表單草稿匯出/匯入（JSON）
+- 自動儲存（瀏覽器 localStorage，下次開啟自動還原）
+- 表單草稿匯出/匯入（JSON，跨瀏覽器或電腦轉移）
 - 頁面內嵌意見回饋表單
 
 ## 產出文件
@@ -46,13 +47,20 @@ npm install
 npm run dev
 ```
 
-### 環境變數
+### AI 設定
 
-AI 功能需要設定 GROQ API Key：
+AI 翻譯與摘要功能支援兩種 LLM 服務，使用者在網頁右上角「AI 設定」面板中選擇並輸入 API Key（僅存於瀏覽器 localStorage，不上傳伺服器）：
+
+| 服務 | 模型 | 取得 API Key |
+|------|------|-------------|
+| Groq | Qwen3 32B | [Groq Console](https://console.groq.com/keys) |
+| Google Gemini | Gemini 3.1 Flash Lite | [Google AI Studio](https://aistudio.google.com/apikey) |
+
+後端環境變數（本地開發或自架部署時使用）：
 
 ```bash
-export GROQ_API_KEY=your_key_here
-export GROQ_MODEL=qwen/qwen3-32b  # 可選，預設值
+export GROQ_API_KEY=your_key_here      # 後端 fallback 用
+export GROQ_MODEL=qwen/qwen3-32b       # 可選，預設值
 ```
 
 ### 部署
