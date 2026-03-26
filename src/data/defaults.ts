@@ -2,7 +2,7 @@
 
 import type { FormData, Personnel, WorkflowStep } from '../types/form';
 
-export const SDD_VERSION = '1.0.0';
+export const SDD_VERSION = '1.1.0';
 
 /** 空白人員模板 */
 export const emptyPersonnel: Personnel = {

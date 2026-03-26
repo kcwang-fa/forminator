@@ -4,6 +4,7 @@ import { createContext, useContext } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
 import type { FormData } from '../types/form';
 import { defaultFormData } from '../data/defaults';
+import { loadDraft } from './useAutoSave';
 
 export type FormStore = UseFormReturn<FormData>;
 
@@ -16,8 +17,9 @@ export function useFormStore(): FormStore {
 }
 
 export function useCreateFormStore(): FormStore {
+  const savedDraft = loadDraft();
   return useForm<FormData>({
-    defaultValues: defaultFormData,
+    defaultValues: savedDraft ?? defaultFormData,
     mode: 'onBlur',
   });
 }
