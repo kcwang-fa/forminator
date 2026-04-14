@@ -64,7 +64,7 @@ export default function Step4IRB() {
         name="data_source"
         control={control}
         render={({ field }) => (
-          <Form.Item label="研究方法及工具描述" tooltip="DOC-2 第 5 題，MVP 預設防疫資料庫申請流程">
+          <Form.Item label="研究方法及工具描述" tooltip="DOC-5 第 5 題，MVP 預設防疫資料庫申請流程">
             <Input.TextArea {...field} rows={4} />
           </Form.Item>
         )}

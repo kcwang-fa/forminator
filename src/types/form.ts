@@ -19,6 +19,31 @@ export interface GanttItem {
   months: boolean[];
 }
 
+export interface WorkHistory {
+  institution: string;  // 服務機關及單位
+  title: string;        // 職稱
+  start_ym: string;     // 起（民國年月，如 110/07）
+  end_ym: string;       // 訖（如 114/04 或「迄今」）
+}
+
+export interface Project {
+  status: 'completed' | 'ongoing' | 'pending';  // 已完成/執行中/申請中
+  project_name: string;
+  role: string;          // 擔任角色（自由文字）
+  funder: string;        // 補助機關
+  budget: string;        // 經費
+  start_ym: string;      // 起年月
+  end_ym: string;        // 迄年月
+  summary: string;       // 摘要（附表二：role=主持人且有經費時填寫）
+}
+
+export interface Publication {
+  title: string;    // 著作名稱
+  journal: string;  // 期刊／出版來源
+  year: string;     // 發表年（民國）
+  authors: string;  // 作者群
+}
+
 export interface Personnel {
   role: PersonnelRole;
   name_zh: string;
@@ -35,6 +60,16 @@ export interface Personnel {
   official_phone: string;
   irb_training_cert: string;
   work_description: string;
+  // 附表一、二、三
+  degree: string;
+  school: string;
+  department: string;
+  grad_year: string;
+  expertise: string;
+  irb_training_hours: number;
+  work_history: WorkHistory[];
+  projects: Project[];
+  publications: Publication[];
 }
 
 export interface OutcomeTypeDetail {
@@ -113,6 +148,8 @@ export interface WorkflowStep {
   title: string;
   description: string;
   documents: string[];
+  refDocuments?: { label: string }[];  // 非 forminator 產生、需自備的參考文件
+  signatureNotes?: string[];           // 需親簽的說明
   contact?: {
     name: string;
     unit: string;
@@ -128,4 +165,11 @@ export interface ExportData {
   exported_at: string;
   project_name: string;
   data: FormData;
+}
+
+export interface PersonnelProfileExport {
+  type: 'pi_profile';
+  version: string;
+  exported_at: string;
+  personnel: Omit<Personnel, 'role'>;
 }

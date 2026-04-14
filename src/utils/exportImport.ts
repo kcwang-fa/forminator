@@ -1,7 +1,9 @@
 // ===== §7.5 JSON 匯出／匯入 =====
 
-import type { FormData, ExportData } from '../types/form';
+import type { FormData, ExportData, Personnel, PersonnelProfileExport } from '../types/form';
 import { SDD_VERSION } from '../data/defaults';
+
+const PROFILE_VERSION = '1.0';
 
 /**
  * 匯出表單資料為 JSON 檔並下載
@@ -28,6 +30,50 @@ export function exportToJson(data: FormData): void {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * 匯出單一人員 Profile 為 JSON
+ */
+export function exportPersonnelProfile(person: Personnel): void {
+  const { role: _role, ...rest } = person;
+  const profile: PersonnelProfileExport = {
+    type: 'pi_profile',
+    version: PROFILE_VERSION,
+    exported_at: new Date().toISOString(),
+    personnel: rest,
+  };
+  const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+  const name = person.name_zh || 'personnel';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `profile-${name}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * 從 JSON 檔匯入人員 Profile
+ */
+export function importPersonnelProfile(file: File): Promise<PersonnelProfileExport | null> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target?.result as string);
+        if (parsed.type !== 'pi_profile' || !parsed.personnel) {
+          resolve(null);
+          return;
+        }
+        resolve(parsed as PersonnelProfileExport);
+      } catch {
+        resolve(null);
+      }
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsText(file);
+  });
 }
 
 /**

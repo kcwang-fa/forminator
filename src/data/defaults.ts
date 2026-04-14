@@ -1,8 +1,33 @@
 // ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
 
-import type { FormData, Personnel, WorkflowStep } from '../types/form';
+import type { FormData, Personnel, WorkflowStep, WorkHistory, Project, Publication } from '../types/form';
 
-export const SDD_VERSION = '1.1.0';
+export const SDD_VERSION = '1.2.0';
+
+export const emptyWorkHistory: WorkHistory = {
+  institution: '',
+  title: '',
+  start_ym: '',
+  end_ym: '',
+};
+
+export const emptyProject: Project = {
+  status: 'completed',
+  project_name: '',
+  role: '',
+  funder: '',
+  budget: '',
+  start_ym: '',
+  end_ym: '',
+  summary: '',
+};
+
+export const emptyPublication: Publication = {
+  title: '',
+  journal: '',
+  year: '',
+  authors: '',
+};
 
 /** 空白人員模板 */
 export const emptyPersonnel: Personnel = {
@@ -21,6 +46,15 @@ export const emptyPersonnel: Personnel = {
   official_phone: '',
   irb_training_cert: '',
   work_description: '',
+  degree: '',
+  school: '',
+  department: '',
+  grad_year: '',
+  expertise: '',
+  irb_training_hours: 0,
+  work_history: [],
+  projects: [],
+  publications: [],
 };
 
 /** §1.5 MVP 預設值 */
@@ -89,14 +123,25 @@ export const workflowSteps: WorkflowStep[] = [
   {
     step: 1,
     title: '研究計畫上簽',
-    description: '將簽呈連同署內研究計畫書送單位主管核定',
-    documents: ['DOC-7', 'DOC-4'],
+    description: '將簽呈連同署內研究計畫書送單位主管、相關單位及企劃組，一層核定',
+    documents: ['DOC-1', 'DOC-2'],
+    signatureNotes: [
+      '署內研究計畫書封面：計畫主持人簽名',
+      '附表一：填表人簽章 + 計畫主持人簽章（每位研究人員各一份）',
+    ],
   },
   {
     step: 2,
     title: '申請 IRB 審查',
     description: '紙本送企劃組，同時寄送 e-mail',
-    documents: ['DOC-1', 'DOC-2', 'DOC-3'],
+    documents: ['DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
+    refDocuments: [
+      { label: '研究計畫簽呈（已奉准）' },
+    ],
+    signatureNotes: [
+      'IRB-012 免審申請表：申請人簽章 + 單位主管簽章',
+      'IRB-018 保密切結書：每位研究人員各自親簽',
+    ],
     contact: {
       name: '劉兪筠',
       unit: '企劃組',
@@ -107,18 +152,22 @@ export const workflowSteps: WorkflowStep[] = [
   {
     step: 3,
     title: '申請資料庫資料',
-    description: 'IRB 通過後，填寫 DOC-6 第三節（申請使用之防疫資料庫），連同保密切結書送資訊室審核',
-    documents: ['DOC-6', 'DOC-5'],
+    description: 'IRB 通過後，填妥 DOC-8 並列印，連同保密切結書送資訊室審核（送件方式請洽資訊室或企劃組）',
+    documents: ['DOC-7', 'DOC-8'],
+    signatureNotes: [
+      '資料庫保密切結書：申請者簽名 + 單位主管簽名',
+    ],
   },
 ];
 
 /** 文件名稱對照表 */
 export const DOC_NAMES: Record<string, string> = {
-  'DOC-1': 'IRB-004 研究計畫書',
-  'DOC-2': 'IRB-012 免審申請表',
-  'DOC-3': 'IRB-018 保密切結書（研究人員）',
-  'DOC-4': '署內研究計畫書',
-  'DOC-5': '資料庫保密切結書（署內員工使用）',
-  'DOC-6': '資料庫使用申請單',
-  'DOC-7': '研究計畫簽呈（含公文系統操作說明）',
+  'DOC-1': '研究計畫簽呈（含公文系統操作說明）',
+  'DOC-2': '署內研究計畫書',
+  'DOC-3': 'IRB-002 計畫送件核對表',
+  'DOC-4': 'IRB-004 研究計畫書',
+  'DOC-5': 'IRB-012 免審申請表',
+  'DOC-6': 'IRB-018 保密切結書（研究人員）',
+  'DOC-7': '資料庫保密切結書（署內員工使用）',
+  'DOC-8': '資料庫使用申請單',
 };

@@ -1,4 +1,4 @@
-// ===== DOC-7 模板生成 =====
+// ===== DOC-7, DOC-8 模板生成 =====
 // 使用 docx-js 建立 .docx 檔案，內含 {placeholder} 標籤
 // DOC-1~6 由 inject-placeholders.cjs 從原始 CDC 模板注入，不在此腳本處理
 
@@ -7,6 +7,8 @@ const path = require('path');
 const {
   Document, Packer, Paragraph, TextRun,
   AlignmentType, PageBreak,
+  Table, TableRow, TableCell, TableBorders, WidthType,
+  BorderStyle, VerticalAlign,
 } = require('docx');
 
 const OUT = path.join(__dirname, '..', 'public', 'templates');
@@ -79,16 +81,153 @@ async function genDOC7() {
       },
     ],
   });
-  await save(doc, 'DOC-7.docx');
+  await save(doc, 'DOC-1.docx');
+}
+
+// ========================================
+// DOC-3: IRB-002 計畫送件核對表
+// ========================================
+async function genDOC8() {
+  const THIN = { style: BorderStyle.SINGLE, size: 4, color: '000000' };
+  const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+
+  function cell(text, opts = {}) {
+    return new TableCell({
+      width: opts.width ? { size: opts.width, type: WidthType.DXA } : undefined,
+      verticalAlign: VerticalAlign.CENTER,
+      borders: { top: THIN, bottom: THIN, left: THIN, right: THIN },
+      shading: opts.shading ? { fill: opts.shading } : undefined,
+      children: [
+        new Paragraph({
+          alignment: opts.align || AlignmentType.LEFT,
+          children: [new TextRun({ text, font: '標楷體', size: opts.size || 22, bold: opts.bold || false })],
+          spacing: { before: 40, after: 40 },
+        }),
+      ],
+    });
+  }
+
+  // 表頭列
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: [
+      cell('項次', { width: 600, bold: true, align: AlignmentType.CENTER, shading: 'D9D9D9' }),
+      cell('表單', { width: 3200, bold: true, align: AlignmentType.CENTER, shading: 'D9D9D9' }),
+      cell('表單編號', { width: 1200, bold: true, align: AlignmentType.CENTER, shading: 'D9D9D9' }),
+      cell('備註', { width: 3200, bold: true, align: AlignmentType.CENTER, shading: 'D9D9D9' }),
+      cell('備齊(V)', { width: 1200, bold: true, align: AlignmentType.CENTER, shading: 'D9D9D9' }),
+    ],
+  });
+
+  const ITEMS = [
+    { no: '1',  name: '人體研究計畫申請表',                           code: 'IRB-002-1', note: '請申請人與單位主管簽章',                                                    ph: '{irb002_check_1}' },
+    { no: '2',  name: '簡易審查案件申請表',                           code: 'IRB-003',   note: '請申請人與單位主管簽章',                                                    ph: '{irb002_check_2}' },
+    { no: '3',  name: '研究計畫書',                                   code: 'IRB-004',   note: '請另提供完整計畫書',                                                        ph: '{irb002_check_3}' },
+    { no: '4',  name: '人體研究計畫免審申請表',                       code: 'IRB-012',   note: '請申請人與單位主管簽章',                                                    ph: '{irb002_check_4}' },
+    { no: '5',  name: '研究對象說明暨同意書',                         code: 'IRB-005',   note: '請申請人簽章',                                                              ph: '{irb002_check_5}' },
+    { no: '6',  name: '問卷或病歷記錄用紙',                           code: '',          note: '',                                                                          ph: '{irb002_check_6}' },
+    { no: '7',  name: '主持人及協同研究人員之學經歷、著作及所受研究倫理相關訓練之背景資料', code: '', note: '研究倫理訓練時數證明：主持人：六年內9小時以上。研究相關人員：三年內4小時以上。', ph: '{irb002_check_7}' },
+    { no: '8',  name: '前次人體研究審查相關資料\nIRB 編號：',         code: '',          note: '',                                                                          ph: '{irb002_check_8}' },
+    { no: '9',  name: '多中心人體研究審查相關資料\nIRB 編號：',       code: '',          note: '請造冊依序列出',                                                            ph: '{irb002_check_9}' },
+    { no: '10', name: '資料及安全性監測計畫 (DSMP)',                  code: 'IRB-014',   note: '請依計畫風險評估是否需建置',                                               ph: '{irb002_check_10}' },
+    { no: '11', name: '其他（請說明）：',                             code: '',          note: '請造冊依序列出',                                                            ph: '{irb002_check_11}' },
+    { no: '12', name: '電子檔1份：含上述所附申請文件',                code: '',          note: '以 e-mail 寄至審查會承辦人',                                               ph: '{irb002_check_12}' },
+    { no: '13', name: '保密切結書',                                   code: 'IRB-018',   note: '請接觸個人資訊及資料存取之研究成員，均需繳交',                             ph: '{irb002_check_13}' },
+  ];
+
+  const dataRows = ITEMS.map(item =>
+    new TableRow({
+      children: [
+        cell(item.no,   { width: 600,  align: AlignmentType.CENTER }),
+        cell(item.name, { width: 3200 }),
+        cell(item.code, { width: 1200, align: AlignmentType.CENTER }),
+        cell(item.note, { width: 3200, size: 20 }),
+        cell(item.ph,   { width: 1200, align: AlignmentType.CENTER }),
+      ],
+    })
+  );
+
+  // 說明列
+  const noteRow = new TableRow({
+    children: [
+      new TableCell({
+        columnSpan: 5,
+        borders: { top: THIN, bottom: THIN, left: THIN, right: THIN },
+        children: [new Paragraph({
+          children: [new TextRun({ text: '申請文件請依上列順序置放，並於確認備齊及簽章完整後送至本署企劃組承辦人收', font: '標楷體', size: 22 })],
+          spacing: { before: 40, after: 40 },
+        })],
+      }),
+    ],
+  });
+
+  const table = new Table({
+    width: { size: 9400, type: WidthType.DXA },
+    borders: TableBorders.NONE,
+    rows: [headerRow, ...dataRows, noteRow],
+  });
+
+  const doc = new Document({
+    styles: {
+      default: { document: { run: { font: '標楷體', size: 24 } } },
+    },
+    sections: [{
+      properties: {
+        page: { size: { width: 11906, height: 16838 }, margin: { top: 1080, right: 900, bottom: 1080, left: 900 } },
+      },
+      children: [
+        // 機關名稱 & 標題
+        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: '衛生福利部疾病管制署人體研究倫理審查會', font: '標楷體', size: 28, bold: true })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: '計畫送件核對表', font: '標楷體', size: 32, bold: true })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 300 }, children: [new TextRun({ text: '（本清單請置於首頁）', font: '標楷體', size: 22 })] }),
+
+        // 計畫名稱
+        new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: '計畫名稱：{irb002_project_title}', font: '標楷體', size: 24 })] }),
+
+        // 主持人 / 日期
+        new Table({
+          width: { size: 9400, type: WidthType.DXA },
+          borders: TableBorders.NONE,
+          rows: [new TableRow({
+            children: [
+              new TableCell({ borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER }, width: { size: 4700, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: '主持人姓名：{irb002_pi_name}', font: '標楷體', size: 24 })] })] }),
+              new TableCell({ borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER }, width: { size: 4700, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: '日期：{irb002_date}', font: '標楷體', size: 24 })] })] }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER }, width: { size: 4700, type: WidthType.DXA }, children: [new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: '職稱：{irb002_pi_title}', font: '標楷體', size: 24 })] })] }),
+              new TableCell({ borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER }, width: { size: 4700, type: WidthType.DXA }, children: [new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: '單位：{irb002_pi_unit}', font: '標楷體', size: 24 })] })] }),
+            ],
+          })],
+        }),
+
+        // 主表格
+        table,
+
+        // 收件人簽章
+        new Paragraph({ spacing: { before: 200, after: 80 }, children: [new TextRun({ text: '收件人簽章/日期：＿＿＿＿＿＿＿＿＿（審查會填寫）', font: '標楷體', size: 24 })] }),
+        new Paragraph({ children: [
+          new TextRun({ text: '□文件不足，請補件　　□確認送件資料無誤', font: '標楷體', size: 24 }),
+        ]}),
+
+        // 表單編號
+        new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 200 }, children: [new TextRun({ text: '表單編號：IRB-002', font: '標楷體', size: 20 })] }),
+      ],
+    }],
+  });
+
+  await save(doc, 'DOC-3.docx');
 }
 
 // ========================================
 // 主程式
 // ========================================
 async function main() {
-  console.log('🏗️  Generating DOC-7 template...\n');
+  console.log('🏗️  Generating DOC-7, DOC-8 templates...\n');
   await genDOC7();
-  console.log('\n✅ DOC-7 generated in public/templates/');
+  await genDOC8();
+  console.log('\n✅ DOC-7, DOC-8 generated in public/templates/');
   console.log('ℹ️  DOC-1~6 由 inject-placeholders.cjs 從原始 CDC 模板注入');
 }
 

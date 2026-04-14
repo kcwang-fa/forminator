@@ -89,11 +89,11 @@ function insertInNthEmptyCell(xml, labelText, placeholder, nth = 1) {
 }
 
 // ========================================
-// DOC-4: 署內研究計畫書
+// DOC-2: 署內研究計畫書
 // ========================================
 function processDOC4() {
-  console.log('\n📄 Processing DOC-4: 署內研究計畫書');
-  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-4.docx'));
+  console.log('\n📄 Processing DOC-2: 署內研究計畫書');
+  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-2.docx'));
 
   // 封面頁
   xml = replaceText(xml, '○○○年\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000\u3000',
@@ -444,15 +444,131 @@ function processDOC4() {
     xml = beforeToc + tocArea + afterToc;
   }
 
-  saveDoc(zip, xml, 'DOC-4.docx');
+  // ===== 附表一、二、三嵌入 =====
+  xml = xml.replace('</w:body>', buildAppendixXml() + '</w:body>');
+
+  saveDoc(zip, xml, 'DOC-2.docx');
 }
 
 // ========================================
-// DOC-5: 資料庫保密切結書（署內員工）
+// 附表一、二、三 XML 產生器
+// ========================================
+function buildAppendixXml() {
+  const F = 'DFKai-SB'; // 標楷體
+  const SZ = '22';
+  const SZ_H = '26';
+
+  function rpr(opts = {}) {
+    return `<w:rPr>
+      <w:rFonts w:ascii="${F}" w:hAnsi="${F}" w:eastAsia="${F}"/>
+      ${opts.bold ? '<w:b/>' : ''}
+      <w:sz w:val="${opts.sz || SZ}"/><w:szCs w:val="${opts.sz || SZ}"/>
+    </w:rPr>`;
+  }
+
+  function run(text, opts = {}) {
+    return `<w:r>${rpr(opts)}<w:t xml:space="preserve">${text}</w:t></w:r>`;
+  }
+
+  function para(content, opts = {}) {
+    const jc = opts.center ? '<w:jc w:val="center"/>' : '';
+    const sp = opts.before || opts.after
+      ? `<w:spacing w:before="${opts.before || 0}" w:after="${opts.after || 100}"/>`
+      : '';
+    const ppr = (jc || sp) ? `<w:pPr>${jc}${sp}</w:pPr>` : '';
+    return `<w:p>${ppr}${content}</w:p>`;
+  }
+
+  const CELL_BORDERS = `<w:tcBorders>
+    <w:top w:val="single" w:sz="4" w:color="000000"/>
+    <w:left w:val="single" w:sz="4" w:color="000000"/>
+    <w:bottom w:val="single" w:sz="4" w:color="000000"/>
+    <w:right w:val="single" w:sz="4" w:color="000000"/>
+  </w:tcBorders>`;
+
+  function tc(text, width, opts = {}) {
+    const shd = opts.header ? '<w:shd w:val="clear" w:color="auto" w:fill="D9D9D9"/>' : '';
+    return `<w:tc>
+      <w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${CELL_BORDERS}${shd}</w:tcPr>
+      <w:p><w:pPr><w:spacing w:before="40" w:after="40"/></w:pPr>${run(text, { bold: !!opts.header })}</w:p>
+    </w:tc>`;
+  }
+
+  function tr(...cells) { return `<w:tr>${cells.join('')}</w:tr>`; }
+
+  const TBL_BORDERS = `<w:tblBorders>
+    <w:top w:val="single" w:sz="4" w:color="000000"/>
+    <w:left w:val="single" w:sz="4" w:color="000000"/>
+    <w:bottom w:val="single" w:sz="4" w:color="000000"/>
+    <w:right w:val="single" w:sz="4" w:color="000000"/>
+    <w:insideH w:val="single" w:sz="4" w:color="000000"/>
+    <w:insideV w:val="single" w:sz="4" w:color="000000"/>
+  </w:tblBorders>`;
+
+  function tbl(rows) {
+    return `<w:tbl>
+      <w:tblPr>
+        <w:tblW w:w="9000" w:type="dxa"/>
+        ${TBL_BORDERS}
+        <w:tblLayout w:type="fixed"/>
+      </w:tblPr>
+      ${rows.join('')}
+    </w:tbl>`;
+  }
+
+  // ===== 附表一：學經歷說明書 =====
+  const appendix1 = `
+    ${para(run('附表一　計畫主持人、協同主持人、研究人員學經歷說明書', { bold: true, sz: SZ_H }), { center: true, after: 160 })}
+    ${tbl([
+      tr(tc('姓名', 1500, { header: true }), tc('{pa_name_zh}　　職稱：{pa_title}　　服務單位：{pa_unit}', 7500)),
+      tr(tc('最高學歷', 1500, { header: true }), tc('{pa_degree}　{pa_school}　{pa_department}，民國{pa_grad_year}年畢業', 7500)),
+      tr(tc('專長領域', 1500, { header: true }), tc('{pa_expertise}', 7500)),
+      tr(tc('研究倫理訓練', 1500, { header: true }), tc('{pa_irb_training_hours}小時（證明文件：{pa_irb_training_cert}）', 7500)),
+    ])}
+    ${para(run('服務經歷', { bold: true }), { before: 200, after: 80 })}
+    ${tbl([
+      tr(tc('服務機關及單位', 4800, { header: true }), tc('職稱', 2000, { header: true }), tc('起訖年月', 2200, { header: true })),
+      tr(tc('{#pa_work_history}{wh_institution}', 4800), tc('{wh_title}', 2000), tc('{wh_start_ym}～{wh_end_ym}{/pa_work_history}', 2200)),
+    ])}
+    ${para(run('研究計畫（近三年已完成、執行中、申請中）', { bold: true }), { before: 200, after: 80 })}
+    ${tbl([
+      tr(tc('計畫名稱', 2800, { header: true }), tc('狀態', 800, { header: true }), tc('角色', 900, { header: true }), tc('補助機關', 1800, { header: true }), tc('經費(元)', 1200, { header: true }), tc('起訖年月', 1500, { header: true })),
+      tr(tc('{#pa_projects}{proj_name}', 2800), tc('{proj_status_label}', 800), tc('{proj_role}', 900), tc('{proj_funder}', 1800), tc('{proj_budget}', 1200), tc('{proj_start_ym}～{proj_end_ym}{/pa_projects}', 1500)),
+    ])}`;
+
+  // ===== 附表二：計畫摘要 =====
+  const appendix2 = `
+    ${para(run('附表二　近三年主持之有經費計畫摘要（若無此資料，請填無此資料）', { bold: true, sz: SZ_H }), { center: true, before: 300, after: 160 })}
+    ${tbl([
+      tr(tc('計畫名稱', 2500, { header: true }), tc('補助機關', 1800, { header: true }), tc('經費(元)', 1000, { header: true }), tc('起訖年月', 1400, { header: true }), tc('計畫摘要', 2300, { header: true })),
+      tr(tc('{#pa_pi_projects}{pi_proj_name}', 2500), tc('{pi_proj_funder}', 1800), tc('{pi_proj_budget}', 1000), tc('{pi_proj_start_ym}～{pi_proj_end_ym}', 1400), tc('{pi_proj_summary}{/pa_pi_projects}', 2300)),
+    ])}
+    ${para(run('{#pa_no_pi_projects}無此資料{/pa_no_pi_projects}'))}`;
+
+  // ===== 附表三：著作清單 =====
+  const appendix3 = `
+    ${para(run('附表三　近三年著作清單（若無此資料，請填無此資料）', { bold: true, sz: SZ_H }), { center: true, before: 300, after: 160 })}
+    ${tbl([
+      tr(tc('著作名稱', 3000, { header: true }), tc('期刊／出版來源', 2500, { header: true }), tc('發表年(民國)', 1000, { header: true }), tc('作者群', 2500, { header: true })),
+      tr(tc('{#pa_publications}{pub_title}', 3000), tc('{pub_journal}', 2500), tc('{pub_year}', 1000), tc('{pub_authors}{/pa_publications}', 2500)),
+    ])}
+    ${para(run('{#pa_no_publications}無此資料{/pa_no_publications}'))}`;
+
+  return `
+    ${para(run('{#personnel_appendix}'))}
+    <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+    ${appendix1}
+    ${appendix2}
+    ${appendix3}
+    ${para(run('{/personnel_appendix}'))}`;
+}
+
+// ========================================
+// DOC-7: 資料庫保密切結書（署內員工）
 // ========================================
 function processDOC5() {
-  console.log('\n📄 Processing DOC-5: 資料庫保密切結書');
-  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-5.docx'));
+  console.log('\n📄 Processing DOC-7: 資料庫保密切結書');
+  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-7.docx'));
 
   // 立書人名字（原始文件有 "邱乾順" 作為範例）
   xml = replaceText(xml, '邱乾順', '{person_name_zh}');
@@ -469,15 +585,15 @@ function processDOC5() {
   // 日期
   xml = replaceText(xml, '中華民國     年     月    日', '中華民國{signing_date_roc}');
 
-  saveDoc(zip, xml, 'DOC-5.docx');
+  saveDoc(zip, xml, 'DOC-7.docx');
 }
 
 // ========================================
 // DOC-6: 資料庫使用申請單
 // ========================================
 function processDOC6() {
-  console.log('\n📄 Processing DOC-6: 資料庫使用申請單');
-  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-6.docx'));
+  console.log('\n📄 Processing DOC-8: 資料庫使用申請單');
+  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-8.docx'));
 
   // 申請日期
   xml = xml.replace(
@@ -520,15 +636,15 @@ function processDOC6() {
   xml = replaceText(xml, '⬛️否', '{cross_link_no}否');
   xml = replaceText(xml, '□是，資科中心資料庫名稱：', '{cross_link_yes}是，資科中心資料庫名稱：{cross_link_db_name}');
 
-  saveDoc(zip, xml, 'DOC-6.docx');
+  saveDoc(zip, xml, 'DOC-8.docx');
 }
 
 // ========================================
 // DOC-1: IRB-004 研究計畫書
 // ========================================
 function processDOC1() {
-  console.log('\n📄 Processing DOC-1: IRB-004 研究計畫書');
-  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-1.docx'));
+  console.log('\n📄 Processing DOC-4: IRB-004 研究計畫書');
+  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-4.docx'));
 
   // 基本資料 - 「中文」和「：」在同一個 cell 裡但被拆成兩個 run
   // 在「：」後面的 </w:p> 前插入 placeholder run
@@ -571,7 +687,7 @@ function processDOC1() {
   // "研發成果之歸" + "屬及運用"（被拆開了）
   xml = insertInNextCell(xml, '屬及運用', '{outcome_usage_text}');
 
-  saveDoc(zip, xml, 'DOC-1.docx');
+  saveDoc(zip, xml, 'DOC-4.docx');
 }
 
 // 在標籤所在 cell 的下一個相鄰 cell 中插入 placeholder
@@ -596,8 +712,8 @@ function insertInNextCell(xml, labelText, placeholder) {
 // DOC-2: IRB-012 免審申請表
 // ========================================
 function processDOC2() {
-  console.log('\n📄 Processing DOC-2: IRB-012 免審申請表');
-  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-2.docx'));
+  console.log('\n📄 Processing DOC-5: IRB-012 免審申請表');
+  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-5.docx'));
 
   // 計畫名稱中英文 - "中文" / "英文" 在表格 cell，值在相鄰空 cell
   xml = insertInNextCell(xml, '中文', '{project_title_zh}');
@@ -641,15 +757,15 @@ function processDOC2() {
   xml = replaceAfterLabel(xml, '(1)納入條件：', '{inclusion_criteria}');
   xml = replaceAfterLabel(xml, '(2)排除條件：', '{exclusion_criteria}');
 
-  saveDoc(zip, xml, 'DOC-2.docx');
+  saveDoc(zip, xml, 'DOC-5.docx');
 }
 
 // ========================================
 // DOC-3: IRB-018 保密切結書（研究人員）
 // ========================================
 function processDOC3() {
-  console.log('\n📄 Processing DOC-3: IRB-018 保密切結書(研究人員)');
-  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-3.docx'));
+  console.log('\n📄 Processing DOC-6: IRB-018 保密切結書(研究人員)');
+  let { zip, xml } = readDocXml(path.join(SRC, 'DOC-6.docx'));
 
   // 本人_____名字（XML 裡是 "本人_________________"）
   xml = replaceText(xml, '本人_________________', '本人{person_name_zh}');
@@ -684,7 +800,7 @@ function processDOC3() {
     xml = replaceText(xml, '日期：', '日期：{signing_date_roc}');
   }
 
-  saveDoc(zip, xml, 'DOC-3.docx');
+  saveDoc(zip, xml, 'DOC-6.docx');
 }
 
 // ===== 執行 =====

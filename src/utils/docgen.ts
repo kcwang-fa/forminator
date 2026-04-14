@@ -143,7 +143,7 @@ function prepareCommonData(data: FormData) {
     cross_link_text: data.cross_link_data_center ? '是' : '否',
     db_usage_scope: '（請於列印後手動填寫）',
 
-    // DOC-1 IRB-004 專用欄位
+    // DOC-4 IRB-004 專用欄位
     co_pi_names: data.personnel
       .filter(p => p.role === 'co_pi')
       .map(p => p.name_zh)
@@ -178,7 +178,7 @@ function prepareCommonData(data: FormData) {
       ).join('\n')
       : '（請參閱署內研究計畫書）',
 
-    // 甘特圖表格 loop (DOC-4)
+    // 甘特圖表格 loop (DOC-2)
     gantt_rows: data.gantt_chart.map(g => {
       const row: Record<string, string> = { task_name: g.task_name };
       for (let i = 0; i < 12; i++) {
@@ -187,7 +187,7 @@ function prepareCommonData(data: FormData) {
       return row;
     }),
 
-    // 人力配置 (for DOC-4 loop)
+    // 人力配置 (for DOC-2 loop)
     personnel_rows: data.personnel.map(p => ({
       role_text: ROLE_MAP[p.role] || p.role,
       name_zh: p.name_zh,
@@ -196,7 +196,7 @@ function prepareCommonData(data: FormData) {
       work_description: p.work_description || '研究資料分析與報告撰寫',
     })),
 
-    // 資料庫人員 (for DOC-6 loop)
+    // 資料庫人員 (for DOC-8 loop)
     db_personnel: data.personnel.filter(p => p.role !== 'pi').map(p => ({
       name_zh: p.name_zh,
       unit: p.unit,
@@ -204,7 +204,7 @@ function prepareCommonData(data: FormData) {
       phone: p.phone,
     })),
 
-    // DOC-4 封面：個別人名欄位
+    // DOC-2 封面：個別人名欄位
     co_pi_name_1: coPis[0]?.name_zh || '',
     co_pi_name_2: coPis[1]?.name_zh || '',
     co_pi_name_3: coPis[2]?.name_zh || '',
@@ -213,7 +213,7 @@ function prepareCommonData(data: FormData) {
     researcher_name_3: researchers[2]?.name_zh || '',
     researcher_name_4: researchers[3]?.name_zh || '',
 
-    // DOC-4 checkbox（■ = 勾選, □ = 未勾選）
+    // DOC-2 checkbox（■ = 勾選, □ = 未勾選）
     project_type_new: data.project_type === 'new_1yr' || data.project_type === 'new_multi' ? '■' : '□',
     project_type_1yr: data.project_type === 'new_1yr' ? '■' : '□',
     project_type_multi: data.project_type === 'new_multi' ? '■' : '□',
@@ -223,16 +223,16 @@ function prepareCommonData(data: FormData) {
     needs_funding_yes: data.needs_funding ? '■' : '□',
     needs_funding_no: data.needs_funding ? '□' : '■',
 
-    // DOC-3 角色 checkbox
+    // DOC-6 角色 checkbox
     role_pi: '□',
     role_co_pi: '□',
     role_researcher: '□',
     role_other: '□',
 
-    // DOC-5/DOC-3 簽署日期
+    // DOC-7/DOC-6 簽署日期
     signing_date_roc: toRocDate(data.filing_date),
 
-    // DOC-6 checkbox
+    // DOC-8 checkbox
     purpose_internal: data.research_purpose_type === 'internal_research' ? '■' : '□',
     purpose_thesis: data.research_purpose_type === 'thesis' ? '■' : '□',
     purpose_no_fund: data.research_purpose_type === 'no_fund_research' ? '■' : '□',
@@ -249,7 +249,7 @@ function prepareCommonData(data: FormData) {
     cross_link_yes: data.cross_link_data_center ? '■' : '□',
     cross_link_db_name: '',
 
-    // DOC-6 成果類型 checkbox 和計數
+    // DOC-8 成果類型 checkbox 和計數
     ...(() => {
       const types = data.outcome_type_detail;
       const find = (t: string) => types.find(o => o.type === t);
@@ -267,8 +267,93 @@ function prepareCommonData(data: FormData) {
       };
     })(),
 
-    // DOC-6 申請日期
+    // DOC-8 申請日期
     apply_date_roc: toRocDate(data.filing_date),
+
+    // DOC-2 附表一、二、三（署內研究計畫書附錄，每位人員一份）
+    personnel_appendix: data.personnel
+      .filter(p => ['pi', 'co_pi', 'researcher'].includes(p.role))
+      .map(p => {
+        const piProjects = (p.projects || []).filter(
+          proj => proj.role === '主持人' && !!proj.budget,
+        );
+        const STATUS_LABEL: Record<string, string> = {
+          completed: '已完成',
+          ongoing: '執行中',
+          pending: '申請中',
+        };
+        return {
+          pa_name_zh: p.name_zh,
+          pa_title: p.title,
+          pa_unit: p.unit,
+          pa_degree: p.degree || '',
+          pa_school: p.school || '',
+          pa_department: p.department || '',
+          pa_grad_year: p.grad_year || '',
+          pa_expertise: p.expertise || '',
+          pa_irb_training_hours: p.irb_training_hours ?? 0,
+          pa_irb_training_cert: p.irb_training_cert || '',
+          // 附表一：服務經歷
+          pa_work_history: (p.work_history || []).map(wh => ({
+            wh_institution: wh.institution,
+            wh_title: wh.title,
+            wh_start_ym: wh.start_ym,
+            wh_end_ym: wh.end_ym,
+          })),
+          // 附表一：研究計畫
+          pa_projects: (p.projects || []).map(proj => ({
+            proj_name: proj.project_name,
+            proj_status_label: STATUS_LABEL[proj.status] || proj.status,
+            proj_role: proj.role,
+            proj_funder: proj.funder,
+            proj_budget: proj.budget || '無',
+            proj_start_ym: proj.start_ym,
+            proj_end_ym: proj.end_ym,
+          })),
+          // 附表二：主持人且有經費的計畫摘要
+          pa_pi_projects: piProjects.map(proj => ({
+            pi_proj_name: proj.project_name,
+            pi_proj_funder: proj.funder,
+            pi_proj_budget: proj.budget,
+            pi_proj_start_ym: proj.start_ym,
+            pi_proj_end_ym: proj.end_ym,
+            pi_proj_summary: proj.summary || '',
+          })),
+          pa_no_pi_projects: piProjects.length === 0,
+          // 附表三：著作清單
+          pa_publications: (p.publications || []).map(pub => ({
+            pub_title: pub.title,
+            pub_journal: pub.journal,
+            pub_year: pub.year,
+            pub_authors: pub.authors,
+          })),
+          pa_no_publications: (p.publications || []).length === 0,
+        };
+      }),
+    personnel_appendix_count: data.personnel.filter(
+      p => ['pi', 'co_pi', 'researcher'].includes(p.role),
+    ).length,
+
+    // DOC-3 IRB-002 計畫送件核對表
+    irb002_project_title: data.project_title_zh,
+    irb002_pi_name: pi?.name_zh || '',
+    irb002_date: toRocDate(data.filing_date),
+    irb002_pi_title: pi?.title || '',
+    irb002_pi_unit: pi?.unit || '',
+    // 各項目備齊狀態（根據審查類型自動判斷）
+    irb002_check_1: data.review_type !== 'exempt' ? '■是' : '□不適用',        // IRB-002-1 人體研究計畫申請表
+    irb002_check_2: data.review_type === 'expedited' ? '■是' : '□不適用',     // IRB-003 簡易審查案件申請表
+    irb002_check_3: '■是',                                                      // IRB-004 研究計畫書（必備）
+    irb002_check_4: data.review_type === 'exempt' ? '■是' : '□不適用',        // IRB-012 免審申請表
+    irb002_check_5: data.recruit_subjects ? '■是' : '□不適用',                 // IRB-005 研究對象說明暨同意書
+    irb002_check_6: data.has_questionnaire ? '■是' : '□不適用',                // 問卷或病歷記錄用紙
+    irb002_check_7: '■是',                                                      // 研究倫理訓練證明（必備）
+    irb002_check_8: '□不適用',                                                  // 前次審查相關資料
+    irb002_check_9: '□不適用',                                                  // 多中心審查相關資料
+    irb002_check_10: '□不適用',                                                 // DSMP
+    irb002_check_11: '□不適用',                                                 // 其他
+    irb002_check_12: '■是',                                                     // 電子檔（必備）
+    irb002_check_13: '■是',                                                     // IRB-018 保密切結書（必備）
 
     // 封面用
     co_pi_lines: data.personnel
@@ -321,7 +406,7 @@ async function generatePerPersonDoc(
       person_phone: person.phone,
       person_email: person.email,
       person_id_number: person.id_number,
-      // DOC-3 角色 checkbox
+      // DOC-6 角色 checkbox
       role_pi: person.role === 'pi' ? '■' : '□',
       role_co_pi: person.role === 'co_pi' ? '■' : '□',
       role_researcher: person.role === 'researcher' ? '■' : '□',
@@ -347,7 +432,7 @@ export async function generateAllDocuments(
 
   for (const docId of selectedDocs) {
     try {
-      if (docId === 'DOC-3' || docId === 'DOC-5') {
+      if (docId === 'DOC-6' || docId === 'DOC-7') {
         // 保密切結書：每位人員一份
         const results = await generatePerPersonDoc(docId, commonData, data.personnel);
         for (const { filename, blob } of results) {

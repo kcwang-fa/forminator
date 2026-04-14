@@ -119,7 +119,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
       <Content style={{ padding: '24px', maxWidth: 960, margin: '0 auto', width: '100%' }} ref={contentRef}>
         <DataLossWarning onExport={handleExport} hasData={hasData} />
         <Alert
-          message="目前僅支援「署內無經費研究」之免審申請表單生成"
+          message="本工具適用於署內無經費研究免審申請，協助快速產生計畫書、IRB 申請表及相關文件"
           type="info"
           showIcon
           closable

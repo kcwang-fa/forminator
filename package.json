@@ -1,14 +1,16 @@
 {
   "name": "forminator",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "start": "node server.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "append-appendix": "node scripts/append-appendix.cjs",
+    "gen-templates": "node scripts/generate-templates.cjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
