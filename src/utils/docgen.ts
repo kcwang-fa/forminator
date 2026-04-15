@@ -187,7 +187,7 @@ function prepareCommonData(data: FormData) {
       return row;
     }),
 
-    // 人力配置 (for DOC-2 loop)
+    // 人力配置 (for DOC-4 loop)
     personnel_rows: data.personnel.map(p => ({
       role_text: ROLE_MAP[p.role] || p.role,
       name_zh: p.name_zh,
@@ -277,54 +277,60 @@ function prepareCommonData(data: FormData) {
         const piProjects = (p.projects || []).filter(
           proj => proj.role === '主持人' && !!proj.budget,
         );
-        const STATUS_LABEL: Record<string, string> = {
-          completed: '已完成',
-          ongoing: '執行中',
-          pending: '申請中',
+        const ROLE_LABEL: Record<string, string> = {
+          pi: '主持人', co_pi: '協同主持人', researcher: '研究人員',
         };
+        const GENDER_LABEL: Record<string, string> = {
+          male: '男', female: '女',
+        };
+        const completed = (p.projects || []).filter(pr => pr.status === 'completed');
+        const ongoing   = (p.projects || []).filter(pr => pr.status === 'ongoing');
+        const pending   = (p.projects || []).filter(pr => pr.status === 'pending');
+        const toProj = (proj: typeof p.projects[0]) => ({
+          proj_name:     proj.project_name,
+          proj_role:     proj.role,
+          proj_budget:   proj.budget || '無',
+          proj_funder:   proj.funder,
+          proj_start_ym: proj.start_ym,
+          proj_end_ym:   proj.end_ym,
+        });
         return {
-          pa_name_zh: p.name_zh,
-          pa_title: p.title,
-          pa_unit: p.unit,
+          // 附表一：基本資料
+          pa_role_label:  ROLE_LABEL[p.role] || p.role,
+          pa_name_zh:     p.name_zh,
+          pa_gender_label: GENDER_LABEL[p.gender] || '',
+          pa_birth_date:  p.birth_date || '',
+          // 附表一：學歷
           pa_education: (p.education || []).map(e => ({
-            edu_degree: e.degree === '其他' ? (e.degree_other || '其他') : (e.degree || ''),
-            edu_school: e.school || '',
-            edu_department: e.department || '',
+            edu_degree:  e.degree === '其他' ? (e.degree_other || '其他') : (e.degree || ''),
+            edu_school:  [e.school, e.department].filter(Boolean).join(' '),
             edu_grad_year: e.grad_year || '',
           })),
-          pa_expertise: p.expertise || '',
-          pa_irb_training_hours: p.irb_training_hours ?? 0,
-          pa_irb_training_cert: p.irb_training_cert || '',
           // 附表一：服務經歷
           pa_work_history: (p.work_history || []).map(wh => ({
             wh_institution: wh.institution,
-            wh_title: wh.title,
-            wh_start_ym: wh.start_ym,
-            wh_end_ym: wh.end_ym,
+            wh_title:       wh.title,
+            wh_start_ym:    wh.start_ym,
+            wh_end_ym:      wh.end_ym,
           })),
-          // 附表一：研究計畫
-          pa_projects: (p.projects || []).map(proj => ({
-            proj_name: proj.project_name,
-            proj_status_label: STATUS_LABEL[proj.status] || proj.status,
-            proj_role: proj.role,
-            proj_funder: proj.funder,
-            proj_budget: proj.budget || '無',
-            proj_start_ym: proj.start_ym,
-            proj_end_ym: proj.end_ym,
-          })),
-          // 附表二：主持人且有經費的計畫摘要
-          pa_pi_projects: piProjects.map(proj => ({
-            pi_proj_name: proj.project_name,
-            pi_proj_funder: proj.funder,
-            pi_proj_budget: proj.budget,
-            pi_proj_start_ym: proj.start_ym,
-            pi_proj_end_ym: proj.end_ym,
-            pi_proj_summary: proj.summary || '',
-          })),
-          pa_no_pi_projects: piProjects.length === 0,
+          // 附表一：研究計畫（依狀態分組）
+          pa_completed:    completed.map(toProj),
+          pa_no_completed: completed.length === 0,
+          pa_ongoing:      ongoing.map(toProj),
+          pa_no_ongoing:   ongoing.length === 0,
+          pa_pending:      pending.map(toProj),
+          pa_no_pending:   pending.length === 0,
+          // 附表二：主持人且有經費計畫摘要（單筆，段落格式）
+          pa_has_pi_proj: piProjects.length > 0,
+          pa_no_pi_proj:  piProjects.length === 0,
+          pa_pi_proj_name:    piProjects[0]?.project_name || '',
+          pa_pi_proj_pi:      p.name_zh,
+          pa_pi_proj_funder:  piProjects[0]?.funder || '',
+          pa_pi_proj_period:  piProjects[0] ? `${piProjects[0].start_ym}～${piProjects[0].end_ym}` : '',
+          pa_pi_proj_budget:  piProjects[0]?.budget || '',
+          pa_pi_proj_summary: piProjects[0]?.summary || '',
           // 附表三：著作清單（自由文字）
           pa_publications_text: p.publications || '',
-          pa_no_publications: !p.publications?.trim(),
         };
       }),
     personnel_appendix_count: data.personnel.filter(
@@ -334,23 +340,9 @@ function prepareCommonData(data: FormData) {
     // DOC-3 IRB-002 計畫送件核對表
     irb002_project_title: data.project_title_zh,
     irb002_pi_name: pi?.name_zh || '',
-    irb002_date: toRocDate(data.filing_date),
     irb002_pi_title: pi?.title || '',
     irb002_pi_unit: pi?.unit || '',
-    // 各項目備齊狀態（根據審查類型自動判斷）
-    irb002_check_1: data.review_type !== 'exempt' ? '■是' : '□不適用',        // IRB-002-1 人體研究計畫申請表
-    irb002_check_2: data.review_type === 'expedited' ? '■是' : '□不適用',     // IRB-003 簡易審查案件申請表
-    irb002_check_3: '■是',                                                      // IRB-004 研究計畫書（必備）
-    irb002_check_4: data.review_type === 'exempt' ? '■是' : '□不適用',        // IRB-012 免審申請表
-    irb002_check_5: data.recruit_subjects ? '■是' : '□不適用',                 // IRB-005 研究對象說明暨同意書
-    irb002_check_6: data.has_questionnaire ? '■是' : '□不適用',                // 問卷或病歷記錄用紙
-    irb002_check_7: '■是',                                                      // 研究倫理訓練證明（必備）
-    irb002_check_8: '□不適用',                                                  // 前次審查相關資料
-    irb002_check_9: '□不適用',                                                  // 多中心審查相關資料
-    irb002_check_10: '□不適用',                                                 // DSMP
-    irb002_check_11: '□不適用',                                                 // 其他
-    irb002_check_12: '■是',                                                     // 電子檔（必備）
-    irb002_check_13: '■是',                                                     // IRB-018 保密切結書（必備）
+    // 備齊欄由使用者自行勾選，不自動填入
 
     // 封面用
     co_pi_lines: data.personnel

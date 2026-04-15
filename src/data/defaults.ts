@@ -159,12 +159,18 @@ export const workflowSteps: WorkflowStep[] = [
   },
 ];
 
-/** 文件名稱對照表 */
+/**
+ * 文件名稱對照表 — DOC 編號的唯一權威來源
+ *
+ * DOC-2 = 署內研究計畫書（完整：封面 + 壹~捌主體 + 附表一/二/三）← inject-doc2.cjs
+ * DOC-4 = IRB-004 研究計畫書                                       ← inject-doc4.cjs
+ * 兩者不同，勿混淆。
+ */
 export const DOC_NAMES: Record<string, string> = {
   'DOC-1': '研究計畫簽呈（含公文系統操作說明）',
-  'DOC-2': '署內研究計畫書',
+  'DOC-2': '署內研究計畫書',           // 完整文件：封面 + 壹~捌 + 附表一/二/三
   'DOC-3': 'IRB-002 計畫送件核對表',
-  'DOC-4': 'IRB-004 研究計畫書',
+  'DOC-4': 'IRB-004 研究計畫書',       // IRB 審查用，非署內計畫書
   'DOC-5': 'IRB-012 免審申請表',
   'DOC-6': 'IRB-018 保密切結書（研究人員）',
   'DOC-7': '資料庫保密切結書（署內員工使用）',

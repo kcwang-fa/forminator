@@ -9,7 +9,14 @@
     "start": "node server.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "append-appendix": "node scripts/append-appendix.cjs",
+    "inject-doc2": "node scripts/inject-doc2.cjs",
+    "inject-doc3": "node scripts/inject-doc3.cjs",
+    "inject-doc4": "node scripts/inject-doc4.cjs",
+    "inject-doc5": "node scripts/inject-doc5.cjs",
+    "inject-doc6": "node scripts/inject-doc6.cjs",
+    "inject-doc7": "node scripts/inject-doc7.cjs",
+    "inject-doc8": "node scripts/inject-doc8.cjs",
+    "inject-all": "node scripts/inject-doc2.cjs && node scripts/inject-doc3.cjs && node scripts/inject-doc4.cjs && node scripts/inject-doc5.cjs && node scripts/inject-doc6.cjs && node scripts/inject-doc7.cjs && node scripts/inject-doc8.cjs",
     "gen-templates": "node scripts/generate-templates.cjs"
   },
   "dependencies": {

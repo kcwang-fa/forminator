@@ -1,7 +1,7 @@
 // ===== 研究計畫表單終結者 Forminator — 主應用 =====
 
 import { useRef, useCallback } from 'react';
-import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Alert, Modal, App as AntApp } from 'antd';
+import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
 
@@ -118,13 +118,9 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
 
       <Content style={{ padding: '24px', maxWidth: 960, margin: '0 auto', width: '100%' }} ref={contentRef}>
         <DataLossWarning onExport={handleExport} hasData={hasData} />
-        <Alert
-          message="本工具適用於署內無經費研究免審申請，協助快速產生計畫書、IRB 申請表及相關文件"
-          type="info"
-          showIcon
-          closable
-          style={{ marginBottom: 16 }}
-        />
+        <Text type="secondary" style={{ display: 'block', fontSize: 15, marginBottom: 20 }}>
+          本工具適用於署內無經費研究免審申請，協助快速產生計畫書、IRB 申請表及相關文件
+        </Text>
 
         {!showResult ? (
           <>
@@ -209,7 +205,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
       </Content>
 
       <Footer style={{ textAlign: 'center', color: '#999', fontSize: 12 }}>
-        研究計畫表單終結者 Forminator — 「I'll be back... with all 7 forms.」
+        研究計畫表單終結者 Forminator — 「I'll be back... with all 8 forms.」
       </Footer>
       <FeedbackButton />
     </Layout>

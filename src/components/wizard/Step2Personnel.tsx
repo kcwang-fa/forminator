@@ -25,6 +25,11 @@ function PersonnelCardTitle({ index }: { index: number }) {
   return <>{name ? `${roleLabel}　${name}` : roleLabel}</>;
 }
 
+const GENDER_OPTIONS = [
+  { value: 'male', label: '男' },
+  { value: 'female', label: '女' },
+];
+
 const DEGREE_OPTIONS = [
   { value: '博士', label: '博士' },
   { value: '碩士', label: '碩士' },
@@ -430,6 +435,28 @@ export default function Step2Personnel() {
                 </Form.Item>
               )}
             />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <Controller
+              name={`personnel.${index}.gender`}
+              control={control}
+              render={({ field: f }) => (
+                <Form.Item label="性別" tooltip="附表一使用">
+                  <Select {...f} options={GENDER_OPTIONS} placeholder="請選擇" allowClear />
+                </Form.Item>
+              )}
+            />
+            <Controller
+              name={`personnel.${index}.birth_date`}
+              control={control}
+              render={({ field: f }) => (
+                <Form.Item label="出生年月日（民國）" tooltip="附表一使用，格式：68/05/15">
+                  <Input {...f} placeholder="例：68/05/15" />
+                </Form.Item>
+              )}
+            />
+            <div />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>

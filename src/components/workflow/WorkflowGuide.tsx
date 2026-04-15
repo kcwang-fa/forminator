@@ -10,6 +10,17 @@ export default function WorkflowGuide() {
   return (
     <div style={{ marginTop: 32 }}>
       <Card title="📋 申請流程導引（跑關順序）" style={{ borderColor: '#1677ff' }}>
+        <div style={{ background: '#e6f4ff', border: '1px solid #91caff', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+          <Text strong style={{ color: '#0958d9' }}>💡 署內研究計畫書（DOC-2）目錄頁碼更新方式</Text>
+          <div style={{ marginTop: 6, fontSize: 13, color: '#333' }}>
+            下載後以 Word 開啟，全選後按下快捷鍵更新欄位即可自動帶入正確頁碼：
+          </div>
+          <ul style={{ margin: '6px 0 0', paddingLeft: 20, fontSize: 13 }}>
+            <li><Text strong>Windows：</Text>Ctrl + A → F9</li>
+            <li><Text strong>Mac：</Text>⌘ Command + A → fn + F9（或右鍵目錄 → 更新欄位）</li>
+          </ul>
+        </div>
+
         <Steps
           direction="vertical"
           current={-1}
