@@ -2,10 +2,10 @@
 
 import { Button, Card, Form, Input, Select, Space, Popconfirm, Collapse, Divider, InputNumber, Tooltip, message } from 'antd';
 import { PlusOutlined, DeleteOutlined, ExportOutlined, ImportOutlined, CopyOutlined } from '@ant-design/icons';
-import { Controller, useFieldArray } from 'react-hook-form';
+import { Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
 import { usePersonnelProfile } from '../../hooks/usePersonnelProfile';
-import { emptyPersonnel, emptyWorkHistory, emptyProject, emptyPublication } from '../../data/defaults';
+import { emptyPersonnel, emptyEducation, emptyWorkHistory, emptyProject } from '../../data/defaults';
 import type { PersonnelRole } from '../../types/form';
 
 const ROLE_OPTIONS: { value: PersonnelRole; label: string }[] = [
@@ -15,6 +15,15 @@ const ROLE_OPTIONS: { value: PersonnelRole; label: string }[] = [
   { value: 'contact', label: '聯絡人' },
   { value: 'assistant', label: '研究助理' },
 ];
+
+// 成員卡標題（useWatch 讓姓名和角色即時反映）
+function PersonnelCardTitle({ index }: { index: number }) {
+  const { control } = useFormStore();
+  const role = useWatch({ control, name: `personnel.${index}.role` });
+  const name = useWatch({ control, name: `personnel.${index}.name_zh` });
+  const roleLabel = ROLE_OPTIONS.find(o => o.value === role)?.label || `成員 ${index + 1}`;
+  return <>{name ? `${roleLabel}　${name}` : roleLabel}</>;
+}
 
 const DEGREE_OPTIONS = [
   { value: '博士', label: '博士' },
@@ -28,6 +37,94 @@ const PROJECT_STATUS_OPTIONS = [
   { value: 'ongoing',   label: '執行中' },
   { value: 'pending',   label: '申請中' },
 ];
+
+// ===== 學歷子元件 =====
+function EducationRow({ personIndex, rowIndex, onRemove }: { personIndex: number; rowIndex: number; onRemove: () => void }) {
+  const { control } = useFormStore();
+  const degreeVal = useWatch({ control, name: `personnel.${personIndex}.education.${rowIndex}.degree` });
+  return (
+    <Card
+      size="small"
+      style={{ marginBottom: 8, background: '#fafafa' }}
+      extra={<Button type="text" danger icon={<DeleteOutlined />} size="small" onClick={onRemove} />}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: degreeVal === '其他' ? '1fr 1fr 1fr 1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 8 }}>
+        <Controller
+          name={`personnel.${personIndex}.education.${rowIndex}.degree`}
+          control={control}
+          render={({ field: f }) => (
+            <Form.Item label="學位" style={{ marginBottom: 0 }}>
+              <Select {...f} options={DEGREE_OPTIONS} placeholder="請選擇" allowClear />
+            </Form.Item>
+          )}
+        />
+        {degreeVal === '其他' && (
+          <Controller
+            name={`personnel.${personIndex}.education.${rowIndex}.degree_other`}
+            control={control}
+            render={({ field: f }) => (
+              <Form.Item label="學位（請填寫）" style={{ marginBottom: 0 }}>
+                <Input {...f} placeholder="例：專科" />
+              </Form.Item>
+            )}
+          />
+        )}
+        <Controller
+          name={`personnel.${personIndex}.education.${rowIndex}.school`}
+          control={control}
+          render={({ field: f }) => (
+            <Form.Item label="學校" style={{ marginBottom: 0 }}>
+              <Input {...f} placeholder="例：國立臺灣大學" />
+            </Form.Item>
+          )}
+        />
+        <Controller
+          name={`personnel.${personIndex}.education.${rowIndex}.department`}
+          control={control}
+          render={({ field: f }) => (
+            <Form.Item label="系所" style={{ marginBottom: 0 }}>
+              <Input {...f} placeholder="例：流行病學研究所" />
+            </Form.Item>
+          )}
+        />
+        <Controller
+          name={`personnel.${personIndex}.education.${rowIndex}.grad_year`}
+          control={control}
+          render={({ field: f }) => (
+            <Form.Item label="畢業年（民國）" style={{ marginBottom: 0 }}>
+              <Input {...f} placeholder="例：100" />
+            </Form.Item>
+          )}
+        />
+      </div>
+    </Card>
+  );
+}
+
+function EducationFields({ personIndex }: { personIndex: number }) {
+  const { control } = useFormStore();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `personnel.${personIndex}.education`,
+  });
+
+  return (
+    <div>
+      {fields.map((field, i) => (
+        <EducationRow key={field.id} personIndex={personIndex} rowIndex={i} onRemove={() => remove(i)} />
+      ))}
+      <Button
+        type="dashed"
+        icon={<PlusOutlined />}
+        size="small"
+        onClick={() => append({ ...emptyEducation })}
+        style={{ width: '100%' }}
+      >
+        新增學歷
+      </Button>
+    </div>
+  );
+}
 
 // ===== 服務經歷子元件 =====
 function WorkHistoryFields({ personIndex }: { personIndex: number }) {
@@ -220,72 +317,22 @@ function ProjectFields({ personIndex }: { personIndex: number }) {
 // ===== 著作子元件 =====
 function PublicationFields({ personIndex }: { personIndex: number }) {
   const { control } = useFormStore();
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: `personnel.${personIndex}.publications`,
-  });
-
   return (
     <div>
-      {fields.map((field, i) => (
-        <Card
-          key={field.id}
-          size="small"
-          style={{ marginBottom: 8, background: '#fafafa' }}
-          extra={
-            <Button type="text" danger icon={<DeleteOutlined />} size="small" onClick={() => remove(i)} />
-          }
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: 8 }}>
-            <Controller
-              name={`personnel.${personIndex}.publications.${i}.title`}
-              control={control}
-              render={({ field: f }) => (
-                <Form.Item label="著作名稱" style={{ marginBottom: 0 }}>
-                  <Input {...f} />
-                </Form.Item>
-              )}
-            />
-            <Controller
-              name={`personnel.${personIndex}.publications.${i}.journal`}
-              control={control}
-              render={({ field: f }) => (
-                <Form.Item label="期刊／出版來源" style={{ marginBottom: 0 }}>
-                  <Input {...f} />
-                </Form.Item>
-              )}
-            />
-            <Controller
-              name={`personnel.${personIndex}.publications.${i}.year`}
-              control={control}
-              render={({ field: f }) => (
-                <Form.Item label="發表年（民國）" style={{ marginBottom: 0 }}>
-                  <Input {...f} placeholder="例：113" />
-                </Form.Item>
-              )}
-            />
-          </div>
-          <Controller
-            name={`personnel.${personIndex}.publications.${i}.authors`}
-            control={control}
-            render={({ field: f }) => (
-              <Form.Item label="作者群" style={{ marginBottom: 0, marginTop: 8 }}>
-                <Input {...f} placeholder="例：王小明、李大華" />
-              </Form.Item>
-            )}
+      <Controller
+        name={`personnel.${personIndex}.publications`}
+        control={control}
+        render={({ field: f }) => (
+          <Input.TextArea
+            {...f}
+            value={Array.isArray(f.value) ? '' : (f.value ?? '')}
+            rows={5}
+            placeholder={'逐筆填寫，每筆著作一行，例：\nChiou C-S, Hong Y-P, Liao Y-S, et al. New multidrug-resistant Salmonella enterica serovar Anatum clone, Taiwan, 2015–2017. Emerg Infect Dis. 2019;25(1).'}
           />
-        </Card>
-      ))}
-      <Button
-        type="dashed"
-        icon={<PlusOutlined />}
-        size="small"
-        onClick={() => append({ ...emptyPublication })}
-      >
-        新增著作
-      </Button>
+        )}
+      />
       <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-        若無相關著作，請不要新增（附表三將自動顯示「無此資料」）
+        若無相關著作，請填「無」（附表三將顯示此內容）
       </div>
     </div>
   );
@@ -314,15 +361,11 @@ export default function Step2Personnel() {
         <Card
           key={field.id}
           size="small"
-          title={(() => {
-            const p = getValues(`personnel.${index}`);
-            const roleLabel = ROLE_OPTIONS.find(o => o.value === p.role)?.label || `成員 ${index + 1}`;
-            return p.name_zh ? `${roleLabel}　${p.name_zh}` : roleLabel;
-          })()}
+          title={<PersonnelCardTitle index={index} />}
           style={{ marginBottom: 12 }}
           extra={
             <Space size={4}>
-              {getValues(`personnel.${index}.role`) === 'contact' && (
+              {fields[index] && getValues(`personnel.${index}.role`) === 'contact' && (
                 <Tooltip title="自動填入計畫主持人的基本資料">
                   <Button
                     type="text"
@@ -484,6 +527,39 @@ export default function Step2Personnel() {
             )}
           />
 
+          {/* ===== 專長與研究倫理訓練 ===== */}
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8, marginTop: 8 }}>
+            <Controller
+              name={`personnel.${index}.expertise`}
+              control={control}
+              render={({ field: f }) => (
+                <Form.Item label="專長領域" style={{ marginBottom: 8 }}>
+                  <Input {...f} placeholder="例：傳染病流行病學、統計分析" />
+                </Form.Item>
+              )}
+            />
+            <Controller
+              name={`personnel.${index}.irb_training_hours`}
+              control={control}
+              render={({ field: f }) => (
+                <Form.Item
+                  label="研究倫理訓練時數"
+                  tooltip="主持人需六年內≥9小時；研究人員需三年內≥4小時"
+                  style={{ marginBottom: 8 }}
+                >
+                  <InputNumber
+                    {...f}
+                    min={0}
+                    step={1}
+                    precision={0}
+                    addonAfter="小時"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+              )}
+            />
+          </div>
+
           {/* ===== 附表一、二、三資料（折疊）===== */}
           <Collapse
             ghost
@@ -494,78 +570,8 @@ export default function Step2Personnel() {
               children: (
                 <div>
                   {/* 學歷 */}
-                  <Divider plain style={{ fontSize: 13 }}>最高學歷</Divider>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
-                    <Controller
-                      name={`personnel.${index}.degree`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <Form.Item label="學位" style={{ marginBottom: 8 }}>
-                          <Select {...f} options={DEGREE_OPTIONS} placeholder="請選擇" allowClear />
-                        </Form.Item>
-                      )}
-                    />
-                    <Controller
-                      name={`personnel.${index}.school`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <Form.Item label="學校" style={{ marginBottom: 8 }}>
-                          <Input {...f} placeholder="例：國立臺灣大學" />
-                        </Form.Item>
-                      )}
-                    />
-                    <Controller
-                      name={`personnel.${index}.department`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <Form.Item label="系所" style={{ marginBottom: 8 }}>
-                          <Input {...f} placeholder="例：流行病學研究所" />
-                        </Form.Item>
-                      )}
-                    />
-                    <Controller
-                      name={`personnel.${index}.grad_year`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <Form.Item label="畢業年（民國）" style={{ marginBottom: 8 }}>
-                          <Input {...f} placeholder="例：100" />
-                        </Form.Item>
-                      )}
-                    />
-                  </div>
-
-                  {/* 專長與訓練 */}
-                  <Divider plain style={{ fontSize: 13 }}>專長與研究倫理訓練</Divider>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
-                    <Controller
-                      name={`personnel.${index}.expertise`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <Form.Item label="專長領域" style={{ marginBottom: 8 }}>
-                          <Input {...f} placeholder="例：傳染病流行病學、統計分析" />
-                        </Form.Item>
-                      )}
-                    />
-                    <Controller
-                      name={`personnel.${index}.irb_training_hours`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <Form.Item
-                          label="研究倫理訓練時數"
-                          tooltip="主持人需六年內≥9小時；研究人員需三年內≥4小時"
-                          style={{ marginBottom: 8 }}
-                        >
-                          <InputNumber
-                            {...f}
-                            min={0}
-                            step={0.5}
-                            addonAfter="小時"
-                            style={{ width: '100%' }}
-                          />
-                        </Form.Item>
-                      )}
-                    />
-                  </div>
+                  <Divider plain style={{ fontSize: 13 }}>學歷（附表一）</Divider>
+                  <EducationFields personIndex={index} />
 
                   {/* 服務經歷 */}
                   <Divider plain style={{ fontSize: 13 }}>服務經歷（附表一）</Divider>
@@ -595,13 +601,6 @@ export default function Step2Personnel() {
           onClick={() => append({ ...emptyPersonnel, role: 'researcher' })}
         >
           新增研究人員
-        </Button>
-        <Button
-          type="dashed"
-          icon={<PlusOutlined />}
-          onClick={() => append({ ...emptyPersonnel, role: 'contact' })}
-        >
-          新增聯絡人
         </Button>
       </Space>
     </div>

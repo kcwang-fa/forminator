@@ -1,8 +1,16 @@
 // ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
 
-import type { FormData, Personnel, WorkflowStep, WorkHistory, Project, Publication } from '../types/form';
+import type { FormData, Personnel, WorkflowStep, Education, WorkHistory, Project } from '../types/form';
 
 export const SDD_VERSION = '1.2.0';
+
+export const emptyEducation: Education = {
+  degree: '',
+  degree_other: '',
+  school: '',
+  department: '',
+  grad_year: '',
+};
 
 export const emptyWorkHistory: WorkHistory = {
   institution: '',
@@ -22,12 +30,6 @@ export const emptyProject: Project = {
   summary: '',
 };
 
-export const emptyPublication: Publication = {
-  title: '',
-  journal: '',
-  year: '',
-  authors: '',
-};
 
 /** 空白人員模板 */
 export const emptyPersonnel: Personnel = {
@@ -46,15 +48,12 @@ export const emptyPersonnel: Personnel = {
   official_phone: '',
   irb_training_cert: '',
   work_description: '',
-  degree: '',
-  school: '',
-  department: '',
-  grad_year: '',
+  education: [],
   expertise: '',
   irb_training_hours: 0,
   work_history: [],
   projects: [],
-  publications: [],
+  publications: '',
 };
 
 /** §1.5 MVP 預設值 */

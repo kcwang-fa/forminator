@@ -74,7 +74,7 @@ function buildAppendixXml() {
     ${para(run('附表一　計畫主持人、協同主持人、研究人員學經歷說明書', { bold: true, sz: SZ_H }), { center: true, after: 160 })}
     ${tbl([
       tr(tc('姓名', 1500, { header: true }), tc('{pa_name_zh}　　職稱：{pa_title}　　服務單位：{pa_unit}', 7500)),
-      tr(tc('最高學歷', 1500, { header: true }), tc('{pa_degree}　{pa_school}　{pa_department}，民國{pa_grad_year}年畢業', 7500)),
+      tr(tc('學歷', 1500, { header: true }), tc('{#pa_education}{edu_degree}　{edu_school}　{edu_department}，民國{edu_grad_year}年畢業{/pa_education}', 7500)),
       tr(tc('專長領域', 1500, { header: true }), tc('{pa_expertise}', 7500)),
       tr(tc('研究倫理訓練', 1500, { header: true }), tc('{pa_irb_training_hours}小時（證明文件：{pa_irb_training_cert}）', 7500)),
     ])}
@@ -102,8 +102,8 @@ function buildAppendixXml() {
   const appendix3 = `
     ${para(run('附表三　近三年著作清單（若無此資料，請填無此資料）', { bold: true, sz: SZ_H }), { center: true, before: 300, after: 160 })}
     ${tbl([
-      tr(tc('著作名稱', 3000, { header: true }), tc('期刊／出版來源', 2500, { header: true }), tc('發表年(民國)', 1000, { header: true }), tc('作者群', 2500, { header: true })),
-      tr(tc('{#pa_publications}{pub_title}', 3000), tc('{pub_journal}', 2500), tc('{pub_year}', 1000), tc('{pub_authors}{/pa_publications}', 2500)),
+      tr(tc('著作清單', 9000, { header: true })),
+      tr(tc('{pa_publications_text}', 9000)),
     ])}
     ${para(run('{#pa_no_publications}無此資料{/pa_no_publications}'))}`;
 
@@ -121,10 +121,23 @@ const buf = fs.readFileSync(TEMPLATE);
 const zip = new PizZip(buf);
 let xml = zip.file('word/document.xml').asText();
 
-// 檢查是否已經嵌入過
+// 檢查是否已經嵌入過（--force 強制重注入）
+const force = process.argv.includes('--force');
 if (xml.includes('{#personnel_appendix}')) {
-  console.log('⚠️  附表已存在，跳過（如需重新嵌入請先還原 DOC-2.docx）');
-  process.exit(0);
+  if (!force) {
+    console.log('⚠️  附表已存在，跳過（如需重新嵌入請加 --force）');
+    process.exit(0);
+  }
+  // 移除舊附表（從 {#personnel_appendix} 到 {/personnel_appendix} 之間的 XML）
+  xml = xml.replace(/<w:p[ >][\s\S]*?\{#personnel_appendix\}[\s\S]*?<\/w:p>/m, '');
+  xml = xml.replace(/<w:p[ >][\s\S]*?\{\/personnel_appendix\}[\s\S]*?<\/w:p>/m, '');
+  // 移除夾在中間的附表內容（personnel_appendix loop 包住的所有段落）
+  const start = xml.indexOf('{#personnel_appendix}');
+  const end = xml.indexOf('{/personnel_appendix}');
+  if (start !== -1 && end !== -1) {
+    xml = xml.slice(0, start) + xml.slice(end + '{/personnel_appendix}'.length);
+  }
+  console.log('🔄 強制重新嵌入附表...');
 }
 
 xml = xml.replace('</w:body>', buildAppendixXml() + '</w:body>');

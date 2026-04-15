@@ -19,6 +19,14 @@ export interface GanttItem {
   months: boolean[];
 }
 
+export interface Education {
+  degree: string;       // 博士/碩士/學士/其他
+  degree_other: string; // degree === '其他' 時的自填內容
+  school: string;
+  department: string;
+  grad_year: string;    // 民國年
+}
+
 export interface WorkHistory {
   institution: string;  // 服務機關及單位
   title: string;        // 職稱
@@ -61,15 +69,12 @@ export interface Personnel {
   irb_training_cert: string;
   work_description: string;
   // 附表一、二、三
-  degree: string;
-  school: string;
-  department: string;
-  grad_year: string;
+  education: Education[];
   expertise: string;
   irb_training_hours: number;
   work_history: WorkHistory[];
   projects: Project[];
-  publications: Publication[];
+  publications: string;  // 近三年著作清單（自由文字）
 }
 
 export interface OutcomeTypeDetail {

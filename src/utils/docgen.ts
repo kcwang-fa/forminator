@@ -286,10 +286,12 @@ function prepareCommonData(data: FormData) {
           pa_name_zh: p.name_zh,
           pa_title: p.title,
           pa_unit: p.unit,
-          pa_degree: p.degree || '',
-          pa_school: p.school || '',
-          pa_department: p.department || '',
-          pa_grad_year: p.grad_year || '',
+          pa_education: (p.education || []).map(e => ({
+            edu_degree: e.degree === '其他' ? (e.degree_other || '其他') : (e.degree || ''),
+            edu_school: e.school || '',
+            edu_department: e.department || '',
+            edu_grad_year: e.grad_year || '',
+          })),
           pa_expertise: p.expertise || '',
           pa_irb_training_hours: p.irb_training_hours ?? 0,
           pa_irb_training_cert: p.irb_training_cert || '',
@@ -320,14 +322,9 @@ function prepareCommonData(data: FormData) {
             pi_proj_summary: proj.summary || '',
           })),
           pa_no_pi_projects: piProjects.length === 0,
-          // 附表三：著作清單
-          pa_publications: (p.publications || []).map(pub => ({
-            pub_title: pub.title,
-            pub_journal: pub.journal,
-            pub_year: pub.year,
-            pub_authors: pub.authors,
-          })),
-          pa_no_publications: (p.publications || []).length === 0,
+          // 附表三：著作清單（自由文字）
+          pa_publications_text: p.publications || '',
+          pa_no_publications: !p.publications?.trim(),
         };
       }),
     personnel_appendix_count: data.personnel.filter(
