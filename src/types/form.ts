@@ -14,6 +14,16 @@ export type FundingSource = 'cdc' | 'mohw' | 'nstc' | 'other';
 
 // ===== 子結構 =====
 
+export interface BudgetItem {
+  id: string;          // preset key ('irb_fee' | 'travel' | 'meal' | 'misc' | 'mgmt') 或 uuid（自訂）
+  name: string;        // 項目名稱
+  category: string;    // '人事費' | '業務費' | '管理費'
+  is_custom: boolean;  // 使用者自訂項目
+  amount: string;      // 金額（字串，空白表示未填）
+  note: string;        // 說明
+  active?: boolean;    // false = 使用者手動停用（目前只用於管理費）
+}
+
 export interface GanttItem {
   task_name: string;
   months: boolean[];
@@ -131,7 +141,9 @@ export interface FormData {
   privacy_after: string;
   privacy_withdrawal: string;
 
-  // §2.2.5 經費（MVP 全隱藏）
+  // §2.2.5 經費
+  budget_items: BudgetItem[];
+
   // §2.2.6 機關配合協調
   has_coordination: boolean;
 

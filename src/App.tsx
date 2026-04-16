@@ -20,7 +20,8 @@ import Step1BasicInfo from './components/wizard/Step1BasicInfo';
 import Step2Personnel from './components/wizard/Step2Personnel';
 import Step3Research from './components/wizard/Step3Research';
 import Step4IRB from './components/wizard/Step4IRB';
-import Step5Database from './components/wizard/Step5Database';
+import Step5Budget from './components/wizard/Step5Budget';
+import Step6Database from './components/wizard/Step5Database';
 import WorkflowGuide from './components/workflow/WorkflowGuide';
 
 import { DOC_NAMES, SDD_VERSION, defaultFormData } from './data/defaults';
@@ -33,7 +34,8 @@ const STEPS = [
   { title: '研究團隊', component: Step2Personnel },
   { title: '研究內容', component: Step3Research },
   { title: 'IRB 審查', component: Step4IRB },
-  { title: '資料庫申請', component: Step5Database },
+  { title: '經費概算', component: Step5Budget },
+  { title: '資料庫申請', component: Step6Database },
 ];
 
 function AppContent() {
@@ -119,7 +121,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
       <Content style={{ padding: '24px', maxWidth: 960, margin: '0 auto', width: '100%' }} ref={contentRef}>
         <DataLossWarning onExport={handleExport} hasData={hasData} />
         <Text type="secondary" style={{ display: 'block', fontSize: 15, marginBottom: 20 }}>
-          本工具適用於署內無經費研究免審申請，協助快速產生計畫書、IRB 申請表及相關文件
+          本工具適用於署內研究免審申請，協助快速產生計畫書、IRB 申請表及相關文件
         </Text>
 
         {!showResult ? (

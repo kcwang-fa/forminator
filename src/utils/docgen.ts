@@ -344,6 +344,30 @@ function prepareCommonData(data: FormData) {
     irb002_pi_unit: pi?.unit || '',
     // 備齊欄由使用者自行勾選，不自動填入
 
+    // DOC-2 陸、經費需求表
+    budget_no_items: !data.needs_funding,
+    budget_rows: (() => {
+      if (!data.needs_funding) return [];
+      const items = (data.budget_items || []).filter(i => i.id !== 'mgmt' && i.name && i.amount);
+      const PERSONNEL = ['pi_fee', 'co_pi_fee', 'ra_fee', 'insurance', 'pension'];
+      const personnel  = items.filter(i => PERSONNEL.includes(i.id)).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+      const business   = items.filter(i => !PERSONNEL.includes(i.id)).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+      const piAmount   = Number(items.find(i => i.id === 'pi_fee')?.amount   || 0);
+      const coPiAmount = Number(items.find(i => i.id === 'co_pi_fee')?.amount || 0);
+      const mgmtActive = items.find(i => i.id === 'mgmt')?.active !== false;
+      const mgmt  = mgmtActive ? Math.round((personnel + business - piAmount - coPiAmount) * 0.15) : 0;
+      const total = personnel + business + mgmt;
+      return [
+        ...items.map(i => ({
+          budget_item: i.name,
+          budget_amount: i.amount ? Number(i.amount).toLocaleString() : '',
+          budget_note: i.note,
+        })),
+        { budget_item: '管理費', budget_amount: mgmt ? mgmt.toLocaleString() : '', budget_note: '業務費小計 × 15%' },
+        { budget_item: '合計', budget_amount: total ? total.toLocaleString() : '', budget_note: '' },
+      ];
+    })(),
+
     // 封面用
     co_pi_lines: data.personnel
       .filter(p => p.role === 'co_pi')

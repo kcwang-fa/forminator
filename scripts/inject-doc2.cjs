@@ -446,6 +446,64 @@ console.log('  ✓ 肆、計畫內容各節注入');
 }
 
 // ─────────────────────────────────────────────
+// 二·五、陸、經費需求表 — 注入 budget loop
+// ─────────────────────────────────────────────
+// 表格結構：
+//   Row 0 (1 cell): 說明文字
+//   Row 1 (3 cells): 項目 | 金額 | 說明 (column header)
+//   Row 2 (3 cells): '無經費需求'  ← 改為條件 {#budget_no_items}無經費需求{/budget_no_items}
+//   Row 3 (3 cells): 空白          ← 改為 loop {#budget_rows}{budget_item}...{/budget_rows}
+//   Rows 4-8 (3 cells): 空白       ← 刪除（loop 會自動複製 Row 3）
+{
+  const secIdx = xml.indexOf('無經費需求');
+  if (secIdx !== -1) {
+    // 找到包含「無經費需求」的 <w:tr>
+    const row2Start = xml.lastIndexOf('<w:tr ', secIdx);
+    const row2End   = xml.indexOf('</w:tr>', row2Start) + 7;
+
+    // 找接下來 6 個空白 row（刪掉 rows 4-8，保留 row 3 改成 loop）
+    let loopRowStart = row2End;
+    const loopRowEnd_s = xml.indexOf('<w:tr ', loopRowStart);
+    const loopRowEnd_e = xml.indexOf('</w:tr>', loopRowEnd_s) + 7;
+
+    // 找後面要刪掉的 rows（rows 4-8，共 5 個）
+    let deleteStart = loopRowEnd_e;
+    let deleteEnd = loopRowEnd_e;
+    for (let i = 0; i < 5; i++) {
+      const s = xml.indexOf('<w:tr ', deleteEnd);
+      if (s === -1) break;
+      const e = xml.indexOf('</w:tr>', s) + 7;
+      // 確認是同一個表格（3-cell 空白 row）
+      const rowChunk = xml.slice(s, e);
+      if (rowChunk.includes('<w:tc>') && !rowChunk.match(/<w:t[^>]*>[^<]{3,}/)) {
+        deleteEnd = e;
+      } else {
+        break;
+      }
+    }
+
+    // 重建 Row 2：{#budget_no_items}無經費需求{/budget_no_items}
+    const row2 = xml.slice(row2Start, row2End);
+    const newRow2 = row2.replace(/無經費需求/, '{#budget_no_items}無經費需求{/budget_no_items}');
+
+    // 重建 Loop Row（原 Row 3）：3 cells → item | amount | note
+    const loopRow = xml.slice(loopRowEnd_s, loopRowEnd_e);
+    const loopCells = splitCells(loopRow);
+    if (loopCells.length >= 3) {
+      loopCells[0] = setCellText(loopCells[0], '{#budget_rows}{budget_item}');
+      loopCells[1] = setCellText(loopCells[1], '{budget_amount}');
+      loopCells[2] = setCellText(loopCells[2], '{budget_note}{/budget_rows}');
+    }
+    const newLoopRow = getRowHeader(loopRow) + loopCells.join('') + '</w:tr>';
+
+    xml = xml.slice(0, row2Start) + newRow2 + newLoopRow + xml.slice(deleteEnd);
+    console.log('  ✓ 陸、經費需求表 loop 注入');
+  } else {
+    console.warn('⚠️  找不到「無經費需求」，跳過陸 loop 注入');
+  }
+}
+
+// ─────────────────────────────────────────────
 // 三、附表一 — 注入到現有表格
 // ─────────────────────────────────────────────
 

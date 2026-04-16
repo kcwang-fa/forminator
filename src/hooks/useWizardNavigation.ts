@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 export function useWizardNavigation() {
   const [currentStep, setCurrentStep] = useState(0);
