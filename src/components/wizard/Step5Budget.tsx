@@ -1,43 +1,14 @@
 // ===== Step 5：經費概算 =====
 
+import { useMemo } from 'react';
 import { useFormStore } from '../../hooks/useFormStore';
 import { BUDGET_PRESETS, defaultBudgetItems } from '../../data/defaults';
+import { calcMgmt, calcTotal, isMgmtActive } from '../../utils/budgetCalc';
 import type { BudgetItem } from '../../types/form';
 import { Switch, Input, Table, Button, Tooltip, Typography, Checkbox, Select } from 'antd';
 import { QuestionCircleOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
-
-const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee', 'insurance', 'pension'];
-const BUSINESS_IDS  = ['irb_fee', 'travel', 'meal', 'misc'];
-
-function isPersonnel(item: BudgetItem): boolean {
-  return PERSONNEL_IDS.includes(item.id) || (item.is_custom && item.category === '人事費');
-}
-function isBusiness(item: BudgetItem): boolean {
-  return BUSINESS_IDS.includes(item.id) || (item.is_custom && item.category !== '人事費');
-}
-
-
-function calcMgmt(items: BudgetItem[]): number {
-  const personnel  = items.filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const business   = items.filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const piAmount   = Number(items.find(i => i.id === 'pi_fee')?.amount   || 0);
-  const coPiAmount = Number(items.find(i => i.id === 'co_pi_fee')?.amount || 0);
-  return Math.round((personnel + business - piAmount - coPiAmount) * 0.15);
-}
-
-function isMgmtActive(items: BudgetItem[]): boolean {
-  const mgmt = items.find(i => i.id === 'mgmt');
-  return mgmt ? (mgmt.active !== false) : true;
-}
-
-function calcTotal(items: BudgetItem[]): number {
-  const personnel = items.filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const business  = items.filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const mgmt = isMgmtActive(items) ? calcMgmt(items) : 0;
-  return personnel + business + mgmt;
-}
 
 type ColumnRecord = BudgetItem | { id: string; name: string; _section: true };
 
@@ -146,6 +117,9 @@ function makeColumns(
   ];
 }
 
+const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee', 'insurance', 'pension'];
+const BUSINESS_IDS  = ['irb_fee', 'travel', 'meal', 'misc'];
+
 export default function Step5Budget() {
   const { watch, setValue } = useFormStore();
   const needs_funding: boolean = watch('needs_funding') ?? false;
@@ -157,6 +131,9 @@ export default function Step5Budget() {
   function updateName(id: string, name: string) {
     setValue('budget_items', budget_items.map(i => i.id === id ? { ...i, name } : i), { shouldDirty: true });
   }
+  function updateCategory(id: string, category: string) {
+    setValue('budget_items', budget_items.map(i => i.id === id ? { ...i, category } : i), { shouldDirty: true });
+  }
   function removeItem(id: string) {
     setValue('budget_items', budget_items.filter(i => i.id !== id), { shouldDirty: true });
   }
@@ -166,18 +143,16 @@ export default function Step5Budget() {
       { id: `custom_${Date.now()}`, name: '', is_custom: true, category: '業務費', amount: '', note: '' },
     ], { shouldDirty: true });
   }
-
-  const mgmtAmount  = calcMgmt(budget_items);
-  const mgmtActive  = isMgmtActive(budget_items);
-  const totalAmount = calcTotal(budget_items);
-
   function toggleMgmt(checked: boolean) {
     setValue('budget_items', budget_items.map(i =>
       i.id === 'mgmt' ? { ...i, active: checked } : i
     ), { shouldDirty: true });
   }
 
-  // 建立有分組 header 的資料列
+  const mgmtAmount  = calcMgmt(budget_items);
+  const mgmtActive  = isMgmtActive(budget_items);
+  const totalAmount = calcTotal(budget_items);
+
   const personnelItems = budget_items.filter(i => PERSONNEL_IDS.includes(i.id));
   const businessItems  = budget_items.filter(i => BUSINESS_IDS.includes(i.id) || i.is_custom);
 
@@ -188,11 +163,11 @@ export default function Step5Budget() {
     ...businessItems,
   ];
 
-  function updateCategory(id: string, category: string) {
-    setValue('budget_items', budget_items.map(i => i.id === id ? { ...i, category } : i), { shouldDirty: true });
-  }
-
-  const columns = makeColumns(updateItem, updateName, removeItem, updateCategory);
+  const columns = useMemo(
+    () => makeColumns(updateItem, updateName, removeItem, updateCategory),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [budget_items],
+  );
 
   return (
     <div>

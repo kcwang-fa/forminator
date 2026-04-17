@@ -2,14 +2,12 @@
 
 import { useState, useCallback } from 'react';
 
-const TOTAL_STEPS = 6;
-
-export function useWizardNavigation() {
+export function useWizardNavigation(totalSteps: number) {
   const [currentStep, setCurrentStep] = useState(0);
   const [showResult, setShowResult] = useState(false);
 
   const next = useCallback(() => {
-    if (currentStep < TOTAL_STEPS - 1) {
+    if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
     }
@@ -38,6 +36,6 @@ export function useWizardNavigation() {
     enterResult,
     exitResult,
     isFirst: currentStep === 0,
-    isLast: currentStep === TOTAL_STEPS - 1,
+    isLast: currentStep === totalSteps - 1,
   };
 }

@@ -61,7 +61,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   setLLMSettings: ReturnType<typeof useLLMSettings>['setSettings'];
   contentRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation();
+  const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(STEPS.length);
   const { selectedDocs, setSelectedDocs, generating, download, allDocs } = useDocumentGeneration();
   const { handleExport, handleImport } = useImportExport();
   useAutoGantt();
