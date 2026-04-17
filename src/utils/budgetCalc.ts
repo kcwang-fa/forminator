@@ -2,15 +2,20 @@
 
 import type { BudgetItem } from '../types/form';
 
-export const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee', 'insurance', 'pension'];
-export const BUSINESS_IDS  = ['irb_fee', 'travel', 'meal', 'misc'];
+export const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee'];
+export const BUSINESS_IDS  = ['consumable', 'maintenance', 'office', 'travel'];
+export const CAPITAL_IDS   = ['hardware'];
 
 export function isPersonnel(item: BudgetItem): boolean {
   return PERSONNEL_IDS.includes(item.id) || (item.is_custom && item.category === '人事費');
 }
 
 export function isBusiness(item: BudgetItem): boolean {
-  return BUSINESS_IDS.includes(item.id) || (item.is_custom && item.category !== '人事費');
+  return BUSINESS_IDS.includes(item.id) || (item.is_custom && item.category === '業務費');
+}
+
+export function isCapital(item: BudgetItem): boolean {
+  return CAPITAL_IDS.includes(item.id) || (item.is_custom && item.category === '資本門');
 }
 
 export function isMgmtActive(items: BudgetItem[]): boolean {
@@ -29,8 +34,9 @@ export function calcMgmt(items: BudgetItem[]): number {
 export function calcTotal(items: BudgetItem[]): number {
   const personnel = items.filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0);
   const business  = items.filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const capital   = items.filter(isCapital).reduce((s, i) => s + (Number(i.amount) || 0), 0);
   const mgmt = isMgmtActive(items) ? calcMgmt(items) : 0;
-  return personnel + business + mgmt;
+  return personnel + business + capital + mgmt;
 }
 
 /**
@@ -41,13 +47,18 @@ export function buildBudgetRows(items: BudgetItem[], needsFunding: boolean) {
   if (!needsFunding) return [];
 
   const active = items.filter(i => i.id !== 'mgmt' && i.name && i.amount);
-  const personnel = active.filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const business  = active.filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const personnel  = active.filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const business   = active.filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const capital    = active.filter(isCapital).reduce((s, i) => s + (Number(i.amount) || 0), 0);
   const piAmount   = Number(active.find(i => i.id === 'pi_fee')?.amount  || 0);
   const coPiAmount = Number(active.find(i => i.id === 'co_pi_fee')?.amount || 0);
   const mgmtActive = isMgmtActive(items);
   const mgmt  = mgmtActive ? Math.round((personnel + business - piAmount - coPiAmount) * 0.15) : 0;
-  const total = personnel + business + mgmt;
+  const total = personnel + business + capital + mgmt;
+
+  const mgmtRow = mgmtActive
+    ? [{ budget_item: '管理費', budget_amount: mgmt ? mgmt.toLocaleString() : '', budget_note: '業務費小計 × 15%' }]
+    : [];
 
   return [
     ...active.map(i => ({
@@ -55,7 +66,7 @@ export function buildBudgetRows(items: BudgetItem[], needsFunding: boolean) {
       budget_amount: Number(i.amount).toLocaleString(),
       budget_note:   i.note,
     })),
-    { budget_item: '管理費', budget_amount: mgmt ? mgmt.toLocaleString() : '', budget_note: '業務費小計 × 15%' },
-    { budget_item: '合計',   budget_amount: total ? total.toLocaleString() : '', budget_note: '' },
+    ...mgmtRow,
+    { budget_item: '合計', budget_amount: total ? total.toLocaleString() : '', budget_note: '' },
   ];
 }

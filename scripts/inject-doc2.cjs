@@ -255,6 +255,37 @@ xml = insertInNthEmptyCell(xml, '話', '{contact_phone}', 2);
 xml = insertInNthEmptyCell(xml, '真', '{pi_fax}', 1);
 xml = insertInNthEmptyCell(xml, '真', '{contact_fax}', 2);
 
+// 壹、綜合資料 — 經費摘要表（研究人力 / 申請金額 / 人事費 / 業務費 / 設備費）
+// 表格結構：Row 1 = 本年度資料列；Row 5 = 合計列（MVP 1年期故相同）
+// 注入策略：用 paraId 定位各儲存格（paraId 來自原始範本，不應更動）
+function injectByParaId(xml, paraId, text) {
+  const marker = `paraId="${paraId}"`;
+  const idx = xml.indexOf(marker);
+  if (idx === -1) { console.warn(`⚠️  找不到 paraId ${paraId} (經費表)`); return xml; }
+  const pStart = xml.lastIndexOf('<w:p ', idx);
+  if (pStart === -1) return xml;
+  const pEnd = xml.indexOf('</w:p>', idx);
+  if (pEnd === -1) return xml;
+  return xml.substring(0, pEnd) + `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>` + xml.substring(pEnd);
+}
+// Row 1 - 第一筆資料列（本年度）
+// 年度欄：把 "年度" 換成 "{project_year}年度"
+xml = xml.replace(/(<w:p[^>]*paraId="7F2C6B17"[\s\S]*?<w:t[^>]*>)年度(<\/w:t>)/, '$1{project_year}年度$2');
+xml = injectByParaId(xml, '66153E86', '{personnel_count}');  // 研究人力
+xml = injectByParaId(xml, '580C8D8B', '{apply_amount}');     // 申請金額
+xml = injectByParaId(xml, '749EF8CA', '{budget_total}');     // 主管機關核定金額
+xml = injectByParaId(xml, '11BB61C9', '{budget_personnel}'); // 人事費
+xml = injectByParaId(xml, '5CA30DFF', '{budget_business}');  // 業務費
+xml = injectByParaId(xml, '765CCF64', '{budget_capital}');   // 設備費（資本門）
+// Row 5 - 合計列
+xml = injectByParaId(xml, '28BAD8BC', '{personnel_count}');  // 研究人力合計
+xml = injectByParaId(xml, '23196B7B', '{apply_amount}');     // 申請金額合計
+xml = injectByParaId(xml, '213D1697', '{budget_total}');     // 主管機關核定金額合計
+xml = injectByParaId(xml, '3F986E94', '{budget_personnel}'); // 人事費合計
+xml = injectByParaId(xml, '55D707CB', '{budget_business}');  // 業務費合計
+xml = injectByParaId(xml, '3552E365', '{budget_capital}');   // 設備費合計
+console.log('  ✓ 壹、綜合資料 經費摘要表注入');
+
 // 貳、中文摘要 / 參、英文摘要
 let abstractCount = 0;
 xml = xml.replace(/請摘述本計畫之目的與實施方法及關鍵詞/g, () => {
@@ -587,7 +618,7 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const hdr = getRowHeader(rows[noDataIdx]);
   const cells = splitCells(rows[noDataIdx]);
   cells[0] = stripVMerge(setVerticalCellText(cells[0], '{#pa_no_completed}近三年已完成之研究計畫{/pa_no_completed}'));
-  cells[1] = setCellText(cells[1], '{#pa_no_completed}若無此資料，請填無此資料{/pa_no_completed}');
+  cells[1] = setCellText(cells[1], '{#pa_no_completed}無{/pa_no_completed}');
   rows[noDataIdx] = hdr + cells.join('') + '</w:tr>';
 }
 
@@ -612,7 +643,7 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const hdr = getRowHeader(rows[noDataIdx]);
   const cells = splitCells(rows[noDataIdx]);
   cells[0] = stripVMerge(setVerticalCellText(cells[0], '{#pa_no_ongoing}執行中之相關研究計畫{/pa_no_ongoing}'));
-  cells[1] = setCellText(cells[1], '{#pa_no_ongoing}若無此資料，請填無此資料{/pa_no_ongoing}');
+  cells[1] = setCellText(cells[1], '{#pa_no_ongoing}無{/pa_no_ongoing}');
   rows[noDataIdx] = hdr + cells.join('') + '</w:tr>';
 }
 
@@ -637,7 +668,7 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const hdr = getRowHeader(rows[noDataIdx]);
   const cells = splitCells(rows[noDataIdx]);
   cells[0] = stripVMerge(setVerticalCellText(cells[0], '{#pa_no_pending}申請中之相關研究計畫{/pa_no_pending}'));
-  cells[1] = setCellText(cells[1], '{#pa_no_pending}若無此資料，請填無此資料{/pa_no_pending}');
+  cells[1] = setCellText(cells[1], '{#pa_no_pending}無{/pa_no_pending}');
   rows[noDataIdx] = hdr + cells.join('') + '</w:tr>';
 }
 

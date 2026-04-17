@@ -110,6 +110,7 @@ export interface FormData {
   has_questionnaire: boolean;
   experiment_types: ExperimentType[];
   needs_funding: boolean;
+  apply_amount: string;  // 申請金額（使用者填寫，帶入壹、綜合資料）
 
   // §2.2.2 人員
   personnel: Personnel[];

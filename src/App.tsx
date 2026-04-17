@@ -14,7 +14,6 @@ import { useAutoGantt } from './hooks/useAutoGantt';
 import { useAutoSave, clearDraft } from './hooks/useAutoSave';
 
 import DataLossWarning from './components/common/DataLossWarning';
-import FeedbackButton from './components/common/FeedbackButton';
 import LLMSettingsPanel from './components/common/LLMSettingsPanel';
 import Step1BasicInfo from './components/wizard/Step1BasicInfo';
 import Step2Personnel from './components/wizard/Step2Personnel';
@@ -87,8 +86,8 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{
-        background: '#fff',
-        borderBottom: '1px solid #f0f0f0',
+        background: '#FDFCFA',
+        borderBottom: '1px solid #D9D4CC',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -166,7 +165,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
               <Text type="secondary">請選擇要下載的文件，並依跑關順序辦理後續流程。</Text>
             </div>
 
-            <div style={{ background: '#f6f8fa', borderRadius: 8, padding: 24, marginBottom: 24 }}>
+            <div style={{ background: '#F0EDE8', borderRadius: 8, padding: 24, marginBottom: 24 }}>
               <h4>選擇要產生的文件</h4>
               <Checkbox.Group
                 value={selectedDocs}
@@ -207,16 +206,38 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
       </Content>
 
       <Footer style={{ textAlign: 'center', color: '#999', fontSize: 12 }}>
-        研究計畫表單終結者 Forminator — 「I'll be back... with all 8 forms.」
+        研究計畫表單終結者 Forminator — 「I'll be back... with all 8 forms.」<br />
+        意見回饋 / 問題通報：請 e-mail 至 <a href="mailto:kcwang35@cdc.gov.tw" style={{ color: '#999' }}>kcwang35@cdc.gov.tw</a>
       </Footer>
-      <FeedbackButton />
     </Layout>
   );
 }
 
 export default function App() {
   return (
-    <ConfigProvider locale={zhTW}>
+    <ConfigProvider
+      locale={zhTW}
+      theme={{
+        token: {
+          colorPrimary:       '#2C6FBF',
+          colorBgLayout:      '#F7F5F0',
+          colorBgContainer:   '#FDFCFA',
+          colorBorder:        '#D9D4CC',
+          colorTextBase:      '#2D2D2D',
+          colorTextSecondary: '#666056',
+          fontSize:           15,
+          borderRadius:       6,
+        },
+        components: {
+          Layout: {
+            footerBg: '#F0EDE8',
+          },
+          Steps: {
+            colorPrimary: '#2C6FBF',
+          },
+        },
+      }}
+    >
       <AntApp>
         <AppContent />
       </AntApp>

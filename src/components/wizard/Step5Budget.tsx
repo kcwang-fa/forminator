@@ -1,11 +1,11 @@
 // ===== Step 5：經費概算 =====
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useFormStore } from '../../hooks/useFormStore';
 import { BUDGET_PRESETS, defaultBudgetItems } from '../../data/defaults';
-import { calcMgmt, calcTotal, isMgmtActive } from '../../utils/budgetCalc';
+import { calcMgmt, calcTotal, isMgmtActive, CAPITAL_IDS } from '../../utils/budgetCalc';
 import type { BudgetItem } from '../../types/form';
-import { Switch, Input, Table, Button, Tooltip, Typography, Checkbox, Select } from 'antd';
+import { Switch, Input, Table, Button, Tooltip, Typography, Checkbox } from 'antd';
 import { QuestionCircleOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -16,7 +16,6 @@ function makeColumns(
   updateItem: (id: string, field: 'amount' | 'note', val: string) => void,
   updateName: (id: string, name: string) => void,
   removeItem: (id: string) => void,
-  updateCategory: (id: string, category: string) => void,
 ) {
   return [
     {
@@ -31,24 +30,12 @@ function makeColumns(
         const preset = BUDGET_PRESETS.find(p => p.id === r.id);
         if (r.is_custom) {
           return (
-            <div style={{ display: 'flex', gap: 4 }}>
-              <Select
-                value={r.category || '業務費'}
-                onChange={val => updateCategory(r.id, val)}
-                size="small"
-                style={{ width: 90 }}
-                options={[
-                  { value: '人事費', label: '人事費' },
-                  { value: '業務費', label: '業務費' },
-                ]}
-              />
-              <Input
-                value={name}
-                placeholder="項目名稱"
-                onChange={e => updateName(r.id, e.target.value)}
-                size="small"
-              />
-            </div>
+            <Input
+              value={name}
+              placeholder="項目名稱"
+              onChange={e => updateName(r.id, e.target.value)}
+              size="small"
+            />
           );
         }
         return (
@@ -117,13 +104,35 @@ function makeColumns(
   ];
 }
 
-const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee', 'insurance', 'pension'];
-const BUSINESS_IDS  = ['irb_fee', 'travel', 'meal', 'misc'];
+const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee'];
+const BUSINESS_IDS  = ['consumable', 'maintenance', 'office', 'travel'];
 
 export default function Step5Budget() {
   const { watch, setValue } = useFormStore();
   const needs_funding: boolean = watch('needs_funding') ?? false;
+  const apply_amount: string = watch('apply_amount') ?? '';
   const budget_items: BudgetItem[] = watch('budget_items') ?? defaultBudgetItems;
+
+  // 補全舊草稿缺少的 preset 項目（新增預設項目後不需手動清草稿）
+  useEffect(() => {
+    const existingIds = new Set(budget_items.map(i => i.id));
+    const missing = BUDGET_PRESETS.filter(p => !p.auto && !existingIds.has(p.id));
+    if (missing.length === 0) return;
+
+    // 把缺少的項目插入到 mgmt 之前，保持 preset 順序
+    const mgmtIndex = budget_items.findIndex(i => i.id === 'mgmt');
+    const insertAt = mgmtIndex >= 0 ? mgmtIndex : budget_items.length;
+    const newItems: BudgetItem[] = missing.map(p => ({
+      id: p.id, name: p.name, category: p.category, is_custom: false, amount: '', note: '',
+    }));
+    const merged = [
+      ...budget_items.slice(0, insertAt),
+      ...newItems,
+      ...budget_items.slice(insertAt),
+    ];
+    setValue('budget_items', merged, { shouldDirty: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function updateItem(id: string, field: 'amount' | 'note', value: string) {
     setValue('budget_items', budget_items.map(i => i.id === id ? { ...i, [field]: value } : i), { shouldDirty: true });
@@ -131,17 +140,16 @@ export default function Step5Budget() {
   function updateName(id: string, name: string) {
     setValue('budget_items', budget_items.map(i => i.id === id ? { ...i, name } : i), { shouldDirty: true });
   }
-  function updateCategory(id: string, category: string) {
-    setValue('budget_items', budget_items.map(i => i.id === id ? { ...i, category } : i), { shouldDirty: true });
-  }
   function removeItem(id: string) {
     setValue('budget_items', budget_items.filter(i => i.id !== id), { shouldDirty: true });
   }
-  function addCustomItem() {
-    setValue('budget_items', [
-      ...budget_items,
-      { id: `custom_${Date.now()}`, name: '', is_custom: true, category: '業務費', amount: '', note: '' },
-    ], { shouldDirty: true });
+  function addCustomItem(category: '業務費' | '資本門' | '人事費') {
+    // 插入到同類別的最後一項之後（mgmt 之前）
+    const mgmtIndex = budget_items.findIndex(i => i.id === 'mgmt');
+    const newItem = { id: `custom_${Date.now()}`, name: '', is_custom: true, category, amount: '', note: '' };
+    const insertAt = mgmtIndex >= 0 ? mgmtIndex : budget_items.length;
+    const updated = [...budget_items.slice(0, insertAt), newItem, ...budget_items.slice(insertAt)];
+    setValue('budget_items', updated, { shouldDirty: true });
   }
   function toggleMgmt(checked: boolean) {
     setValue('budget_items', budget_items.map(i =>
@@ -153,25 +161,27 @@ export default function Step5Budget() {
   const mgmtActive  = isMgmtActive(budget_items);
   const totalAmount = calcTotal(budget_items);
 
-  const personnelItems = budget_items.filter(i => PERSONNEL_IDS.includes(i.id));
-  const businessItems  = budget_items.filter(i => BUSINESS_IDS.includes(i.id) || i.is_custom);
-
-  const tableData: ColumnRecord[] = [
-    { id: '_h_personnel', name: '人事費', _section: true },
-    ...personnelItems,
-    { id: '_h_business', name: '業務費', _section: true },
-    ...businessItems,
-  ];
+  const personnelItems = budget_items.filter(i => PERSONNEL_IDS.includes(i.id) || (i.is_custom && i.category === '人事費'));
+  const businessItems  = budget_items.filter(i => BUSINESS_IDS.includes(i.id) || (i.is_custom && i.category === '業務費'));
+  const capitalItems   = budget_items.filter(i => CAPITAL_IDS.includes(i.id) || (i.is_custom && i.category === '資本門'));
 
   const columns = useMemo(
-    () => makeColumns(updateItem, updateName, removeItem, updateCategory),
+    () => makeColumns(updateItem, updateName, removeItem),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [budget_items],
   );
 
+  const sectionTableProps = {
+    rowKey: 'id' as const,
+    pagination: false as const,
+    size: 'small' as const,
+    columns,
+    style: { marginBottom: 4 },
+  };
+
   return (
     <div>
-      <h3>陸、經費概算</h3>
+      <h3>經費概算</h3>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <Switch
@@ -188,15 +198,32 @@ export default function Step5Budget() {
 
       {needs_funding && (
         <>
-          <Table
-            dataSource={tableData}
-            rowKey="id"
-            pagination={false}
-            size="small"
-            style={{ marginBottom: 8 }}
-            columns={columns}
-            rowClassName={record => '_section' in record ? 'budget-section-header' : ''}
-          />
+          {/* 申請金額 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <Text style={{ whiteSpace: 'nowrap' }}>申請金額</Text>
+            <Input
+              value={apply_amount}
+              placeholder="0"
+              onChange={e => setValue('apply_amount', e.target.value.replace(/[^\d]/g, ''), { shouldDirty: true })}
+              suffix="元"
+              style={{ width: 200 }}
+            />
+          </div>
+
+          {/* 業務費（經常門） */}
+          <Text strong style={{ display: 'block', background: '#fafafa', padding: '6px 8px', border: '1px solid #f0f0f0' }}>業務費（經常門）</Text>
+          <Table dataSource={businessItems} {...sectionTableProps} />
+          <Button size="small" icon={<PlusOutlined />} onClick={() => addCustomItem('業務費')} style={{ marginBottom: 16 }}>新增項目</Button>
+
+          {/* 設備費（資本門） */}
+          <Text strong style={{ display: 'block', background: '#fafafa', padding: '6px 8px', border: '1px solid #f0f0f0', marginTop: 8 }}>設備費（資本門）</Text>
+          <Table dataSource={capitalItems} {...sectionTableProps} showHeader={false} />
+          <Button size="small" icon={<PlusOutlined />} onClick={() => addCustomItem('資本門')} style={{ marginBottom: 16 }}>新增項目</Button>
+
+          {/* 人事費（經常門） */}
+          <Text strong style={{ display: 'block', background: '#fafafa', padding: '6px 8px', border: '1px solid #f0f0f0', marginTop: 8 }}>人事費（經常門）</Text>
+          <Table dataSource={personnelItems} {...sectionTableProps} showHeader={false} />
+          <Button size="small" icon={<PlusOutlined />} onClick={() => addCustomItem('人事費')} style={{ marginBottom: 16 }}>新增項目</Button>
 
           {/* 管理費（可選，自動計算） */}
           <Table
@@ -238,15 +265,10 @@ export default function Step5Budget() {
             <Text strong style={{ color: '#1677ff' }}>{totalAmount.toLocaleString()} 元</Text>
           </div>
 
-          <Button icon={<PlusOutlined />} onClick={addCustomItem} style={{ marginTop: 12 }}>
-            新增其他業務費項目
-          </Button>
-
           <p style={{ color: '#999', fontSize: 12, marginTop: 12 }}>
             ・人事費上限：總經費 50%<br />
-            ・雜支費上限：業務費總額 5%，且不超過 10 萬元<br />
-            ・管理費 = (人事費 + 業務費 - 主持人費 - 協同主持人費) × 15%<br />
-            ・不得購置儀器設備（無資本門），需要時以租金方式編列
+            ・管理費 = (人事費 + 業務費 - 主持人費 - 協同主持人費) × 15%（資本門不計入）<br />
+            ・資本門：儀器設備購置，須另行核准
           </p>
         </>
       )}

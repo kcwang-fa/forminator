@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import type { FormData, Personnel } from '../types/form';
 import { toRocDate } from './date';
 import { DOC_NAMES } from '../data/defaults';
-import { buildBudgetRows } from './budgetCalc';
+import { buildBudgetRows, calcTotal, isPersonnel, isBusiness, isCapital } from './budgetCalc';
 
 // ===== 靜態對照表 =====
 
@@ -359,6 +359,13 @@ function prepareCommonData(data: FormData) {
     // 經費概算
     budget_no_items: !data.needs_funding,
     budget_rows: buildBudgetRows(data.budget_items || [], data.needs_funding),
+    // 壹、綜合資料經費摘要表
+    personnel_count: (data.personnel || []).length,
+    apply_amount:     data.needs_funding && data.apply_amount ? Number(data.apply_amount).toLocaleString() : '',
+    budget_total:     data.needs_funding ? calcTotal(data.budget_items || []).toLocaleString() : '',
+    budget_personnel: data.needs_funding ? (data.budget_items || []).filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
+    budget_business:  data.needs_funding ? (data.budget_items || []).filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
+    budget_capital:   data.needs_funding ? (data.budget_items || []).filter(isCapital).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
   };
 }
 

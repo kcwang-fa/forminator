@@ -58,17 +58,17 @@ export const emptyPersonnel: Personnel = {
 
 /** 預設經費項目（含 tooltip 說明） */
 export const BUDGET_PRESETS: { id: string; name: string; category: string; tooltip: string; auto?: boolean }[] = [
-  // 人事費
+  // 業務費（經常門）
+  { id: 'consumable',  name: '消耗品',     category: '業務費', tooltip: '辦公或研究所需消耗性材料，核實報支。' },
+  { id: 'maintenance', name: '設備養護費', category: '業務費', tooltip: '既有設備之維修保養費用，核實報支。' },
+  { id: 'office',      name: '一般事務費', category: '業務費', tooltip: '辦公文具、印刷、郵資等一般行政事務費用。' },
+  { id: 'travel',      name: '差旅費',     category: '業務費', tooltip: '依行政院「國內出差旅費報支要點」規定辦理。' },
+  // 資本門
+  { id: 'hardware',  name: '軟硬體設備費', category: '資本門', tooltip: '購置研究所需軟體授權或硬體設備，依預算規定辦理。' },
+  // 人事費（經常門）
   { id: 'pi_fee',    name: '計畫主持人費', category: '人事費', tooltip: '以新臺幣 2 萬元／月為上限。' },
   { id: 'co_pi_fee', name: '協同主持人費', category: '人事費', tooltip: '以 1 萬 8 千元／月為上限。' },
   { id: 'ra_fee',    name: '研究人力費',   category: '人事費', tooltip: '依受委託單位自訂標準核實支給；在本計畫支領專任薪資者，不得再支領本部其他計畫薪資。' },
-  { id: 'insurance', name: '保險',         category: '人事費', tooltip: '依勞保、健保相關規定編列雇主應負擔之勞保及健保費用。' },
-  { id: 'pension',   name: '公提離職儲金', category: '人事費', tooltip: '依「衛生福利部及所屬機關研究計畫助理人員約用注意事項」及「勞工退休金提繳工資分級表」編列。' },
-  // 業務費
-  { id: 'irb_fee',  name: 'IRB審查費', category: '業務費', tooltip: '每一計畫或每一人體試驗案審查費以十萬元為限，核實報支。' },
-  { id: 'travel',   name: '國內旅費',  category: '業務費', tooltip: '依行政院「國內出差旅費報支要點」規定辦理。' },
-  { id: 'meal',     name: '餐費',      category: '業務費', tooltip: '每人次最高 150 元。' },
-  { id: 'misc',     name: '雜支費',    category: '業務費', tooltip: '上限：業務費總額 5%，且不超過 10 萬元。' },
   // 管理費（自動計算）
   { id: 'mgmt', name: '管理費', category: '管理費', tooltip: '自動計算：(人事費 + 業務費 - 主持人費 - 協同主持人費) × 15%。', auto: true },
 ];
@@ -98,6 +98,7 @@ export const defaultFormData: FormData = {
   has_questionnaire: false,
   experiment_types: [],
   needs_funding: false,
+  apply_amount: '',
   budget_items: defaultBudgetItems,
 
   // 人員 — 預設一位 PI
