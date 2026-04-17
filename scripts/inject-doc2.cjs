@@ -106,9 +106,13 @@ function setCellText(cellXml, text) {
   return result;
 }
 
-// 移除 cell 的 vMerge 屬性（避免 loop 複製時重複 restart 導致格式錯亂）
+// 移除 cell 的 vMerge 和 textDirection 屬性（避免 loop 複製時格式錯亂）
 function stripVMerge(cellXml) {
-  return cellXml.replace(/<w:vMerge[^/]*\/>/g, '').replace(/<w:vMerge[^>]*>[\s\S]*?<\/w:vMerge>/g, '');
+  return cellXml
+    .replace(/<w:vMerge[^/]*\/>/g, '')
+    .replace(/<w:vMerge[^>]*>[\s\S]*?<\/w:vMerge>/g, '')
+    .replace(/<w:textDirection[^/]*\/>/g, '')
+    .replace(/<w:textDirection[^>]*>[\s\S]*?<\/w:textDirection>/g, '');
 }
 
 // 直式文字 cell：加 textDirection tbRlV + 置中 + DFKai-SB 字型
@@ -600,8 +604,7 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const loopIdx = 10;
   const hdr = getRowHeader(rows[loopIdx]);
   const cells = splitCells(rows[loopIdx]);
-  // col 0 原本是 vMerge restart label；stripVMerge 後變成普通儲存格（保留標題文字，避免 loop 複製時每行都 restart 一個合併）
-  cells[0] = stripVMerge(cells[0]);
+  cells[0] = setCellText(stripVMerge(cells[0]), '近三年');
   cells[1] = setCellText(cells[1], '{#pa_completed}{proj_name}');
   cells[2] = setCellText(cells[2], '{proj_role}');
   cells[3] = setCellText(cells[3], '{proj_budget}');
@@ -617,8 +620,9 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const noDataIdx = 11;
   const hdr = getRowHeader(rows[noDataIdx]);
   const cells = splitCells(rows[noDataIdx]);
-  cells[0] = stripVMerge(setVerticalCellText(cells[0], '{#pa_no_completed}近三年已完成之研究計畫{/pa_no_completed}'));
-  cells[1] = setCellText(cells[1], '{#pa_no_completed}無{/pa_no_completed}');
+  cells[0] = setCellText(stripVMerge(cells[0]), '{#pa_no_completed}近三年');
+  cells[1] = setCellText(cells[1], '無{/pa_no_completed}');
+  for (let i = 2; i < cells.length; i++) cells[i] = setCellText(cells[i], '');
   rows[noDataIdx] = hdr + cells.join('') + '</w:tr>';
 }
 
@@ -627,7 +631,7 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const loopIdx = 12;
   const hdr = getRowHeader(rows[loopIdx]);
   const cells = splitCells(rows[loopIdx]);
-  cells[0] = stripVMerge(cells[0]);  // 移除 vMerge restart，避免 loop 複製時格式錯亂
+  cells[0] = setCellText(stripVMerge(cells[0]), '執行中');
   cells[1] = setCellText(cells[1], '{#pa_ongoing}{proj_name}');
   cells[2] = setCellText(cells[2], '{proj_role}');
   cells[3] = setCellText(cells[3], '{proj_budget}');
@@ -642,8 +646,9 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const noDataIdx = 13;
   const hdr = getRowHeader(rows[noDataIdx]);
   const cells = splitCells(rows[noDataIdx]);
-  cells[0] = stripVMerge(setVerticalCellText(cells[0], '{#pa_no_ongoing}執行中之相關研究計畫{/pa_no_ongoing}'));
-  cells[1] = setCellText(cells[1], '{#pa_no_ongoing}無{/pa_no_ongoing}');
+  cells[0] = setCellText(stripVMerge(cells[0]), '{#pa_no_ongoing}執行中');
+  cells[1] = setCellText(cells[1], '無{/pa_no_ongoing}');
+  for (let i = 2; i < cells.length; i++) cells[i] = setCellText(cells[i], '');
   rows[noDataIdx] = hdr + cells.join('') + '</w:tr>';
 }
 
@@ -652,7 +657,7 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const loopIdx = 14;
   const hdr = getRowHeader(rows[loopIdx]);
   const cells = splitCells(rows[loopIdx]);
-  cells[0] = stripVMerge(cells[0]);  // 移除 vMerge restart
+  cells[0] = setCellText(stripVMerge(cells[0]), '申請中');
   cells[1] = setCellText(cells[1], '{#pa_pending}{proj_name}');
   cells[2] = setCellText(cells[2], '{proj_role}');
   cells[3] = setCellText(cells[3], '{proj_budget}');
@@ -667,8 +672,9 @@ rows[1] = setRowCell(rows[1], 5, '{pa_birth_date}');
   const noDataIdx = 15;
   const hdr = getRowHeader(rows[noDataIdx]);
   const cells = splitCells(rows[noDataIdx]);
-  cells[0] = stripVMerge(setVerticalCellText(cells[0], '{#pa_no_pending}申請中之相關研究計畫{/pa_no_pending}'));
-  cells[1] = setCellText(cells[1], '{#pa_no_pending}無{/pa_no_pending}');
+  cells[0] = setCellText(stripVMerge(cells[0]), '{#pa_no_pending}申請中');
+  cells[1] = setCellText(cells[1], '無{/pa_no_pending}');
+  for (let i = 2; i < cells.length; i++) cells[i] = setCellText(cells[i], '');
   rows[noDataIdx] = hdr + cells.join('') + '</w:tr>';
 }
 

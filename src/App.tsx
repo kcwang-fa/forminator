@@ -220,6 +220,7 @@ export default function App() {
       theme={{
         token: {
           colorPrimary:       '#2C6FBF',
+          fontFamily:         '"LXGW WenKai TC", "Noto Sans TC", sans-serif',
           colorBgLayout:      '#F7F5F0',
           colorBgContainer:   '#FDFCFA',
           colorBorder:        '#D9D4CC',

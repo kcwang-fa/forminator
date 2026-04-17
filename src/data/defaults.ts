@@ -2,7 +2,7 @@
 
 import type { FormData, Personnel, WorkflowStep, Education, WorkHistory, Project, BudgetItem } from '../types/form';
 
-export const SDD_VERSION = '1.2.0';
+export const SDD_VERSION = '1.3.0';
 
 export const emptyEducation: Education = {
   degree: '',
