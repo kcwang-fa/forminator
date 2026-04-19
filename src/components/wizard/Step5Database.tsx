@@ -35,10 +35,8 @@ export default function Step5Database() {
                 onChange={(d) => {
                   const dateStr = d?.format('YYYY-MM-DD') || '';
                   field.onChange(dateStr);
-                  // 自動計算保留期限 +3 年
-                  if (dateStr) {
-                    setValue('retention_deadline', addYears(dateStr, 3));
-                  }
+                  // 自動計算保留期限 +3 年；清除時一併清除保留期限
+                  setValue('retention_deadline', dateStr ? addYears(dateStr, 3) : '');
                 }}
                 style={{ width: '100%' }}
               />

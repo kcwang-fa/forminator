@@ -1,6 +1,6 @@
 // ===== 研究計畫表單終結者 Forminator — 主應用 =====
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
@@ -24,18 +24,21 @@ import Step6Database from './components/wizard/Step5Database';
 import WorkflowGuide from './components/workflow/WorkflowGuide';
 
 import { DOC_NAMES, SDD_VERSION, defaultFormData } from './data/defaults';
+import { getPlanConfig, type WizardStepKey } from './data/planConfigs';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 
-const STEPS = [
-  { title: '基本資訊', component: Step1BasicInfo },
-  { title: '研究團隊', component: Step2Personnel },
-  { title: '研究內容', component: Step3Research },
-  { title: 'IRB 審查', component: Step4IRB },
-  { title: '經費概算', component: Step5Budget },
-  { title: '資料庫申請', component: Step6Database },
-];
+// 所有可能的步驟定義（key → 元件對應）
+// 實際顯示哪幾步由 planConfigs.ts 的 wizardStepKeys 決定，不是這裡全部都顯示
+const ALL_STEPS: Record<WizardStepKey, { title: string; component: React.ComponentType }> = {
+  basic:      { title: '基本資訊', component: Step1BasicInfo },
+  personnel:  { title: '研究團隊', component: Step2Personnel },
+  research:   { title: '研究內容', component: Step3Research },
+  irb:        { title: 'IRB 審查', component: Step4IRB },
+  budget:     { title: '經費概算', component: Step5Budget },
+  database:   { title: '資料庫申請', component: Step6Database },
+};
 
 function AppContent() {
   const form = useCreateFormStore();
@@ -60,7 +63,14 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   setLLMSettings: ReturnType<typeof useLLMSettings>['setSettings'];
   contentRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(STEPS.length);
+  // 根據 review_type 動態決定步驟清單
+  const reviewType = form.watch('review_type');
+  const steps = useMemo(() => {
+    const { wizardStepKeys } = getPlanConfig(reviewType);
+    return wizardStepKeys.map(key => ALL_STEPS[key]);
+  }, [reviewType]);
+
+  const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(steps.length);
   const { selectedDocs, setSelectedDocs, generating, download, allDocs } = useDocumentGeneration();
   const { handleExport, handleImport } = useImportExport();
   useAutoGantt();
@@ -81,7 +91,8 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
       },
     });
   }, [form]);
-  const CurrentStepComponent = STEPS[currentStep].component;
+
+  const CurrentStepComponent = steps[currentStep]?.component ?? Step1BasicInfo;
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -127,7 +138,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
           <>
             <Steps
               current={currentStep}
-              items={STEPS.map((s) => ({ title: s.title }))}
+              items={steps.map((s) => ({ title: s.title }))}
               style={{ marginBottom: 32 }}
               onChange={goTo}
             />

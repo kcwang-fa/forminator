@@ -1,10 +1,10 @@
 // ===== 資料庫保密切結書（署內員工使用）（DOC-7）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-7.docx
-// 來源：../原始範本/資料庫-保密切結書-署內員工使用D-205-0009-1140410-V4.2.docx
+// 來源：../source-templates/資料庫-保密切結書-署內員工使用D-205-0009-1140410-V4.2.docx
 //
 // ⚠️  DOC-7 = 資料庫保密切結書（署內員工使用）
 //     每位研究人員各自產生一份（generatePerPersonDoc）
-//     原始範本中的「邱乾順」為示範姓名，需替換為 placeholder
+//     source-templates中的「邱乾順」為示範姓名，需替換為 placeholder
 // 執行：node scripts/inject-doc7.cjs  或  npm run inject-doc7
 
 'use strict';
@@ -13,7 +13,7 @@ const path = require('path');
 const PizZip = require('pizzip');
 
 const SRC = path.join(__dirname,
-  '../../原始範本/資料庫-保密切結書-署內員工使用D-205-0009-1140410-V4.2.docx');
+  '../../source-templates/資料庫-保密切結書-署內員工使用D-205-0009-1140410-V4.2.docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-7.docx');
 
 function readDocXml(p) {

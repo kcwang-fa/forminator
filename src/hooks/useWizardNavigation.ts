@@ -11,7 +11,7 @@ export function useWizardNavigation(totalSteps: number) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
     }
-  }, [currentStep]);
+  }, [currentStep, totalSteps]);
 
   const prev = useCallback(() => {
     if (currentStep > 0) {

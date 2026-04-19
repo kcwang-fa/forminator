@@ -1,4 +1,16 @@
 // ===== 文件生成邏輯 =====
+//
+// 流程：FormData（使用者填的表單）→ prepareCommonData() 整理成 placeholder 物件
+//       → generateDoc() 把 placeholder 填進 .docx 模板（docxtemplater）
+//       → generateAllDocuments() 打包成 ZIP 下載
+//
+// 模板檔案放在 public/templates/，由 scripts/inject-docN.cjs 預先注入 {placeholder} 標籤。
+// 模板的佔位符格式是 {欄位名}，與 JavaScript 的 ${} 不同。
+//
+// 新手提示：
+//   - 要加新欄位 → 在對應的 prepareXxxData() 函式裡加一行，key 名稱要和模板裡的 {placeholder} 一致
+//   - 要加新文件 → 在 DOC_NAMES（defaults.ts）加 ID，在 generateDoc() 的 switch 加 case
+//   - DOC-6、DOC-7 是逐人生成（每位研究人員一份），邏輯在 generatePerPersonDoc()
 
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
@@ -6,51 +18,12 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import type { FormData, Personnel } from '../types/form';
 import { toRocDate } from './date';
-import { DOC_NAMES } from '../data/defaults';
+import { DOC_NAMES, type DocId } from '../data/defaults';
 import { buildBudgetRows, calcTotal, isPersonnel, isBusiness, isCapital } from './budgetCalc';
+import { ROLE_MAP, EXEMPT_MAP, PURPOSE_MAP, ANALYSIS_LOCATION_MAP, OUTCOME_TYPE_MAP } from './docgenMaps';
 
-// ===== 靜態對照表 =====
-
-const ROLE_MAP: Record<string, string> = {
-  pi: '計畫主持人',
-  co_pi: '協同主持人',
-  researcher: '研究人員',
-  contact: '計畫聯絡人',
-  assistant: '研究助理',
-};
-
-const EXEMPT_MAP: Record<string, string> = {
-  public_non_interactive: '於公共場所進行之非介入性研究，且非以可辨識個人之方式利用',
-  public_info: '使用已合法公開之資料或文件，且資訊之使用無涉可辨識之個資',
-  public_policy: '公共政策之成效評估研究，且非以可辨識個人之方式利用',
-  education: '於一般教學環境中進行之教育評量或測試、教學技巧之研究',
-  minimal_risk: '研究計畫屬最低風險，且所蒐集之個資經加密處理',
-};
-
-const PURPOSE_MAP: Record<string, string> = {
-  internal_research: '署內科技研究計畫',
-  thesis: '碩、博士論文',
-  no_fund_research: '無需經費研究計畫',
-  other: '其他',
-};
-
-const ANALYSIS_LOCATION_MAP: Record<string, string> = {
-  office: '本署署內辦公場域',
-  personal_pc: '個人公務電腦',
-  other_platform: '其他分析平台',
-  data_center: '資科中心',
-};
-
-const OUTCOME_TYPE_MAP: Record<string, string> = {
-  policy: '提供決策',
-  report: '研究報告',
-  paper_writing: '論文寫作',
-  paper_publish: '論文發表',
-  other: '其他',
-};
-
-/** 哪些文件需要逐人生成（每人一份） */
-const PER_PERSON_DOCS = new Set(['DOC-6', 'DOC-7']);
+// DOC-6（IRB-018 保密切結書）和 DOC-7（資料庫保密切結書）需要每位研究人員各一份
+const PER_PERSON_DOCS = new Set<DocId>(['DOC-6', 'DOC-7']);
 
 // ===== 輔助函式 =====
 
@@ -101,7 +74,6 @@ function prepareBasicData(data: FormData, pi: Personnel, contact: Personnel) {
 function prepareResearchData(data: FormData) {
   return {
     purpose: data.purpose,
-    purpose_brief: data.purpose.slice(0, 50) + (data.purpose.length > 50 ? '...' : ''),
     background: data.background,
     methodology: data.methodology,
     expected_outcome: data.expected_outcome,
@@ -344,7 +316,8 @@ function prepareCoverData(data: FormData) {
 // ===== 準備通用 template data =====
 
 function prepareCommonData(data: FormData) {
-  const pi      = findByRole(data.personnel, 'pi') || data.personnel[0];
+  const pi      = findByRole(data.personnel, 'pi') ?? data.personnel[0];
+  if (!pi) throw new Error('表單中至少需要一位計畫主持人（PI）');
   const contact = findByRole(data.personnel, 'contact') || pi;
 
   return {
@@ -432,7 +405,7 @@ async function generatePerPersonDoc(
 
 export async function generateAllDocuments(
   data: FormData,
-  selectedDocs: string[],
+  selectedDocs: DocId[],
 ): Promise<void> {
   const commonData = prepareCommonData(data);
   const zip = new JSZip();

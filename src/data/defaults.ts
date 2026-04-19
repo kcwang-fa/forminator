@@ -1,6 +1,6 @@
 // ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
 
-import type { FormData, Personnel, WorkflowStep, Education, WorkHistory, Project, BudgetItem } from '../types/form';
+import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem } from '../types/form';
 
 export const SDD_VERSION = '1.3.0';
 
@@ -145,48 +145,6 @@ export const defaultFormData: FormData = {
   cross_link_data_center: false,
 };
 
-/** §5.4 申請流程導引 */
-export const workflowSteps: WorkflowStep[] = [
-  {
-    step: 1,
-    title: '研究計畫上簽',
-    description: '將簽呈連同署內研究計畫書送單位主管、相關單位及企劃組，一層核定',
-    documents: ['DOC-1', 'DOC-2'],
-    signatureNotes: [
-      '署內研究計畫書封面：計畫主持人簽名',
-      '附表一：填表人簽章 + 計畫主持人簽章（每位研究人員各一份）',
-    ],
-  },
-  {
-    step: 2,
-    title: '申請 IRB 審查',
-    description: '紙本送企劃組，同時寄送 e-mail',
-    documents: ['DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
-    refDocuments: [
-      { label: '研究計畫簽呈（已奉准）' },
-    ],
-    signatureNotes: [
-      'IRB-012 免審申請表：申請人簽章 + 單位主管簽章',
-      'IRB-018 保密切結書：每位研究人員各自親簽',
-    ],
-    contact: {
-      name: '劉兪筠',
-      unit: '企劃組',
-      email: 'yyliu7160@cdc.gov.tw',
-      phone: '(02) 2395-9825 #3022',
-    },
-  },
-  {
-    step: 3,
-    title: '申請資料庫資料',
-    description: 'IRB 通過後，填妥 DOC-8 並列印，連同保密切結書送資訊室審核（送件方式請洽資訊室或企劃組）',
-    documents: ['DOC-7', 'DOC-8'],
-    signatureNotes: [
-      '資料庫保密切結書：申請者簽名 + 單位主管簽名',
-    ],
-  },
-];
-
 /**
  * 文件名稱對照表 — DOC 編號的唯一權威來源
  *
@@ -194,7 +152,9 @@ export const workflowSteps: WorkflowStep[] = [
  * DOC-4 = IRB-004 研究計畫書                                       ← inject-doc4.cjs
  * 兩者不同，勿混淆。
  */
-export const DOC_NAMES: Record<string, string> = {
+// DOC_NAMES 是文件 ID → 中文名稱的對應表，也是 DocId 型別的唯一來源。
+// 新增文件時：在這裡加一行，TypeScript 會自動更新 DocId，planConfigs 可直接使用。
+export const DOC_NAMES = {
   'DOC-1': '研究計畫簽呈（含公文系統操作說明）',
   'DOC-2': '署內研究計畫書',           // 完整文件：封面 + 壹~捌 + 附表一/二/三
   'DOC-3': 'IRB-002 計畫送件核對表',
@@ -203,4 +163,6 @@ export const DOC_NAMES: Record<string, string> = {
   'DOC-6': 'IRB-018 保密切結書（研究人員）',
   'DOC-7': '資料庫保密切結書（署內員工使用）',
   'DOC-8': '資料庫使用申請單',
-};
+} as const;
+
+export type DocId = keyof typeof DOC_NAMES;

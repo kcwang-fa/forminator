@@ -28,7 +28,9 @@ export function exportToJson(data: FormData): void {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
@@ -49,7 +51,9 @@ export function exportPersonnelProfile(person: Personnel): void {
   const a = document.createElement('a');
   a.href = url;
   a.download = `profile-${name}.json`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 

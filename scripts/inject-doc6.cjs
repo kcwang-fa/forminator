@@ -1,6 +1,6 @@
 // ===== IRB-018 保密切結書（研究人員）（DOC-6）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-6.docx
-// 來源：../原始範本/IRB-018 保密切結書(研究人員).docx
+// 來源：../source-templates/IRB-018 保密切結書(研究人員).docx
 //
 // ⚠️  DOC-6 = IRB-018 保密切結書（研究人員）
 //     每位研究人員各自產生一份（generatePerPersonDoc）
@@ -11,7 +11,7 @@ const fs   = require('fs');
 const path = require('path');
 const PizZip = require('pizzip');
 
-const SRC = path.join(__dirname, '../../原始範本/IRB-018 保密切結書(研究人員).docx');
+const SRC = path.join(__dirname, '../../source-templates/IRB-018 保密切結書(研究人員).docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-6.docx');
 
 function readDocXml(p) {

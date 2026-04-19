@@ -1,6 +1,6 @@
 // ===== IRB-004 研究計畫書（DOC-4）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-4.docx
-// 來源：../原始範本/IRB-004 研究計畫書.docx
+// 來源：../source-templates/IRB-004 研究計畫書.docx
 //
 // ⚠️  DOC-4 ≠ DOC-2
 //     DOC-4 = IRB-004 研究計畫書（本腳本）
@@ -12,7 +12,7 @@ const fs   = require('fs');
 const path = require('path');
 const PizZip = require('pizzip');
 
-const SRC = path.join(__dirname, '../../原始範本/IRB-004 研究計畫書.docx');
+const SRC = path.join(__dirname, '../../source-templates/IRB-004 研究計畫書.docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-4.docx');
 
 function readDocXml(filePath) {

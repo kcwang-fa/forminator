@@ -3,7 +3,7 @@
 import { useMemo, useEffect } from 'react';
 import { useFormStore } from '../../hooks/useFormStore';
 import { BUDGET_PRESETS, defaultBudgetItems } from '../../data/defaults';
-import { calcMgmt, calcTotal, isMgmtActive, CAPITAL_IDS } from '../../utils/budgetCalc';
+import { calcMgmt, calcTotal, isMgmtActive, CAPITAL_IDS, PERSONNEL_IDS, BUSINESS_IDS } from '../../utils/budgetCalc';
 import type { BudgetItem } from '../../types/form';
 import { Switch, Input, Table, Button, Tooltip, Typography, Checkbox } from 'antd';
 import { QuestionCircleOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -104,8 +104,7 @@ function makeColumns(
   ];
 }
 
-const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee'];
-const BUSINESS_IDS  = ['consumable', 'maintenance', 'office', 'travel'];
+
 
 export default function Step5Budget() {
   const { watch, setValue } = useFormStore();

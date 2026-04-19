@@ -1,20 +1,30 @@
 // ===== 第 1 頁：基本資訊 =====
 
 import { useCallback, useState } from 'react';
-import { Form, Input, DatePicker, Collapse, Button, Space, App } from 'antd';
+import { Form, Input, DatePicker, Button, Select, Space, Tag, App } from 'antd';
 import { RobotOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
 import { translateTitle } from '../../api/llm';
+import { PLAN_CONFIGS, getPlanConfig } from '../../data/planConfigs';
+import type { ReviewType } from '../../types/form';
 import dayjs from 'dayjs';
+
+const REVIEW_TYPE_OPTIONS = (Object.values(PLAN_CONFIGS) as typeof PLAN_CONFIGS[ReviewType][]).map((cfg) => ({
+  value: cfg.id,
+  label: cfg.label,
+  description: cfg.description,
+  disabled: !cfg.ready,
+}));
 
 export default function Step1BasicInfo() {
   const { control, watch, setValue } = useFormStore();
   const { message } = App.useApp();
   const titleZh = watch('project_title_zh');
+  const reviewType = watch('review_type');
+  const planConfig = getPlanConfig(reviewType);
   const [translating, setTranslating] = useState(false);
 
-  // 手動觸發翻譯
   const handleTitleTranslate = useCallback(async () => {
     if (!titleZh || titleZh.length < 4) return;
     setTranslating(true);
@@ -31,6 +41,38 @@ export default function Step1BasicInfo() {
   return (
     <div>
       <h3>基本資訊</h3>
+
+      {/* 審查類型（計畫類型配置的入口） */}
+      <Controller
+        name="review_type"
+        control={control}
+        render={({ field }) => (
+          <Form.Item
+            label="審查類型"
+            tooltip="決定申請流程、所需文件與表單步驟"
+          >
+            <Select
+              {...field}
+              options={REVIEW_TYPE_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: (
+                  <Space>
+                    {opt.label}
+                    {!opt.disabled
+                      ? <Tag color="blue" style={{ marginLeft: 4 }}>支援</Tag>
+                      : <Tag color="default" style={{ marginLeft: 4 }}>模板準備中</Tag>}
+                  </Space>
+                ),
+                disabled: opt.disabled,
+              }))}
+              style={{ width: 320 }}
+            />
+            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+              {planConfig.description}
+            </div>
+          </Form.Item>
+        )}
+      />
 
       <Controller
         name="project_title_zh"
@@ -138,23 +180,6 @@ export default function Step1BasicInfo() {
             />
           </Form.Item>
         )}
-      />
-
-      <Collapse
-        ghost
-        items={[{
-          key: 'advanced',
-          label: '進階設定（MVP 預設值）',
-          children: (
-            <div style={{ opacity: 0.7 }}>
-              <p>計畫類別：新增型一年期計畫</p>
-              <p>採用問卷：否</p>
-              <p>經費需求：不需經費</p>
-              <p>實驗類型：無</p>
-              <p style={{ color: '#999', fontSize: 12 }}>以上為「署內無經費資料庫回溯性研究」場景預設值，未來可擴充其他場景。</p>
-            </div>
-          ),
-        }]}
       />
     </div>
   );

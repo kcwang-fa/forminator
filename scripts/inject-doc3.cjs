@@ -1,10 +1,10 @@
 // ===== IRB-002 計畫送件核對表（DOC-3）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-3.docx
-// 來源：../原始範本/IRB-002 新案計畫送件核對表.docx
+// 來源：../source-templates/IRB-002 新案計畫送件核對表.docx
 //
 // ⚠️  DOC-3 = IRB-002 新案計畫送件核對表
 //     原始為 .doc 格式（binary）→ 需先用 Word 另存為 .docx 再執行本腳本
-//     原始範本的 .doc 檔請勿刪除（保留做比對用）
+//     source-templates的 .doc 檔請勿刪除（保留做比對用）
 // 執行：node scripts/inject-doc3.cjs  或  npm run inject-doc3
 
 'use strict';
@@ -12,7 +12,7 @@ const fs   = require('fs');
 const path = require('path');
 const PizZip = require('pizzip');
 
-const SRC = path.join(__dirname, '../../原始範本/IRB-002 新案計畫送件核對表.docx');
+const SRC = path.join(__dirname, '../../source-templates/IRB-002 新案計畫送件核對表.docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-3.docx');
 
 function readDocXml(p) {

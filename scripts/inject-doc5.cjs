@@ -1,6 +1,6 @@
 // ===== IRB-012 免審申請表（DOC-5）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-5.docx
-// 來源：../原始範本/IRB-012 免審申請表.docx
+// 來源：../source-templates/IRB-012 免審申請表.docx
 //
 // ⚠️  DOC-5 = IRB-012 免審申請表
 // 執行：node scripts/inject-doc5.cjs  或  npm run inject-doc5
@@ -10,7 +10,7 @@ const fs   = require('fs');
 const path = require('path');
 const PizZip = require('pizzip');
 
-const SRC = path.join(__dirname, '../../原始範本/IRB-012 免審申請表.docx');
+const SRC = path.join(__dirname, '../../source-templates/IRB-012 免審申請表.docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-5.docx');
 
 function readDocXml(p) {

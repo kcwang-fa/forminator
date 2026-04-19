@@ -1,7 +1,15 @@
 // ===== 經費概算計算工具（共用於 Step5Budget 和 docgen）=====
+//
+// 為什麼獨立成一個檔案？
+// Step5Budget（UI 顯示即時小計）和 docgen（填入 Word 文件）都需要同樣的計算邏輯。
+// 抽出來就不會兩邊分開維護、算出不同結果。
+//
+// 管理費計算規則：（人事費 + 業務費 - PI費 - co-PI費）× 15%
+// （PI 和 co-PI 的費用不計入管理費基數，這是疾管署規定）
 
 import type { BudgetItem } from '../types/form';
 
+// 每個費用項目的固定 id，對應 defaults.ts 的 defaultBudgetItems
 export const PERSONNEL_IDS = ['pi_fee', 'co_pi_fee', 'ra_fee'];
 export const BUSINESS_IDS  = ['consumable', 'maintenance', 'office', 'travel'];
 export const CAPITAL_IDS   = ['hardware'];

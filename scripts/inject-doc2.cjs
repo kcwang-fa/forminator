@@ -1,6 +1,6 @@
 // ===== 署內研究計畫書（DOC-2）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-2.docx
-// 來源：../原始範本/署內研究計畫書.docx
+// 來源：../source-templates/署內研究計畫書.docx
 // 內容：封面 + 壹~捌主體（含目錄 PAGEREF、甘特圖 loop、人力配置 loop）+ 附表一/二/三
 //
 // ⚠️  DOC-2 ≠ DOC-4
@@ -13,7 +13,7 @@ const fs   = require('fs');
 const path = require('path');
 const PizZip = require('pizzip');
 
-const SRC  = path.join(__dirname, '../../原始範本/署內研究計畫書.docx');
+const SRC  = path.join(__dirname, '../../source-templates/署內研究計畫書.docx');
 const OUT  = path.join(__dirname, '../public/templates/DOC-2.docx');
 
 // ===== 工具 =====
@@ -116,7 +116,7 @@ function stripVMerge(cellXml) {
 }
 
 // 直式文字 cell：加 textDirection tbRlV + 置中 + DFKai-SB 字型
-// 用於 noData row 的類別標籤 col 0，與原始範本的 loop row 同格式
+// 用於 noData row 的類別標籤 col 0，與source-templates的 loop row 同格式
 function setVerticalCellText(cellXml, text) {
   // 1. 在 tcPr 加入 textDirection（若已存在則不重複）
   let result = cellXml.includes('textDirection')
@@ -261,7 +261,7 @@ xml = insertInNthEmptyCell(xml, '真', '{contact_fax}', 2);
 
 // 壹、綜合資料 — 經費摘要表（研究人力 / 申請金額 / 人事費 / 業務費 / 設備費）
 // 表格結構：Row 1 = 本年度資料列；Row 5 = 合計列（MVP 1年期故相同）
-// 注入策略：用 paraId 定位各儲存格（paraId 來自原始範本，不應更動）
+// 注入策略：用 paraId 定位各儲存格（paraId 來自source-templates，不應更動）
 function injectByParaId(xml, paraId, text) {
   const marker = `paraId="${paraId}"`;
   const idx = xml.indexOf(marker);

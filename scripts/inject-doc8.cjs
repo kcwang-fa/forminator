@@ -1,6 +1,6 @@
 // ===== 資料庫使用申請單（DOC-8）placeholder 注入腳本 =====
 // 輸出：public/templates/DOC-8.docx
-// 來源：../原始範本/資料庫_使用申請單.docx
+// 來源：../source-templates/資料庫_使用申請單.docx
 //
 // ⚠️  DOC-8 = 資料庫使用申請單（附件2）
 //     申請日期、申請者資料、研究計畫摘要各欄位、checkbox 等
@@ -11,7 +11,7 @@ const fs   = require('fs');
 const path = require('path');
 const PizZip = require('pizzip');
 
-const SRC = path.join(__dirname, '../../原始範本/資料庫_使用申請單.docx');
+const SRC = path.join(__dirname, '../../source-templates/資料庫_使用申請單.docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-8.docx');
 
 function readDocXml(p) {

@@ -17,7 +17,7 @@
     "inject-doc7": "node scripts/inject-doc7.cjs",
     "inject-doc8": "node scripts/inject-doc8.cjs",
     "inject-all": "node scripts/inject-doc2.cjs && node scripts/inject-doc3.cjs && node scripts/inject-doc4.cjs && node scripts/inject-doc5.cjs && node scripts/inject-doc6.cjs && node scripts/inject-doc7.cjs && node scripts/inject-doc8.cjs",
-    "gen-templates": "node scripts/generate-templates.cjs"
+    "gen-templates": "node scripts/legacy/generate-templates.cjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

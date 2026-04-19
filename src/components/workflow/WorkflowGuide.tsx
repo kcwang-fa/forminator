@@ -2,11 +2,27 @@
 
 import { Steps, Card, Tag, Space, Typography } from 'antd';
 import { MailOutlined, PhoneOutlined, FileTextOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
-import { workflowSteps, DOC_NAMES } from '../../data/defaults';
+import { DOC_NAMES } from '../../data/defaults';
+import { getPlanConfig } from '../../data/planConfigs';
+import { useFormStore } from '../../hooks/useFormStore';
 
 const { Text, Link } = Typography;
 
 export default function WorkflowGuide() {
+  const { watch } = useFormStore();
+  const reviewType = watch('review_type');
+  const { workflowSteps } = getPlanConfig(reviewType);
+
+  if (workflowSteps.length === 0) {
+    return (
+      <div style={{ marginTop: 32 }}>
+        <Card title="📋 申請流程導引（跑關順序）" style={{ borderColor: '#d9d4cc' }}>
+          <Text type="secondary">此計畫類型的申請流程說明尚在準備中。</Text>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div style={{ marginTop: 32 }}>
       <Card title="📋 申請流程導引（跑關順序）" style={{ borderColor: '#1677ff' }}>

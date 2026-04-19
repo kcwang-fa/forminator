@@ -1,17 +1,26 @@
 // ===== 文件生成 Hook =====
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import { useFormStore } from './useFormStore';
 import { generateAllDocuments } from '../utils/docgen';
-import { DOC_NAMES } from '../data/defaults';
+import { DOC_NAMES, type DocId } from '../data/defaults';
+import { getPlanConfig } from '../data/planConfigs';
 
-const ALL_DOCS = Object.keys(DOC_NAMES);
+const ALL_DOCS = Object.keys(DOC_NAMES) as DocId[];
 
 export function useDocumentGeneration() {
-  const { getValues } = useFormStore();
-  const [selectedDocs, setSelectedDocs] = useState<string[]>(ALL_DOCS);
+  const { getValues, watch } = useFormStore();
+  const reviewType = watch('review_type');
+  const planConfig = getPlanConfig(reviewType);
+
+  const [selectedDocs, setSelectedDocs] = useState<DocId[]>(() => planConfig.docs);
   const [generating, setGenerating] = useState(false);
+
+  // 切換計畫類型時，自動更新預選文件
+  useEffect(() => {
+    setSelectedDocs(planConfig.docs);
+  }, [reviewType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const download = useCallback(async () => {
     if (selectedDocs.length === 0) {
