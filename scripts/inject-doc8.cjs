@@ -92,10 +92,12 @@ xml = insertInNextCell(xml, '計畫緣起',  '{background}');
 xml = insertInNextCell(xml, '計畫目的',  '{purpose}');
 xml = insertInNextCell(xml, '實施方法及進行步驟', '{methodology}');
 
-// 分析期限、保留期限（原始格式：「分析期|限|：_____________」）
-// 第 2、3 個「：_____________」分別對應分析/保留期限（第 1 個是序號）
-xml = replaceNth(xml, '：_____________', '：{analysis_deadline_roc}', 2);
-xml = replaceNth(xml, '：_____________', '：{retention_deadline_roc}', 3);
+// 分析期限、保留期限
+// 原始 XML 共有 4 處「：_____________」(13 個底線)：
+//   ① 分析期限  ② 保留期限  ③ 其他分析平台  ④ 資科中心資料庫名稱
+// replaceNth 會在每次替換後重新計數，所以連續用 n=1 依序吃掉 ①②。
+xml = replaceNth(xml, '：_____________', '：{analysis_deadline_roc}', 1);
+xml = replaceNth(xml, '：_____________', '：{retention_deadline_roc}', 1);
 
 // ===== 資料交付方式 checkbox =====
 // 連續替換 ⬛️ 都用 n=1（前一個已被替換成其他文字）
@@ -123,7 +125,10 @@ xml = replaceNth(xml, '⬛️', '{pi_same}', 1); // 同申請人員（預設）
 // ===== 四、資料勾稽 checkbox =====
 xml = replaceNth(xml, '⬛️', '{cross_link_no}', 1); // 否（預設）
 xml = replaceText(xml, '□是', '{cross_link_yes}是');
-xml = replaceText(xml, '資科中心資料庫名稱：_____________', '資科中心資料庫名稱：{cross_link_db_name}');
+// 「資科中心資料庫名稱」標籤與「：_____________」位於不同 <w:t> run，
+// 無法用 replaceText 一次比對。改用 replaceNth：前兩處 (分析/保留) 已消耗，
+// 剩下「其他分析平台」「資科中心」兩處，資科中心為第 2 個。
+xml = replaceNth(xml, '：_____________', '：{cross_link_db_name}', 2);
 
 console.log('  ✓ 資料庫使用申請單 欄位注入');
 saveDoc(zip, xml, OUT);
