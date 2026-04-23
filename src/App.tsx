@@ -23,7 +23,7 @@ import Step5Budget from './components/wizard/Step5Budget';
 import Step6Database from './components/wizard/Step5Database';
 import WorkflowGuide from './components/workflow/WorkflowGuide';
 
-import { DOC_NAMES, SDD_VERSION, defaultFormData } from './data/defaults';
+import { DOC_NAMES, SDD_VERSION, defaultFormData, type DocId } from './data/defaults';
 import { getPlanConfig, type WizardStepKey } from './data/planConfigs';
 
 const { Header, Content, Footer } = Layout;
@@ -180,7 +180,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
               <h4>選擇要產生的文件</h4>
               <Checkbox.Group
                 value={selectedDocs}
-                onChange={(vals) => setSelectedDocs(vals as string[])}
+                onChange={(vals) => setSelectedDocs(vals as DocId[])}
                 style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
               >
                 {allDocs.map((doc) => (

@@ -21,6 +21,7 @@ import { toRocDate } from './date';
 import { DOC_NAMES, type DocId } from '../data/defaults';
 import { buildBudgetRows, calcTotal, isPersonnel, isBusiness, isCapital } from './budgetCalc';
 import { ROLE_MAP, EXEMPT_MAP, PURPOSE_MAP, ANALYSIS_LOCATION_MAP, OUTCOME_TYPE_MAP } from './docgenMaps';
+import { buildDatabaseUsageScope, getApplySystemText, getDataFieldRows } from './databaseScope';
 
 // DOC-6（IRB-018 保密切結書）和 DOC-7（資料庫保密切結書）需要每位研究人員各一份
 const PER_PERSON_DOCS = new Set<DocId>(['DOC-6', 'DOC-7']);
@@ -127,6 +128,32 @@ function prepareDatabaseData(data: FormData, pi: Personnel) {
   const outcomeDetails = data.outcome_type_detail;
   const findOutcome = (t: string) => outcomeDetails.find(o => o.type === t);
 
+  const applySystemText = getApplySystemText(data);
+  const dataFieldRows = getDataFieldRows(data);
+
+  // 欄位字串（DOC-10 需求內容描述用）
+  const fieldListText = dataFieldRows.length > 0
+    ? dataFieldRows.map(r => r.field_name).join('、')
+    : '';
+
+  // 申請年度（西元 YYYY 年）
+  const applyYearText = data.apply_year
+    ? `${new Date(data.apply_year).getFullYear()} 年`
+    : '';
+
+  // 申請日期拆解（DOC-11 分年／月／日欄位）— 民國年
+  const filingDate = data.filing_date ? new Date(data.filing_date) : null;
+  const filingYear  = filingDate ? String(filingDate.getFullYear() - 1911) : '';
+  const filingMonth = filingDate ? String(filingDate.getMonth() + 1).padStart(2, ' ') : '';
+  const filingDay   = filingDate ? String(filingDate.getDate()) : '';
+
+  // DOC-10 需求內容描述組字串
+  const doc10RequestDesc = [
+    `員工研究計畫「${data.project_title_zh || ''}」`,
+    `申請${applySystemText}「${data.apply_condition || ''}」之${fieldListText || '相關欄位'}，`,
+    '委請資訊室進行去識別化處理。',
+  ].join('');
+
   return {
     apply_unit: data.apply_unit,
     analysis_deadline_roc: toRocDate(data.analysis_deadline),
@@ -141,13 +168,13 @@ function prepareDatabaseData(data: FormData, pi: Personnel) {
       ? '同申請人員'
       : `${pi.name_zh || ''} / ${pi.title || ''} / ${pi.unit || ''}`,
     cross_link_text: data.cross_link_data_center ? '是' : '否',
-    db_usage_scope: '（請於列印後手動填寫）',
+    db_usage_scope: buildDatabaseUsageScope(data),
     // DOC-8 checkbox
     purpose_internal: data.research_purpose_type === 'internal_research' ? '■' : '□',
     purpose_thesis: data.research_purpose_type === 'thesis' ? '■' : '□',
     purpose_no_fund: data.research_purpose_type === 'no_fund_research' ? '■' : '□',
     purpose_other: data.research_purpose_type === 'other' ? '■' : '□',
-    purpose_other_detail: '',
+    purpose_other_detail: data.research_purpose_other_detail || '',
     delivery_paper: data.delivery_format === 'paper' ? '■' : '□',
     delivery_digital: data.delivery_format === 'digital' ? '■' : '□',
     loc_office: data.analysis_location.includes('office') ? '■' : '□',
@@ -158,6 +185,18 @@ function prepareDatabaseData(data: FormData, pi: Personnel) {
     cross_link_no: data.cross_link_data_center ? '□' : '■',
     cross_link_yes: data.cross_link_data_center ? '■' : '□',
     cross_link_db_name: '',
+
+    // DOC-8 第三區、DOC-9、DOC-10、DOC-11 共用
+    apply_system_text:  applySystemText,
+    apply_condition:    data.apply_condition || '',
+    apply_year_text:    applyYearText,
+    apply_purpose_text: '研究及發表',
+    data_field_rows:    dataFieldRows,
+    pi_unit:            pi.unit || '',
+    filing_year:        filingYear,
+    filing_month:       filingMonth,
+    filing_day:         filingDay,
+    doc10_request_desc: doc10RequestDesc,
     // 成果類型 checkbox 和計數
     outcome_policy: findOutcome('policy') ? '■' : '□',
     outcome_policy_count: findOutcome('policy')?.count?.toString() || '___',
@@ -394,7 +433,7 @@ async function generatePerPersonDoc(
     };
 
     const blob = await generateDoc(docId, personData);
-    const docName = DOC_NAMES[docId] || docId;
+    const docName = DOC_NAMES[docId as DocId] || docId;
     results.push({ filename: `${docName}（${person.name_zh}）.docx`, blob });
   }
 

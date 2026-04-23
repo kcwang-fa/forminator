@@ -56,10 +56,24 @@ const exemptWorkflowSteps: WorkflowStep[] = [
   },
   {
     step: 3,
-    title: '申請資料庫資料',
-    description: 'IRB 通過後，填妥 DOC-8 並列印，連同保密切結書送資訊室審核（送件方式請洽資訊室或企劃組）',
-    documents: ['DOC-7', 'DOC-8'],
-    signatureNotes: ['資料庫保密切結書：申請者簽名 + 單位主管簽名'],
+    title: '資料庫申請上簽',
+    description: 'IRB 通過後，將資料庫申請簽呈（DOC-9）連同使用申請單、保密切結書、個人資料利用申請表送單位主管、資料權責單位及資訊室、企劃組，一層核定',
+    documents: ['DOC-9', 'DOC-7', 'DOC-8', 'DOC-11'],
+    refDocuments: [{ label: 'IRB 審查許可書' }],
+    signatureNotes: [
+      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名',
+      'DOC-7 資料庫保密切結書：每位研究人員各自親簽',
+      'DOC-11 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章',
+    ],
+  },
+  {
+    step: 4,
+    title: '送資訊室去識別化',
+    description: '第 3 關奉核後，填妥應用系統維護單送資訊室，委請進行資料庫去識別化處理',
+    documents: ['DOC-10'],
+    signatureNotes: [
+      'DOC-10 應用系統維護單：申請單位核章 + 業務／系統權責單位審查',
+    ],
   },
 ];
 
@@ -69,7 +83,7 @@ export const PLAN_CONFIGS: Record<ReviewType, PlanConfig> = {
     id: 'exempt',
     label: '免審',
     description: '署內資料庫回溯性研究（免審）',
-    docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6', 'DOC-7', 'DOC-8'],
+    docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6', 'DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'],
     wizardStepKeys: ['basic', 'personnel', 'research', 'irb', 'budget', 'database'],
     workflowSteps: exemptWorkflowSteps,
     ready: true,

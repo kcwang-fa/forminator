@@ -2,7 +2,7 @@
 
 import { Steps, Card, Tag, Space, Typography } from 'antd';
 import { MailOutlined, PhoneOutlined, FileTextOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
-import { DOC_NAMES } from '../../data/defaults';
+import { DOC_NAMES, type DocId } from '../../data/defaults';
 import { getPlanConfig } from '../../data/planConfigs';
 import { useFormStore } from '../../hooks/useFormStore';
 
@@ -59,7 +59,7 @@ export default function WorkflowGuide() {
                   ))}
                   {step.documents.map((doc) => (
                     <Tag key={doc} icon={<FileTextOutlined />} color="blue">
-                      {DOC_NAMES[doc]}
+                      {DOC_NAMES[doc as DocId] || doc}
                     </Tag>
                   ))}
                 </Space>

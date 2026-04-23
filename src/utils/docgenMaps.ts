@@ -37,3 +37,14 @@ export const OUTCOME_TYPE_MAP: Record<string, string> = {
   paper_publish: '論文發表',
   other:         '其他',
 };
+
+// 倉儲系統可選的中文欄位 label（DOC-8 第三區 loop 展開用；DataFieldKey 對應）
+export const DATA_FIELD_MAP: Record<string, string> = {
+  case_id:      '傳染病報告單電腦編號',
+  gender:       '性別',
+  residence:    '居住縣市',
+  onset_date:   '發病日期(西元-yyyymmdd)',
+  main_symptom: '主要症狀',
+  is_dead:      '是否死亡',
+  death_date:   '死亡日期(西元-yyyymmdd)',
+};

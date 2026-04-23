@@ -11,6 +11,17 @@ export type DeliveryFormat = 'paper' | 'digital';
 export type AnalysisLocation = 'office' | 'personal_pc' | 'other_platform' | 'data_center';
 export type ExperimentType = 'human_research' | 'gene_recombination' | 'animal' | 'biosafety_level2' | 'high_risk_pathogen';
 export type FundingSource = 'cdc' | 'mohw' | 'nstc' | 'other';
+export type ApplySystem = 'warehouse' | 'other';
+// 倉儲系統可選的中文欄位；other 表示自填
+export type DataFieldKey =
+  | 'case_id'        // 傳染病報告單電腦編號
+  | 'gender'         // 性別
+  | 'residence'      // 居住縣市
+  | 'onset_date'     // 發病日期(西元-yyyymmdd)
+  | 'main_symptom'   // 主要症狀
+  | 'is_dead'        // 是否死亡
+  | 'death_date'     // 死亡日期(西元-yyyymmdd)
+  | 'other';         // 其他（使用者自填）
 
 // ===== 子結構 =====
 
@@ -151,12 +162,21 @@ export interface FormData {
   // §2.2.7 資料庫申請
   apply_unit: string;
   research_purpose_type: ResearchPurposeType;
+  research_purpose_other_detail: string;
   analysis_deadline: string;
   retention_deadline: string;
   delivery_format: DeliveryFormat;
   analysis_location: AnalysisLocation[];
   pi_same_as_applicant: boolean;
   cross_link_data_center: boolean;
+
+  // 資料庫申請系統與欄位（DOC-8、DOC-9、DOC-10、DOC-11 共用）
+  apply_system: ApplySystem;            // 申請系統：倉儲系統 / 其他
+  apply_system_other: string;           // apply_system === 'other' 時的自填名稱
+  apply_year: string;                   // 申請年度（西元 YYYY-MM-DD，沿用 DatePicker 格式）
+  apply_condition: string;              // 擷取資料條件（病名、菌名），例：「2018至2025年麻疹確定個案」
+  data_fields: DataFieldKey[];          // 選用的中文欄位（僅 apply_system='warehouse' 時有效）
+  data_fields_other: string;            // data_fields 包含 'other' 時的自填內容
 }
 
 // ===== 跑關流程 =====

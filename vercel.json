@@ -1,5 +1,6 @@
 {
   "framework": "vite",
+  "ignoreCommand": "git log -1 --pretty=%B | grep -q '\\[skip deploy\\]'",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

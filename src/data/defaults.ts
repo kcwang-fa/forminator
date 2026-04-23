@@ -137,12 +137,21 @@ export const defaultFormData: FormData = {
   // 資料庫申請 — MVP 預設
   apply_unit: '',
   research_purpose_type: 'no_fund_research',
+  research_purpose_other_detail: '',
   analysis_deadline: '',
   retention_deadline: '',
   delivery_format: 'digital',
   analysis_location: ['office', 'personal_pc'],
   pi_same_as_applicant: true,
   cross_link_data_center: false,
+
+  // 資料庫申請系統與欄位 — MVP 預設倉儲系統
+  apply_system: 'warehouse',
+  apply_system_other: '',
+  apply_year: '',
+  apply_condition: '',
+  data_fields: [],
+  data_fields_other: '',
 };
 
 /**
@@ -163,6 +172,9 @@ export const DOC_NAMES = {
   'DOC-6': 'IRB-018 保密切結書（研究人員）',
   'DOC-7': '資料庫保密切結書（署內員工使用）',
   'DOC-8': '資料庫使用申請單',
+  'DOC-9': '資料庫申請簽呈（含公文系統操作說明）',
+  'DOC-10': '應用系統維護單',
+  'DOC-11': '個人資料利用申請表',
 } as const;
 
 export type DocId = keyof typeof DOC_NAMES;
