@@ -2,6 +2,7 @@
 
 import type { FormData, ExportData, Personnel, PersonnelProfileExport } from '../types/form';
 import { SDD_VERSION } from '../data/defaults';
+import { normalizeFormData } from './formNormalization';
 
 const PROFILE_VERSION = '1.0';
 
@@ -94,7 +95,7 @@ export function importFromJson(file: File): Promise<{ data: FormData; version: s
           resolve(null);
           return;
         }
-        resolve({ data: parsed.data, version: parsed.sdd_version });
+        resolve({ data: normalizeFormData(parsed.data), version: parsed.sdd_version });
       } catch {
         resolve(null);
       }

@@ -1,7 +1,7 @@
 // ===== 研究計畫表單終結者 Forminator — 主應用 =====
 
 import { useRef, useCallback, useMemo } from 'react';
-import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, App as AntApp } from 'antd';
+import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, Collapse, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
 
@@ -40,6 +40,11 @@ const ALL_STEPS: Record<WizardStepKey, { title: string; component: React.Compone
   database:   { title: '資料庫申請', component: Step6Database },
 };
 
+const DOC_GROUPS: Array<{ key: string; label: string; docs: DocId[] }> = [
+  { key: 'irb', label: 'IRB', docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'] },
+  { key: 'database', label: '資料庫', docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'] },
+];
+
 function AppContent() {
   const form = useCreateFormStore();
   const { settings: llmSettings, setSettings: setLLMSettings } = useLLMSettings();
@@ -71,7 +76,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   }, [reviewType]);
 
   const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(steps.length);
-  const { selectedDocs, setSelectedDocs, generating, download, allDocs } = useDocumentGeneration();
+  const { selectedDocs, setSelectedDocs, generating, download } = useDocumentGeneration();
   const { handleExport, handleImport } = useImportExport();
   useAutoGantt();
   useAutoSave();
@@ -91,6 +96,30 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
       },
     });
   }, [form]);
+
+  const toggleDocGroup = useCallback((docs: DocId[]) => {
+    setSelectedDocs((prev) => {
+      const hasAllGroupDocs = docs.every((doc) => prev.includes(doc));
+      const hasOtherDocs = prev.some((doc) => !docs.includes(doc));
+
+      if (hasAllGroupDocs && hasOtherDocs) {
+        return docs;
+      }
+
+      if (!hasAllGroupDocs) {
+        return Array.from(new Set([...prev, ...docs]));
+      }
+
+      return prev.filter((doc) => !docs.includes(doc));
+    });
+  }, [setSelectedDocs]);
+
+  const updateDocGroupSelection = useCallback((groupDocs: DocId[], nextGroupDocs: DocId[]) => {
+    setSelectedDocs((prev) => {
+      const otherDocs = prev.filter((doc) => !groupDocs.includes(doc));
+      return [...otherDocs, ...nextGroupDocs];
+    });
+  }, [setSelectedDocs]);
 
   const CurrentStepComponent = steps[currentStep]?.component ?? Step1BasicInfo;
 
@@ -178,17 +207,47 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
 
             <div style={{ background: '#F0EDE8', borderRadius: 8, padding: 24, marginBottom: 24 }}>
               <h4>選擇要產生的文件</h4>
-              <Checkbox.Group
-                value={selectedDocs}
-                onChange={(vals) => setSelectedDocs(vals as DocId[])}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
-              >
-                {allDocs.map((doc) => (
-                  <Checkbox key={doc} value={doc}>
-                    <FileTextOutlined /> {doc} {DOC_NAMES[doc]}
-                  </Checkbox>
-                ))}
-              </Checkbox.Group>
+              <Collapse
+                ghost
+                items={DOC_GROUPS.map((group) => ({
+                  key: group.key,
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={group.docs.every((doc) => selectedDocs.includes(doc))}
+                          indeterminate={
+                            group.docs.some((doc) => selectedDocs.includes(doc)) &&
+                            !group.docs.every((doc) => selectedDocs.includes(doc))
+                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleDocGroup(group.docs);
+                          }}
+                        >
+                          {group.label}
+                        </Checkbox>
+                      </span>
+                      <span style={{ color: '#666056' }}>（{group.docs.length} 份）</span>
+                    </div>
+                  ),
+                  children: (
+                    <Checkbox.Group
+                      value={group.docs.filter((doc) => selectedDocs.includes(doc))}
+                      onChange={(vals) => updateDocGroupSelection(group.docs, vals as DocId[])}
+                    >
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {group.docs.map((doc) => (
+                          <Checkbox key={doc} value={doc}>
+                            <FileTextOutlined /> {doc} {DOC_NAMES[doc]}
+                          </Checkbox>
+                        ))}
+                      </div>
+                    </Checkbox.Group>
+                  ),
+                }))}
+              />
 
               <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
                 <Button type="primary" icon={<DownloadOutlined />} size="large"

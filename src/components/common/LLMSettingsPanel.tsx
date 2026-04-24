@@ -84,7 +84,7 @@ export default function LLMSettingsPanel({ settings, onSave }: Props) {
             {provider === 'groq' ? (
               <>使用模型：Qwen3 32B。可至 <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">Groq Console</a> 取得 API Key。</>
             ) : (
-              <>使用模型：Gemini 3.1 Flash Lite。可至 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Google AI Studio</a> 取得 API Key。</>
+              <>使用模型：Gemini 2.5 Flash-Lite。可至 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Google AI Studio</a> 取得 API Key。</>
             )}
           </Text>
         </Form>

@@ -33,8 +33,8 @@ export default function Step3Research() {
       setValue('keywords_zh', res.keywords_zh);
       setValue('keywords_en', res.keywords_en);
       message.success('摘要與關鍵字生成完成！可手動修改。');
-    } catch {
-      message.error('生成失敗，請稍後重試或手動填寫。');
+    } catch (err) {
+      message.error(`生成失敗：${err instanceof Error ? err.message : '未知錯誤'}`);
     } finally {
       setGenerating(false);
     }

@@ -58,21 +58,21 @@ const exemptWorkflowSteps: WorkflowStep[] = [
     step: 3,
     title: '資料庫申請上簽',
     description: 'IRB 通過後，將資料庫申請簽呈（DOC-9）連同使用申請單、保密切結書、個人資料利用申請表送單位主管、資料權責單位及資訊室、企劃組，一層核定',
-    documents: ['DOC-9', 'DOC-7', 'DOC-8', 'DOC-11'],
+    documents: ['DOC-9', 'DOC-7', 'DOC-8', 'DOC-10'],
     refDocuments: [{ label: 'IRB 審查許可書' }],
     signatureNotes: [
-      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名',
       'DOC-7 資料庫保密切結書：每位研究人員各自親簽',
-      'DOC-11 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章',
+      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名',
+      'DOC-10 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章',
     ],
   },
   {
     step: 4,
     title: '送資訊室去識別化',
-    description: '第 3 關奉核後，填妥應用系統維護單送資訊室，委請進行資料庫去識別化處理',
-    documents: ['DOC-10'],
+    description: '資料庫申請奉核後，填妥應用系統維護單送資訊室，委請進行資料庫去識別化處理',
+    documents: ['DOC-11'],
     signatureNotes: [
-      'DOC-10 應用系統維護單：申請單位核章 + 業務／系統權責單位審查',
+      'DOC-11 應用系統維護單：申請單位核章 + 業務／系統權責單位審查',
     ],
   },
 ];

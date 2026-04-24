@@ -54,7 +54,7 @@ AI 翻譯與摘要功能支援兩種 LLM 服務，使用者在網頁右上角「
 | 服務 | 模型 | 取得 API Key |
 |------|------|-------------|
 | Groq | Qwen3 32B | [Groq Console](https://console.groq.com/keys) |
-| Google Gemini | Gemini 3.1 Flash Lite | [Google AI Studio](https://aistudio.google.com/apikey) |
+| Google Gemini | Gemini 2.5 Flash-Lite | [Google AI Studio](https://aistudio.google.com/apikey) |
 
 後端環境變數（本地開發或自架部署時使用）：
 

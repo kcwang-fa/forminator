@@ -5,6 +5,7 @@ import { message } from 'antd';
 import { useFormStore } from './useFormStore';
 import { exportToJson } from '../utils/exportImport';
 import type { FormData } from '../types/form';
+import { normalizeFormData } from '../utils/formNormalization';
 
 const STORAGE_KEY = 'forminator_draft';
 const DEBOUNCE_MS = 2000;
@@ -14,7 +15,7 @@ export function loadDraft(): FormData | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as FormData;
+    return normalizeFormData(JSON.parse(raw));
   } catch {
     return null;
   }

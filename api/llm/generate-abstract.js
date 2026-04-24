@@ -1,5 +1,5 @@
 // Vercel Serverless Function — 摘要與關鍵字生成
-import { GoogleGenAI } from '@google/genai';
+import { callLlmJson, GEMINI_MODEL, GROQ_MODEL } from '../_lib/llm.js';
 
 const SYSTEM_PROMPT = `你是一位公共衛生研究計畫撰寫助手，專門協助疾管署研究人員撰寫計畫摘要。
 請根據以下研究內容，生成中文摘要、英文摘要、中文關鍵詞與英文關鍵詞。
@@ -20,48 +20,20 @@ const SYSTEM_PROMPT = `你是一位公共衛生研究計畫撰寫助手，專門
   "keywords_en": "..."
 }`;
 
-async function callGroq(apiKey, userPrompt) {
-  const model = 'qwen/qwen3-32b';
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+const RESPONSE_SCHEMA = {
+  name: 'generate_abstract',
+  schema: {
+    type: 'object',
+    properties: {
+      abstract_zh: { type: 'string' },
+      abstract_en: { type: 'string' },
+      keywords_zh: { type: 'string' },
+      keywords_en: { type: 'string' },
     },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.5,
-      max_tokens: 2000,
-    }),
-  });
-  if (!response.ok) {
-    const errBody = await response.text();
-    console.error('GROQ API error:', response.status, errBody);
-    throw new Error(`Groq API 錯誤: ${response.status}`);
-  }
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('LLM 回應為空');
-  return content.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<think>[\s\S]*/g, '').trim();
-}
-
-async function callGemini(apiKey, userPrompt) {
-  const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.1-flash-lite-preview',
-    config: {
-      systemInstruction: SYSTEM_PROMPT,
-    },
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-  });
-  const content = response.text;
-  if (!content) throw new Error('LLM 回應為空');
-  return content.trim();
-}
+    required: ['abstract_zh', 'abstract_en', 'keywords_zh', 'keywords_en'],
+    additionalProperties: false,
+  },
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -77,22 +49,26 @@ export default async function handler(req, res) {
 
     const userPrompt = `研究目的：\n${purpose}\n\n背景分析：\n${background}\n\n研究方法：\n${methodology}\n\n預期成果：\n${expected_outcome}`;
 
-    let content;
-    if (provider === 'gemini') {
-      content = await callGemini(apiKey, userPrompt);
-    } else {
-      content = await callGroq(apiKey, userPrompt);
-    }
+    const parsed = await callLlmJson(
+      provider,
+      apiKey,
+      SYSTEM_PROMPT,
+      userPrompt,
+      RESPONSE_SCHEMA,
+      { temperature: 0.5, maxTokens: 2000 },
+    );
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error('No JSON found in response:', content);
-      return res.status(502).json({ error: 'LLM 回應格式錯誤' });
-    }
-    const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);
   } catch (err) {
     console.error('generate-abstract error:', err);
-    res.status(500).json({ error: `生成失敗: ${err.message}` });
+    res.status(500).json({
+      error: `生成失敗: ${err instanceof Error ? err.message : '未知錯誤'}`,
+      provider: providerLabel(req.body?.provider),
+      model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
+    });
   }
+}
+
+function providerLabel(provider) {
+  return provider === 'gemini' ? 'Gemini' : 'Groq';
 }

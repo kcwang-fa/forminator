@@ -1,8 +1,8 @@
 // ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
 
-import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem } from '../types/form';
+import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest } from '../types/form';
 
-export const SDD_VERSION = '1.3.0';
+export const SDD_VERSION = '1.4.0';
 
 export const emptyEducation: Education = {
   degree: '',
@@ -28,6 +28,17 @@ export const emptyProject: Project = {
   start_ym: '',
   end_ym: '',
   summary: '',
+};
+
+export const emptyDatabaseRequest: DatabaseRequest = {
+  apply_system: 'warehouse',
+  apply_system_other: '',
+  apply_condition: '',
+  data_fields: [],
+  data_fields_other: [],
+  doc8_field_purposes: [],
+  db_usage_scope_item: '',
+  db_usage_scope_item_manual: false,
 };
 
 
@@ -113,8 +124,8 @@ export const defaultFormData: FormData = {
   abstract_en: '',
   keywords_zh: '',
   keywords_en: '',
-  outcome_type: ['paper_writing'],
-  outcome_type_detail: [{ type: 'paper_writing', count: 1, note: '' }],
+  outcome_type: [],
+  outcome_type_detail: [],
   references: '',
   gantt_chart: [],
 
@@ -145,13 +156,12 @@ export const defaultFormData: FormData = {
   pi_same_as_applicant: true,
   cross_link_data_center: false,
 
-  // 資料庫申請系統與欄位 — MVP 預設倉儲系統
-  apply_system: 'warehouse',
-  apply_system_other: '',
-  apply_year: '',
-  apply_condition: '',
-  data_fields: [],
-  data_fields_other: '',
+  apply_date: '',
+  apply_year_start: '',
+  apply_year_end: '',
+  irb_number: '',
+  db_apply_purpose: '',
+  database_requests: [{ ...emptyDatabaseRequest }],
 };
 
 /**
@@ -173,8 +183,8 @@ export const DOC_NAMES = {
   'DOC-7': '資料庫保密切結書（署內員工使用）',
   'DOC-8': '資料庫使用申請單',
   'DOC-9': '資料庫申請簽呈（含公文系統操作說明）',
-  'DOC-10': '應用系統維護單',
-  'DOC-11': '個人資料利用申請表',
+  'DOC-10': '個人資料利用申請表',
+  'DOC-11': '應用系統維護單',
 } as const;
 
 export type DocId = keyof typeof DOC_NAMES;

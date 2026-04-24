@@ -102,6 +102,23 @@ export interface OutcomeTypeDetail {
   type: OutcomeType;
   count: number;
   note: string;
+  publish_date: string;
+}
+
+export interface DatabaseFieldPurpose {
+  field_name: string;
+  apply_purpose: string;
+}
+
+export interface DatabaseRequest {
+  apply_system: ApplySystem;            // 申請系統：倉儲系統 / 其他
+  apply_system_other: string;           // apply_system === 'other' 時的自填名稱
+  apply_condition: string;              // 擷取資料條件（病名、菌名），例：「2018至2025年麻疹確定個案」
+  data_fields: DataFieldKey[];          // 選用的中文欄位（僅 apply_system='warehouse' 時有效）
+  data_fields_other: string[];          // data_fields 包含 'other' 時的自填內容（可多筆）
+  doc8_field_purposes: DatabaseFieldPurpose[]; // DOC-8 每個中文欄位名稱對應的個別申請目的
+  db_usage_scope_item: string;          // 單一申請系統的使用範圍明細
+  db_usage_scope_item_manual: boolean;  // true 表示使用者已手動修改，不再自動覆寫
 }
 
 // ===== 主表單資料結構 =====
@@ -169,14 +186,12 @@ export interface FormData {
   analysis_location: AnalysisLocation[];
   pi_same_as_applicant: boolean;
   cross_link_data_center: boolean;
-
-  // 資料庫申請系統與欄位（DOC-8、DOC-9、DOC-10、DOC-11 共用）
-  apply_system: ApplySystem;            // 申請系統：倉儲系統 / 其他
-  apply_system_other: string;           // apply_system === 'other' 時的自填名稱
-  apply_year: string;                   // 申請年度（西元 YYYY-MM-DD，沿用 DatePicker 格式）
-  apply_condition: string;              // 擷取資料條件（病名、菌名），例：「2018至2025年麻疹確定個案」
-  data_fields: DataFieldKey[];          // 選用的中文欄位（僅 apply_system='warehouse' 時有效）
-  data_fields_other: string;            // data_fields 包含 'other' 時的自填內容
+  apply_date: string;                   // 申請日期（西元 YYYY-MM-DD）
+  apply_year_start: string;             // 資料擷取期間起（西元 YYYY-MM-DD）
+  apply_year_end: string;               // 資料擷取期間迄（西元 YYYY-MM-DD）
+  irb_number: string;                   // IRB 編號
+  db_apply_purpose: string;             // DOC-8 中文欄位旁的申請目的（可由 LLM 生成後手動編修）
+  database_requests: DatabaseRequest[]; // 多個申請系統明細（DOC-8、DOC-9、DOC-10、DOC-11 共用）
 }
 
 // ===== 跑關流程 =====

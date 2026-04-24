@@ -92,6 +92,10 @@ xml = xml.replace(
 // ===== 二、研究計畫摘要（表格欄位）=====
 xml = insertInNextCell(xml, '年   度',   '{project_year}');
 xml = insertInNextCell(xml, '計畫名稱',  '{project_title_zh}');
+xml = xml.replace(
+  /(<w:t>計畫期間<\/w:t>[\s\S]*?<\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*><w:pPr>[\s\S]*?<\/w:pPr>)(<\/w:p><\/w:tc>)/,
+  '$1<w:r><w:t>{execution_period_text}</w:t></w:r>$2'
+);
 xml = insertInNextCell(xml, '計畫緣起',  '{background}');
 xml = insertInNextCell(xml, '計畫目的',  '{purpose}');
 xml = insertInNextCell(xml, '實施方法及進行步驟', '{methodology}');
@@ -117,7 +121,7 @@ xml = xml.replace(/(>)□(<\/w:t><\/w:r>[\s\S]{0,400}?<w:t[^>]*>)其他分析平
 xml = replaceText(xml, '□資科中心', '{loc_data_center}資科中心');
 
 // ===== 研究成果預計處理類型 checkbox =====
-xml = replaceNth(xml, '⬛️', '{outcome_paper_writing}', 1); // 3.論文寫作（預設）
+xml = replaceNth(xml, '⬛️', '{outcome_paper_writing}', 1); // 3.論文寫作
 xml = replaceText(xml, '□1.提供決策___件', '{outcome_policy}1.提供決策{outcome_policy_count}件');
 xml = replaceText(xml, '□2.研究報告___件 ', '{outcome_report}2.研究報告{outcome_report_count}件 ');
 xml = replaceText(xml,
@@ -135,84 +139,108 @@ xml = replaceText(xml, '□是', '{cross_link_yes}是');
 // 剩下「其他分析平台」「資科中心」兩處，資科中心為第 2 個。
 xml = replaceNth(xml, '：_____________', '：{cross_link_db_name}', 2);
 
-// ===== 三、申請使用之防疫資料庫（第一個區塊）=====
-// 原始表格每區塊有 2 個 header row + 3 個空白 data row（序號 1/2/3）。
-// 我們只處理第一個區塊；後兩個區塊留給使用者需要多系統申請時自行填。
-//
-// 第一個 header row 有 6 個 cells：
-//   cell 0/2/4 是 label（申請系統名稱／擷取資料條件／申請年度）
-//   cell 1/3/5 是空白 data cells（注入 placeholder）
-// 第二個 header row 是「序號 / 中文欄位名稱 / 申請目的」。
-// 接著 3 個 data rows（序號 1/2/3），我們把序號 1 的 row 改成 docxtemplater loop，
-// 並刪除序號 2/3 的 row（由 loop 動態展開）。
-{
-  // 找第一個「申請系統」header row 範圍
-  const sysMatch = xml.match(/<w:t[^>]*>申請系統<\/w:t>/);
-  if (!sysMatch) throw new Error('找不到「申請系統」');
-  const labelPos = sysMatch.index;
+function injectPlaceholderIntoEmptyCell(cellXml, placeholder) {
+  const lastPClose = cellXml.lastIndexOf('</w:p>');
+  if (lastPClose === -1) throw new Error('cell 無段落可注入 placeholder');
+  return cellXml.slice(0, lastPClose) +
+    `<w:r><w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
+    cellXml.slice(lastPClose);
+}
+
+function processDatabaseSection(sectionIndex, suffix) {
+  const sysRe = /<w:t[^>]*>申請系統<\/w:t>/g;
+  const sysMatches = [...xml.matchAll(sysRe)];
+  if (sysMatches.length < sectionIndex + 1) {
+    throw new Error(`找不到第 ${sectionIndex + 1} 個「申請系統」區塊`);
+  }
+
+  const labelPos = sysMatches[sectionIndex].index;
   const headerTrStart = xml.lastIndexOf('<w:tr ', labelPos);
   const headerTrEnd = xml.indexOf('</w:tr>', labelPos) + '</w:tr>'.length;
   let headerRow = xml.slice(headerTrStart, headerTrEnd);
 
-  // 拆出 6 個 cells
-  const cellRanges = [];
+  const headerCellRanges = [];
   let p = 0;
   while (true) {
     const s = headerRow.indexOf('<w:tc>', p);
     if (s === -1) break;
     const e = headerRow.indexOf('</w:tc>', s) + '</w:tc>'.length;
-    cellRanges.push([s, e]);
+    headerCellRanges.push([s, e]);
     p = e;
   }
-  if (cellRanges.length !== 6) throw new Error(`header row 預期 6 cells，實得 ${cellRanges.length}`);
+  if (headerCellRanges.length !== 6) throw new Error(`第 ${sectionIndex + 1} 個 header row 預期 6 cells，實得 ${headerCellRanges.length}`);
 
-  // 在空白 cell（1/3/5）的空段落中插入 placeholder run
-  const injectPlaceholderIntoEmptyCell = (cellXml, placeholder) => {
-    // 找該 cell 最後一個 <w:p...></w:p> 中的位置，在 </w:p> 前塞入 <w:r><w:t>{x}</w:t></w:r>
-    const lastPClose = cellXml.lastIndexOf('</w:p>');
-    if (lastPClose === -1) throw new Error('cell 無段落可注入 placeholder');
-    return cellXml.slice(0, lastPClose) +
-      `<w:r><w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
-      cellXml.slice(lastPClose);
+  const injectIntoHeaderCell = (idx, placeholder) => {
+    const [s, e] = headerCellRanges[idx];
+    headerRow = headerRow.slice(0, s)
+      + injectPlaceholderIntoEmptyCell(headerRow.slice(s, e), placeholder)
+      + headerRow.slice(e);
   };
 
-  // 從後往前替換才不會位移 index
-  const injectIntoCell = (idx, placeholder) => {
-    const [s, e] = cellRanges[idx];
-    const before = headerRow.slice(0, s);
-    const cell = headerRow.slice(s, e);
-    const after = headerRow.slice(e);
-    headerRow = before + injectPlaceholderIntoEmptyCell(cell, placeholder) + after;
-  };
-
-  // 倒序注入避免 range 失效
-  injectIntoCell(5, '{apply_year_text}');
-  injectIntoCell(3, '{apply_condition}');
-  injectIntoCell(1, '{apply_system_text}');
-
-  // 替換回 xml
+  injectIntoHeaderCell(5, `{apply_year_text${suffix}}`);
+  injectIntoHeaderCell(3, `{apply_condition${suffix}}`);
+  injectIntoHeaderCell(1, `{apply_system_text${suffix}}`);
   xml = xml.slice(0, headerTrStart) + headerRow + xml.slice(headerTrEnd);
-}
 
-// 「序號 1/2/3」三個 data rows：序號 1 改成 loop、2/3 刪除
-{
-  // 定位「序號」header row（107xxx 那個，不是申請日期旁的「序號：___」）
-  // 從第 2 個 <w:t>序號</w:t> 開始
   const seqRe = /<w:t[^>]*>序號<\/w:t>/g;
-  const matches = [...xml.matchAll(seqRe)];
-  if (matches.length < 2) throw new Error('找不到第 2 個「序號」出現位置');
-  const seqHeaderPos = matches[1].index;
+  const seqMatches = [...xml.matchAll(seqRe)];
+  const seqMatchIndex = sectionIndex + 1;
+  if (seqMatches.length < seqMatchIndex + 1) {
+    throw new Error(`找不到第 ${seqMatchIndex + 1} 個「序號」區塊`);
+  }
+  const seqHeaderPos = seqMatches[seqMatchIndex].index;
   const seqHeaderTrEnd = xml.indexOf('</w:tr>', seqHeaderPos) + '</w:tr>'.length;
 
-  // 下一個 tr 是「1」、再下 tr 是「2」、再下 tr 是「3」
   const row1Start = xml.indexOf('<w:tr ', seqHeaderTrEnd);
   const row1End = xml.indexOf('</w:tr>', row1Start) + '</w:tr>'.length;
   const row2End = xml.indexOf('</w:tr>', row1End) + '</w:tr>'.length;
   const row3End = xml.indexOf('</w:tr>', row2End) + '</w:tr>'.length;
 
   let row1 = xml.slice(row1Start, row1End);
+  const dataCellRanges = [];
+  p = 0;
+  while (true) {
+    const s = row1.indexOf('<w:tc>', p);
+    if (s === -1) break;
+    const e = row1.indexOf('</w:tc>', s) + '</w:tc>'.length;
+    dataCellRanges.push([s, e]);
+    p = e;
+  }
+  if (dataCellRanges.length !== 3) throw new Error(`第 ${sectionIndex + 1} 個 data row 預期 3 cells，實得 ${dataCellRanges.length}`);
 
-  // 拆 row1 的 3 cells
+  const loopName = `data_field_rows${suffix}`;
+  const updateDataCell = (idx, placeholder) => {
+    const [s, e] = dataCellRanges[idx];
+    row1 = row1.slice(0, s)
+      + injectPlaceholderIntoEmptyCell(row1.slice(s, e), placeholder)
+      + row1.slice(e);
+  };
+
+  updateDataCell(2, `{apply_purpose}{/${loopName}}`);
+  updateDataCell(1, '{field_name}');
+  row1 = row1.replace(/<w:t[^>]*>1<\/w:t>/, `<w:t xml:space="preserve">{#${loopName}}{field_index}</w:t>`);
+
+  xml = xml.slice(0, row1Start) + row1 + xml.slice(row3End);
+}
+
+function processDbPersonnelRoster() {
+  const label = '共同參與研究人員及實際處理資料人員清冊';
+  const labelPos = xml.indexOf(label);
+  if (labelPos === -1) {
+    throw new Error(`找不到「${label}」區塊`);
+  }
+
+  const labelRowEnd = xml.indexOf('</w:tr>', labelPos) + '</w:tr>'.length;
+  const headerRowStart = xml.indexOf('<w:tr ', labelRowEnd);
+  const headerRowEnd = xml.indexOf('</w:tr>', headerRowStart) + '</w:tr>'.length;
+
+  const row1Start = xml.indexOf('<w:tr ', headerRowEnd);
+  const row1End = xml.indexOf('</w:tr>', row1Start) + '</w:tr>'.length;
+  const row2End = xml.indexOf('</w:tr>', row1End) + '</w:tr>'.length;
+  const row3End = xml.indexOf('</w:tr>', row2End) + '</w:tr>'.length;
+  const row4End = xml.indexOf('</w:tr>', row3End) + '</w:tr>'.length;
+
+  let row1 = xml.slice(row1Start, row1End);
   const cellRanges = [];
   let p = 0;
   while (true) {
@@ -222,33 +250,30 @@ xml = replaceNth(xml, '：_____________', '：{cross_link_db_name}', 2);
     cellRanges.push([s, e]);
     p = e;
   }
-  if (cellRanges.length !== 3) throw new Error(`data row 預期 3 cells，實得 ${cellRanges.length}`);
-
-  // Cell 0: 序號「1」 → 改成 `{#data_field_rows}{field_index}`
-  // Cell 1: 空白 → 注入 `{field_name}`
-  // Cell 2: 空白 → 注入 `{apply_purpose_text}{/data_field_rows}`
-  const injectEmpty = (cell, placeholder) => {
-    const lastPClose = cell.lastIndexOf('</w:p>');
-    return cell.slice(0, lastPClose) +
-      `<w:r><w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
-      cell.slice(lastPClose);
-  };
-
-  // 倒序修改
-  {
-    const [s, e] = cellRanges[2];
-    row1 = row1.slice(0, s) + injectEmpty(row1.slice(s, e), '{apply_purpose_text}{/data_field_rows}') + row1.slice(e);
+  if (cellRanges.length !== 4) {
+    throw new Error(`共同人員清冊資料列預期 4 cells，實得 ${cellRanges.length}`);
   }
-  {
-    const [s, e] = cellRanges[1];
-    row1 = row1.slice(0, s) + injectEmpty(row1.slice(s, e), '{field_name}') + row1.slice(e);
-  }
-  // Cell 0: 把 `<w:t>1</w:t>` 換成 `<w:t>{#data_field_rows}{field_index}</w:t>`
-  row1 = row1.replace(/<w:t[^>]*>1<\/w:t>/, '<w:t xml:space="preserve">{#data_field_rows}{field_index}</w:t>');
 
-  // 用修改後的 row1 取代原 row1 + row2 + row3（刪除 row2/3）
-  xml = xml.slice(0, row1Start) + row1 + xml.slice(row3End);
+  const placeholders = ['{#db_personnel}{name_zh}', '{unit}', '{title}', '{phone}{/db_personnel}'];
+  // 由右往左改，避免前面 cell 插入 placeholder 後把後面 cell 的 index 擠歪
+  placeholders.slice().reverse().forEach((placeholder, reverseIdx) => {
+    const idx = placeholders.length - 1 - reverseIdx;
+    const [s, e] = cellRanges[idx];
+    row1 = row1.slice(0, s)
+      + injectPlaceholderIntoEmptyCell(row1.slice(s, e), placeholder)
+      + row1.slice(e);
+  });
+
+  xml = xml.slice(0, row1Start) + row1 + xml.slice(row4End);
 }
+
+// 將 header label「申請年度」改為「資料期間」
+xml = replaceText(xml, '申請年度', '資料期間');
+
+processDatabaseSection(0, '');
+processDatabaseSection(1, '_2');
+processDatabaseSection(2, '_3');
+processDbPersonnelRoster();
 
 console.log('  ✓ 資料庫使用申請單 欄位注入');
 saveDoc(zip, xml, OUT);

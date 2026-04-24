@@ -4,7 +4,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { GoogleGenAI } from '@google/genai';
+import { callLlmJson, GEMINI_MODEL, GROQ_MODEL } from './api/_lib/llm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -15,49 +15,8 @@ app.use(express.json());
 // 靜態檔案（React build）
 app.use(express.static(join(__dirname, 'dist')));
 
-// ===== 共用：呼叫 Groq API =====
-async function callGroq(apiKey, messages, temperature, maxTokens) {
-  const model = 'qwen/qwen3-32b';
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
-  });
-  if (!response.ok) {
-    const errBody = await response.text();
-    console.error('GROQ API error:', response.status, errBody);
-    throw new Error(`Groq API 錯誤: ${response.status}`);
-  }
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('LLM 回應為空');
-  // 清除 qwen3 的 <think> 標籤
-  return content.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<think>[\s\S]*/g, '').trim();
-}
-
-// ===== 共用：呼叫 Gemini API =====
-async function callGemini(apiKey, systemPrompt, userPrompt) {
-  const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.1-flash-lite-preview',
-    config: {
-      systemInstruction: systemPrompt,
-    },
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-  });
-  const content = response.text;
-  if (!content) throw new Error('LLM 回應為空');
-  return content.trim();
-}
-
-// ===== 共用：從 LLM 回應中提取 JSON =====
-function extractJson(text) {
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('LLM 回應格式錯誤');
-  return JSON.parse(jsonMatch[0]);
+function providerLabel(provider) {
+  return provider === 'gemini' ? 'Gemini' : 'Groq';
 }
 
 // §4.3 Prompt A：計畫名稱英文翻譯
@@ -74,22 +33,35 @@ app.post('/api/llm/translate-title', async (req, res) => {
 3. 採用 Title Case 格式
 4. 僅輸出 JSON 格式：{ "project_title_en": "..." }`;
     const userPrompt = `計畫名稱：${project_title_zh}`;
+    const responseSchema = {
+      name: 'translate_title',
+      schema: {
+        type: 'object',
+        properties: {
+          project_title_en: { type: 'string' },
+        },
+        required: ['project_title_en'],
+        additionalProperties: false,
+      },
+    };
 
-    let content;
-    if (provider === 'gemini') {
-      content = await callGemini(apiKey, systemPrompt, userPrompt);
-    } else {
-      content = await callGroq(apiKey, [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ], 0.3, 1024);
-    }
+    const parsed = await callLlmJson(
+      provider,
+      apiKey,
+      systemPrompt,
+      userPrompt,
+      responseSchema,
+      { temperature: 0.3, maxTokens: 1024 },
+    );
 
-    const parsed = extractJson(content);
     res.json(parsed);
   } catch (err) {
     console.error('translate-title error:', err);
-    res.status(500).json({ error: `翻譯失敗: ${err.message}` });
+    res.status(500).json({
+      error: `翻譯失敗: ${err instanceof Error ? err.message : '未知錯誤'}`,
+      provider: providerLabel(req.body?.provider),
+      model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
+    });
   }
 });
 
@@ -121,27 +93,125 @@ app.post('/api/llm/generate-abstract', async (req, res) => {
   "keywords_en": "..."
 }`;
     const userPrompt = `研究目的：\n${purpose}\n\n背景分析：\n${background}\n\n研究方法：\n${methodology}\n\n預期成果：\n${expected_outcome}`;
+    const responseSchema = {
+      name: 'generate_abstract',
+      schema: {
+        type: 'object',
+        properties: {
+          abstract_zh: { type: 'string' },
+          abstract_en: { type: 'string' },
+          keywords_zh: { type: 'string' },
+          keywords_en: { type: 'string' },
+        },
+        required: ['abstract_zh', 'abstract_en', 'keywords_zh', 'keywords_en'],
+        additionalProperties: false,
+      },
+    };
 
-    let content;
-    if (provider === 'gemini') {
-      content = await callGemini(apiKey, systemPrompt, userPrompt);
-    } else {
-      content = await callGroq(apiKey, [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ], 0.5, 2000);
-    }
+    const parsed = await callLlmJson(
+      provider,
+      apiKey,
+      systemPrompt,
+      userPrompt,
+      responseSchema,
+      { temperature: 0.5, maxTokens: 2000 },
+    );
 
-    const parsed = extractJson(content);
     res.json(parsed);
   } catch (err) {
     console.error('generate-abstract error:', err);
-    res.status(500).json({ error: `生成失敗: ${err.message}` });
+    res.status(500).json({
+      error: `生成失敗: ${err instanceof Error ? err.message : '未知錯誤'}`,
+      provider: providerLabel(req.body?.provider),
+      model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
+    });
+  }
+});
+
+// DOC-8：逐欄位申請目的生成
+app.post('/api/llm/generate-db-purpose', async (req, res) => {
+  try {
+    const { purpose, methodology, apply_system_text, apply_condition, field_names, provider, apiKey } = req.body;
+    if (!purpose || !methodology || !apply_system_text || !Array.isArray(field_names) || field_names.length === 0) {
+      return res.status(400).json({ error: '缺少必要欄位' });
+    }
+    if (!apiKey) return res.status(400).json({ error: '請先設定 API Key' });
+
+    const systemPrompt = `你是一位熟悉疾管署防疫資料庫申請文件的公衛研究計畫撰寫助手。
+請根據研究目的、研究方法／實施方法及進行步驟，以及本次申請的資料庫系統、資料條件與欄位，為每一個中文欄位名稱分別撰寫 DOC-8 的「申請目的」。
+
+重要：
+1. 所有中文內容必須使用繁體中文與台灣用語。
+2. 每個欄位都要有不同的申請目的，不可整批複製同一句。
+3. 文風要正式、精簡，符合公務申請文件。
+4. 聚焦該欄位在研究分析中的用途，不要捏造未提供的方法。
+5. 每個欄位的申請目的控制在 20 到 50 字。
+6. 依輸入欄位順序輸出。
+7. 僅輸出 JSON，不要輸出其他文字。
+
+輸出格式：
+{
+  "field_purposes": [
+    { "field_name": "...", "apply_purpose": "..." }
+  ]
+}`;
+
+    const userPrompt = [
+      `研究目的：\n${purpose}`,
+      `研究方法／實施方法及進行步驟：\n${methodology}`,
+      `申請系統：${apply_system_text}`,
+      `擷取資料條件：${apply_condition || '未填寫'}`,
+      `欄位名稱：\n${field_names.map((name, index) => `${index + 1}. ${name}`).join('\n')}`,
+    ].join('\n\n');
+    const responseSchema = {
+      name: 'generate_db_purpose',
+      schema: {
+        type: 'object',
+        properties: {
+          field_purposes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                field_name: { type: 'string' },
+                apply_purpose: { type: 'string' },
+              },
+              required: ['field_name', 'apply_purpose'],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['field_purposes'],
+        additionalProperties: false,
+      },
+    };
+
+    const parsed = await callLlmJson(
+      provider,
+      apiKey,
+      systemPrompt,
+      userPrompt,
+      responseSchema,
+      { temperature: 0.4, maxTokens: 1200 },
+    );
+
+    res.json(parsed);
+  } catch (err) {
+    console.error('generate-db-purpose error:', err);
+    res.status(500).json({
+      error: `生成失敗: ${err instanceof Error ? err.message : '未知錯誤'}`,
+      provider: providerLabel(req.body?.provider),
+      model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
+    });
   }
 });
 
 // SPA fallback
-app.get('*', (_req, res) => {
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
