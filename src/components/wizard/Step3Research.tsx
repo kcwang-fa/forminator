@@ -100,7 +100,7 @@ export default function Step3Research() {
         control={control}
         rules={{ required: '請輸入研究方法' }}
         render={({ field, fieldState }) => (
-          <Form.Item label="研究方法／實施方法及進行步驟" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+          <Form.Item label="研究方法" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
             <Input.TextArea {...field} rows={6} placeholder="本研究採用回溯性研究設計..." />
           </Form.Item>
         )}
@@ -111,7 +111,18 @@ export default function Step3Research() {
         control={control}
         rules={{ required: '請輸入預期成果' }}
         render={({ field, fieldState }) => (
-          <Form.Item label="預期成果及主要效益" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+          <Form.Item
+            label={(
+              <span>
+                預期成果
+                <br />
+                及主要效益
+              </span>
+            )}
+            required
+            validateStatus={fieldState.error ? 'error' : ''}
+            help={fieldState.error?.message}
+          >
             <Input.TextArea {...field} rows={3} placeholder="本研究預期..." />
           </Form.Item>
         )}

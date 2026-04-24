@@ -1,7 +1,7 @@
 // ===== 研究計畫表單終結者 Forminator — 主應用 =====
 
 import { useRef, useCallback, useMemo } from 'react';
-import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, Collapse, App as AntApp } from 'antd';
+import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, Collapse, Card, Tag, Grid, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
 
@@ -45,6 +45,36 @@ const DOC_GROUPS: Array<{ key: string; label: string; docs: DocId[] }> = [
   { key: 'database', label: '資料庫', docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'] },
 ];
 
+const STEP_WORKBENCH_MAP: Record<WizardStepKey, { docs: DocId[] }> = {
+  basic: {
+    docs: ['DOC-1', 'DOC-2'],
+  },
+  personnel: {
+    docs: ['DOC-2', 'DOC-6'],
+  },
+  research: {
+    docs: ['DOC-2', 'DOC-4'],
+  },
+  irb: {
+    docs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
+  },
+  budget: {
+    docs: ['DOC-1', 'DOC-2'],
+  },
+  database: {
+    docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'],
+  },
+};
+
+const STEP_HINT_MAP: Record<WizardStepKey, string> = {
+  basic: '先把計畫的骨架定清楚，後續文件主旨、封面、期間與單位會一起跟著走。',
+  personnel: '這一步決定逐人文件與研究團隊附表內容。',
+  research: '這一步會影響計畫書、資料庫使用範圍與後續簽呈文案，是整份案子的內容核心。',
+  irb: '確認審查類型、資料來源與保護措施，這些內容會直接進入 IRB 文件。',
+  budget: '先整理經費概算與需求，讓簽核文件裡的計畫資訊完整一致。',
+  database: '這一步會影響資料庫申請單、資料庫簽呈、個資表與應用系統維護單。',
+};
+
 function AppContent() {
   const form = useCreateFormStore();
   const { settings: llmSettings, setSettings: setLLMSettings } = useLLMSettings();
@@ -70,10 +100,12 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
 }) {
   // 根據 review_type 動態決定步驟清單
   const reviewType = form.watch('review_type');
+  const planConfig = useMemo(() => getPlanConfig(reviewType), [reviewType]);
+  const screens = Grid.useBreakpoint();
+  const isDesktop = !!screens.lg;
   const steps = useMemo(() => {
-    const { wizardStepKeys } = getPlanConfig(reviewType);
-    return wizardStepKeys.map(key => ALL_STEPS[key]);
-  }, [reviewType]);
+    return planConfig.wizardStepKeys.map((key) => ({ key, ...ALL_STEPS[key] }));
+  }, [planConfig]);
 
   const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(steps.length);
   const { selectedDocs, setSelectedDocs, generating, download } = useDocumentGeneration();
@@ -121,7 +153,9 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
     });
   }, [setSelectedDocs]);
 
-  const CurrentStepComponent = steps[currentStep]?.component ?? Step1BasicInfo;
+  const currentStepDef = steps[currentStep] ?? { key: 'basic' as const, ...ALL_STEPS.basic };
+  const CurrentStepComponent = currentStepDef.component;
+  const currentStepDocs = STEP_WORKBENCH_MAP[currentStepDef.key].docs;
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -157,47 +191,142 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
         </Space>
       </Header>
 
-      <Content style={{ padding: '24px', maxWidth: 960, margin: '0 auto', width: '100%' }} ref={contentRef}>
+      <Content
+        style={{
+          padding: isDesktop ? '24px' : '16px',
+          maxWidth: 1440,
+          margin: '0 auto',
+          width: '100%',
+        }}
+        ref={contentRef}
+      >
         <DataLossWarning onExport={handleExport} hasData={hasData} />
-        <Text type="secondary" style={{ display: 'block', fontSize: 15, marginBottom: 20 }}>
-          本工具適用於署內研究免審申請，協助快速產生計畫書、IRB 申請表及相關文件
-        </Text>
 
         {!showResult ? (
-          <>
-            <Steps
-              current={currentStep}
-              items={steps.map((s) => ({ title: s.title }))}
-              style={{ marginBottom: 32 }}
-              onChange={goTo}
-            />
-
-            <div style={{ minHeight: 400 }}>
-              <CurrentStepComponent />
-            </div>
-
-            <Divider />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={prev}
-                disabled={isFirst}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isDesktop ? '260px minmax(0, 1fr)' : '1fr',
+              gap: 20,
+              alignItems: 'start',
+            }}
+          >
+            <div style={{ position: isDesktop ? 'sticky' : 'static', top: 88 }}>
+              <Card
+                title="申請流程"
+                style={{
+                  marginBottom: 16,
+                  borderColor: '#D9D4CC',
+                  boxShadow: '0 8px 20px rgba(86, 74, 59, 0.05)',
+                }}
               >
-                上一步
-              </Button>
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Space wrap size={8}>
+                    <Tag color="blue">{planConfig.label}</Tag>
+                    <Tag color="default">{steps.length} 個填寫步驟</Tag>
+                    <Tag color="default">{planConfig.docs.length} 份文件</Tag>
+                  </Space>
+                  <Text type="secondary">{planConfig.description}</Text>
+                  <Steps
+                    direction="vertical"
+                    size="small"
+                    current={currentStep}
+                    items={steps.map((step, index) => ({
+                      title: (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span>{step.title}</span>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            第 {index + 1} 步
+                          </Text>
+                        </div>
+                      ),
+                    }))}
+                    onChange={goTo}
+                  />
+                </Space>
+              </Card>
 
-              {!isLast ? (
-                <Button type="primary" onClick={next}>
-                  下一步 <ArrowRightOutlined />
-                </Button>
-              ) : (
-                <Button type="primary" icon={<DownloadOutlined />} size="large" onClick={enterResult}>
-                  生成文件
-                </Button>
-              )}
+              <Card
+                title="目前進度"
+                size="small"
+                style={{ borderColor: '#D9D4CC', boxShadow: '0 8px 20px rgba(86, 74, 59, 0.05)' }}
+              >
+                <Space direction="vertical" size={8}>
+                  <Text>已完成步驟：{currentStep} / {steps.length - 1}</Text>
+                  <Text>目前位置：{currentStepDef.title}</Text>
+                  <Text type="secondary">點左側流程可以直接切換步驟。</Text>
+                </Space>
+              </Card>
             </div>
-          </>
+
+            <Card
+              bordered={false}
+              style={{
+                minHeight: 560,
+                boxShadow: '0 10px 28px rgba(86, 74, 59, 0.08)',
+              }}
+            >
+              <div
+                style={{
+                  marginBottom: 24,
+                  paddingBottom: 20,
+                  borderBottom: '1px solid #E5DED3',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                }}
+              >
+                <Space wrap size={8}>
+                  <Tag color="blue">第 {currentStep + 1} 步</Tag>
+                  {currentStepDocs.map((doc) => (
+                    <Tag key={doc} color="default">{doc}</Tag>
+                  ))}
+                </Space>
+                <div>
+                  <Title level={2} style={{ margin: 0 }}>{currentStepDef.title}</Title>
+                  <Text type="secondary" style={{ fontSize: 15 }}>
+                    {STEP_HINT_MAP[currentStepDef.key]}
+                  </Text>
+                </div>
+                <div>
+                  <Text strong style={{ display: 'block', marginBottom: 8 }}>本步會影響的文件</Text>
+                  <Space wrap size={[8, 8]}>
+                    {currentStepDocs.map((doc) => (
+                      <Tag key={doc} color="processing">
+                        {doc} {DOC_NAMES[doc]}
+                      </Tag>
+                    ))}
+                  </Space>
+                </div>
+              </div>
+
+              <div style={{ minHeight: 400 }}>
+                <CurrentStepComponent />
+              </div>
+
+              <Divider />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <Button
+                  icon={<ArrowLeftOutlined />}
+                  onClick={prev}
+                  disabled={isFirst}
+                >
+                  上一步
+                </Button>
+
+                {!isLast ? (
+                  <Button type="primary" onClick={next}>
+                    下一步 <ArrowRightOutlined />
+                  </Button>
+                ) : (
+                  <Button type="primary" icon={<DownloadOutlined />} size="large" onClick={enterResult}>
+                    生成文件
+                  </Button>
+                )}
+              </div>
+            </Card>
+          </div>
         ) : (
           <>
             <div style={{ textAlign: 'center', padding: '32px 0' }}>

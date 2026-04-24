@@ -166,7 +166,7 @@ function DatabaseRequestCard({
 
   const handleGenerateFieldPurposes = async () => {
     if (!purpose.trim() || !methodology.trim() || fieldNames.length === 0) {
-      message.error('請先填寫研究目的、研究方法／實施方法及進行步驟，並至少指定一個中文欄位。');
+      message.error('請先填寫研究目的、研究方法，並至少指定一個中文欄位。');
       return;
     }
 
