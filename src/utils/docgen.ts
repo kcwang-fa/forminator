@@ -15,7 +15,10 @@
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
 import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+// file-saver 是 CJS 套件，無具名 ESM 匯出。用 default import + destructure，
+// 讓 Vite 和 Node 原生 ESM（snapshot 腳本用）都能解析。
+import fileSaver from 'file-saver';
+const { saveAs } = fileSaver;
 import type { FormData, Personnel } from '../types/form';
 import { toRocDate } from './date';
 import { DOC_NAMES, emptyDatabaseRequest, type DocId } from '../data/defaults';
@@ -404,8 +407,10 @@ function prepareCoverData(data: FormData) {
 }
 
 // ===== 準備通用 template data =====
-
-function prepareCommonData(data: FormData) {
+//
+// export 目的：讓 scripts/docgen-snapshot.ts 能在 Node 端產出 placeholder 快照，
+// 作為 Phase 2 docgen 重構時的迴歸護網。生產程式不需直接呼叫此匯出。
+export function prepareCommonData(data: FormData) {
   const pi      = findByRole(data.personnel, 'pi') ?? data.personnel[0];
   if (!pi) throw new Error('表單中至少需要一位計畫主持人（PI）');
   const contact = findByRole(data.personnel, 'contact') || pi;

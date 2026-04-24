@@ -26,6 +26,8 @@ dist-ssr
 *.sw?
 CLAUDE.md
 AGENTS.md
+notes/claude-handoff.md
+notes/learning-guide.md
 docs
 *.png
 !src/assets/*.png

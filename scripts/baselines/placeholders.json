@@ -1,0 +1,2710 @@
+{
+  "common": {
+    "abstract_en": "This study uses CDC surveillance database to analyze demographic and clinical characteristics of domestic aspergillosis cases from 2024 to 2025.",
+    "abstract_zh": "本研究以疾管署防疫資料庫為資料來源，分析 113 至 114 年本土麴黴菌感染確定個案之人口學與臨床特徵。",
+    "analysis_deadline_roc": "115 年 6 月 30 日",
+    "analysis_location_text": "本署署內辦公場域、個人公務電腦",
+    "apply_amount": "500,000",
+    "apply_condition": "113至114年 aspergillosis 確定個案",
+    "apply_condition_2": "113至114年侵襲性真菌感染通報",
+    "apply_condition_3": "",
+    "apply_date_roc": "114 年 6 月 1 日",
+    "apply_system_text": "倉儲系統",
+    "apply_system_text_2": "全國法定傳染病通報系統",
+    "apply_system_text_3": "",
+    "apply_unit": "疫情中心第三科",
+    "apply_year_text": "113 年 1 月 1 日至114 年 12 月 31 日",
+    "apply_year_text_2": "113 年 1 月 1 日至114 年 12 月 31 日",
+    "apply_year_text_3": "",
+    "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
+    "budget_business": "90,000",
+    "budget_capital": "80,000",
+    "budget_no_items": false,
+    "budget_personnel": "420,000",
+    "budget_rows": [
+      {
+        "budget_amount": "30,000",
+        "budget_item": "消耗品",
+        "budget_note": "試劑耗材"
+      },
+      {
+        "budget_amount": "20,000",
+        "budget_item": "一般事務費",
+        "budget_note": "文具影印"
+      },
+      {
+        "budget_amount": "40,000",
+        "budget_item": "差旅費",
+        "budget_note": "學術研討會"
+      },
+      {
+        "budget_amount": "80,000",
+        "budget_item": "軟硬體設備費",
+        "budget_note": "統計軟體授權"
+      },
+      {
+        "budget_amount": "240,000",
+        "budget_item": "計畫主持人費",
+        "budget_note": "2 萬×12 月"
+      },
+      {
+        "budget_amount": "180,000",
+        "budget_item": "協同主持人費",
+        "budget_note": "1.5 萬×12 月"
+      },
+      {
+        "budget_amount": "13,500",
+        "budget_item": "管理費",
+        "budget_note": "業務費小計 × 15%"
+      },
+      {
+        "budget_amount": "603,500",
+        "budget_item": "合計",
+        "budget_note": ""
+      }
+    ],
+    "budget_total": "603,500",
+    "co_pi_lines": "協同主持人：李小華",
+    "co_pi_name_1": "李小華",
+    "co_pi_name_2": "",
+    "co_pi_name_3": "",
+    "co_pi_names": "李小華",
+    "conflict_measure_text": "（無利益衝突）",
+    "conflict_of_interest_text": "本研究計畫主持人及所有研究人員聲明，與本研究無利益衝突。",
+    "contact_address": "10050 臺北市中正區林森南路 6 號",
+    "contact_email": "lianluo.chang@cdc.gov.tw",
+    "contact_fax": "02-23959825",
+    "contact_name_zh": "張聯絡",
+    "contact_phone": "02-23959825 分機 1237",
+    "contact_title": "技佐",
+    "contact_unit": "疫情中心第三科",
+    "cross_link_db_name": "",
+    "cross_link_no": "■",
+    "cross_link_text": "否",
+    "cross_link_yes": "□",
+    "data_field_rows": [
+      {
+        "apply_purpose": "個案識別",
+        "field_index": "1",
+        "field_name": "傳染病報告單電腦編號"
+      },
+      {
+        "apply_purpose": "人口學分析",
+        "field_index": "2",
+        "field_name": "性別"
+      },
+      {
+        "apply_purpose": "地理分布分析",
+        "field_index": "3",
+        "field_name": "居住縣市"
+      },
+      {
+        "apply_purpose": "時序分析",
+        "field_index": "4",
+        "field_name": "發病日期(西元-yyyymmdd)"
+      },
+      {
+        "apply_purpose": "臨床表現分析",
+        "field_index": "5",
+        "field_name": "主要症狀"
+      },
+      {
+        "apply_purpose": "致死率計算",
+        "field_index": "6",
+        "field_name": "是否死亡"
+      },
+      {
+        "apply_purpose": "年齡層分析",
+        "field_index": "7",
+        "field_name": "年齡"
+      },
+      {
+        "apply_purpose": "確診標準比對",
+        "field_index": "8",
+        "field_name": "實驗室檢驗結果"
+      }
+    ],
+    "data_field_rows_2": [],
+    "data_field_rows_3": [],
+    "data_source": "本研究使用疾管署防疫資料庫，僅取得去識別化後之群體統計資料。",
+    "db_personnel": [
+      {
+        "name_zh": "李小華",
+        "phone": "02-23959825 分機 1235",
+        "title": "副研究員",
+        "unit": "疫情中心第三科"
+      },
+      {
+        "name_zh": "陳研究",
+        "phone": "02-23959825 分機 1236",
+        "title": "助理研究員",
+        "unit": "疫情中心第三科"
+      },
+      {
+        "name_zh": "張聯絡",
+        "phone": "02-23959825 分機 1237",
+        "title": "技佐",
+        "unit": "疫情中心第三科"
+      }
+    ],
+    "db_usage_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+    "delivery_digital": "■",
+    "delivery_format_text": "數位檔案",
+    "delivery_paper": "□",
+    "doc10_data_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+    "doc11_request_desc": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+    "doc9_apply_scope_text": "113至114年 113至114年 aspergillosis 確定個案",
+    "exec_end_d": "30",
+    "exec_end_m": "6",
+    "exec_end_y": "115",
+    "exec_start_d": "1",
+    "exec_start_m": "7",
+    "exec_start_y": "114",
+    "execution_end_roc": "115 年 6 月 30 日",
+    "execution_period_text": "114 年 7 月 1 日至115 年 6 月 30 日",
+    "execution_start_roc": "114 年 7 月 1 日",
+    "exempt_category_text": "使用已合法公開之資料或文件，且資訊之使用無涉可辨識之個資",
+    "exempt_reason": "本研究為次級資料研究，資料皆已去識別化，符合免審條件。",
+    "exp_gene": "□",
+    "exp_human": "□",
+    "expected_outcome": "預期產出至少一篇 SCI 期刊論文，並提供疾管署作為防治策略參考。",
+    "experiment_types_text": "無",
+    "filing_date_roc": "114 年 5 月 15 日",
+    "filing_day": "1",
+    "filing_month": " 6",
+    "filing_year": "114",
+    "funding_detail_text": "(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿",
+    "funding_text": "需經費",
+    "gantt_chart_text": "文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+    "gantt_rows": [
+      {
+        "m1": "■",
+        "m10": "",
+        "m11": "",
+        "m12": "",
+        "m2": "■",
+        "m3": "",
+        "m4": "",
+        "m5": "",
+        "m6": "",
+        "m7": "",
+        "m8": "",
+        "m9": "",
+        "task_name": "文獻回顧"
+      },
+      {
+        "m1": "",
+        "m10": "",
+        "m11": "",
+        "m12": "",
+        "m2": "■",
+        "m3": "■",
+        "m4": "■",
+        "m5": "",
+        "m6": "",
+        "m7": "",
+        "m8": "",
+        "m9": "",
+        "task_name": "資料申請與清理"
+      },
+      {
+        "m1": "",
+        "m10": "",
+        "m11": "",
+        "m12": "",
+        "m2": "",
+        "m3": "",
+        "m4": "■",
+        "m5": "■",
+        "m6": "■",
+        "m7": "■",
+        "m8": "",
+        "m9": "",
+        "task_name": "統計分析"
+      },
+      {
+        "m1": "",
+        "m10": "",
+        "m11": "",
+        "m12": "",
+        "m2": "",
+        "m3": "",
+        "m4": "",
+        "m5": "",
+        "m6": "",
+        "m7": "■",
+        "m8": "■",
+        "m9": "■",
+        "task_name": "結果撰寫"
+      },
+      {
+        "m1": "",
+        "m10": "■",
+        "m11": "",
+        "m12": "",
+        "m2": "",
+        "m3": "",
+        "m4": "",
+        "m5": "",
+        "m6": "",
+        "m7": "",
+        "m8": "",
+        "m9": "■",
+        "task_name": "論文投稿"
+      },
+      {
+        "m1": "",
+        "m10": "",
+        "m11": "■",
+        "m12": "■",
+        "m2": "",
+        "m3": "",
+        "m4": "",
+        "m5": "",
+        "m6": "",
+        "m7": "",
+        "m8": "",
+        "m9": "",
+        "task_name": "結案報告"
+      },
+      {
+        "m1": "",
+        "m10": "",
+        "m11": "",
+        "m12": "■",
+        "m2": "",
+        "m3": "",
+        "m4": "",
+        "m5": "",
+        "m6": "",
+        "m7": "",
+        "m8": "",
+        "m9": "",
+        "task_name": "成果發表"
+      }
+    ],
+    "interact_text": "否",
+    "irb002_pi_name": "王大明",
+    "irb002_pi_title": "研究員",
+    "irb002_pi_unit": "疫情中心第三科",
+    "irb002_project_title": "本土麴黴菌感染症之流行病學分析",
+    "irb_number": "IRB114-0123",
+    "irb_review_type_text": "免審",
+    "keywords_en": "Aspergillosis, Epidemiology, Secondary data analysis",
+    "keywords_zh": "麴黴菌感染症、流行病學、次級資料分析",
+    "loc_data_center": "□",
+    "loc_office": "■",
+    "loc_other": "□",
+    "loc_pc": "■",
+    "medical_record_text": "病歷記錄用紙之格式■ 無     □ 有（請檢附）",
+    "methodology": "本研究採用次級資料分析，透過疾管署防疫資料庫擷取確定個案資料，以描述性統計及迴歸分析探討風險因子。",
+    "needs_funding_no": "□",
+    "needs_funding_yes": "■",
+    "outcome_other": "□",
+    "outcome_other_count": "___",
+    "outcome_paper_publish": "■",
+    "outcome_paper_publish_count": "1",
+    "outcome_paper_publish_date": "115 年 12 月 31 日",
+    "outcome_paper_writing": "□",
+    "outcome_paper_writing_count": "___",
+    "outcome_policy": "□",
+    "outcome_policy_count": "___",
+    "outcome_report": "■",
+    "outcome_report_count": "1",
+    "outcome_type_text": "論文發表 1 件、研究報告 1 件",
+    "outcome_usage_text": "本研究成果歸屬衛生福利部疾病管制署，研究成果得作為傳染病防治政策參考，並投稿學術期刊發表。",
+    "personnel_appendix": [
+      {
+        "pa_birth_date": "1975-03-15",
+        "pa_completed": [
+          {
+            "proj_budget": "300,000",
+            "proj_end_ym": "112/12",
+            "proj_funder": "疾管署",
+            "proj_name": "登革熱境外移入風險評估",
+            "proj_role": "主持人",
+            "proj_start_ym": "112/01"
+          }
+        ],
+        "pa_education": [
+          {
+            "edu_degree": "博士",
+            "edu_grad_year": "98",
+            "edu_school": "國立臺灣大學 流行病學與預防醫學研究所"
+          },
+          {
+            "edu_degree": "碩士",
+            "edu_grad_year": "91",
+            "edu_school": "國立陽明大學 公共衛生研究所"
+          }
+        ],
+        "pa_gender_label": "男",
+        "pa_has_pi_proj": true,
+        "pa_name_zh": "王大明",
+        "pa_no_completed": false,
+        "pa_no_ongoing": false,
+        "pa_no_pending": true,
+        "pa_no_pi_proj": false,
+        "pa_ongoing": [
+          {
+            "proj_budget": "1,200,000",
+            "proj_end_ym": "115/06",
+            "proj_funder": "國科會",
+            "proj_name": "新興傳染病監測系統",
+            "proj_role": "共同主持人",
+            "proj_start_ym": "113/07"
+          }
+        ],
+        "pa_pending": [],
+        "pa_pi_proj_budget": "300,000",
+        "pa_pi_proj_funder": "疾管署",
+        "pa_pi_proj_name": "登革熱境外移入風險評估",
+        "pa_pi_proj_period": "112/01～112/12",
+        "pa_pi_proj_pi": "王大明",
+        "pa_pi_proj_summary": "分析近五年境外移入個案分布與風險因子。",
+        "pa_publications_text": "王大明, 李小華 (2024). 臺灣麻疹流行病學分析. 台灣公共衛生雜誌, 43(2), 145-160.",
+        "pa_role_label": "主持人",
+        "pa_work_history": [
+          {
+            "wh_end_ym": "迄今",
+            "wh_institution": "衛生福利部疾病管制署",
+            "wh_start_ym": "107/08",
+            "wh_title": "研究員"
+          },
+          {
+            "wh_end_ym": "107/07",
+            "wh_institution": "衛生福利部疾病管制署",
+            "wh_start_ym": "100/01",
+            "wh_title": "副研究員"
+          }
+        ]
+      },
+      {
+        "pa_birth_date": "1982-08-20",
+        "pa_completed": [],
+        "pa_education": [
+          {
+            "edu_degree": "碩士",
+            "edu_grad_year": "97",
+            "edu_school": "國立臺灣大學 公共衛生學系"
+          }
+        ],
+        "pa_gender_label": "女",
+        "pa_has_pi_proj": false,
+        "pa_name_zh": "李小華",
+        "pa_no_completed": true,
+        "pa_no_ongoing": true,
+        "pa_no_pending": true,
+        "pa_no_pi_proj": true,
+        "pa_ongoing": [],
+        "pa_pending": [],
+        "pa_pi_proj_budget": "",
+        "pa_pi_proj_funder": "",
+        "pa_pi_proj_name": "",
+        "pa_pi_proj_period": "",
+        "pa_pi_proj_pi": "李小華",
+        "pa_pi_proj_summary": "",
+        "pa_publications_text": "",
+        "pa_role_label": "協同主持人",
+        "pa_work_history": [
+          {
+            "wh_end_ym": "迄今",
+            "wh_institution": "衛生福利部疾病管制署",
+            "wh_start_ym": "105/01",
+            "wh_title": "副研究員"
+          }
+        ]
+      },
+      {
+        "pa_birth_date": "1990-11-05",
+        "pa_completed": [],
+        "pa_education": [
+          {
+            "edu_degree": "碩士",
+            "edu_grad_year": "104",
+            "edu_school": "國立陽明交通大學 公共衛生研究所"
+          }
+        ],
+        "pa_gender_label": "女",
+        "pa_has_pi_proj": false,
+        "pa_name_zh": "陳研究",
+        "pa_no_completed": true,
+        "pa_no_ongoing": true,
+        "pa_no_pending": true,
+        "pa_no_pi_proj": true,
+        "pa_ongoing": [],
+        "pa_pending": [],
+        "pa_pi_proj_budget": "",
+        "pa_pi_proj_funder": "",
+        "pa_pi_proj_name": "",
+        "pa_pi_proj_period": "",
+        "pa_pi_proj_pi": "陳研究",
+        "pa_pi_proj_summary": "",
+        "pa_publications_text": "",
+        "pa_role_label": "研究人員",
+        "pa_work_history": [
+          {
+            "wh_end_ym": "迄今",
+            "wh_institution": "衛生福利部疾病管制署",
+            "wh_start_ym": "110/03",
+            "wh_title": "助理研究員"
+          }
+        ]
+      }
+    ],
+    "personnel_appendix_count": 3,
+    "personnel_count": 4,
+    "personnel_equipment_text": "計畫主持人：王大明（疫情中心第三科 研究員）— 計畫統籌、資料分析與論文撰寫\n協同主持人：李小華（疫情中心第三科 副研究員）— 文獻回顧、資料品質查核\n研究人員：陳研究（疫情中心第三科 助理研究員）— 資料處理、統計分析輔助\n計畫聯絡人：張聯絡（疫情中心第三科 技佐）— 行政聯絡窗口",
+    "personnel_rows": [
+      {
+        "name_zh": "王大明",
+        "role_text": "計畫主持人",
+        "title": "研究員",
+        "unit": "疫情中心第三科",
+        "work_description": "計畫統籌、資料分析與論文撰寫"
+      },
+      {
+        "name_zh": "李小華",
+        "role_text": "協同主持人",
+        "title": "副研究員",
+        "unit": "疫情中心第三科",
+        "work_description": "文獻回顧、資料品質查核"
+      },
+      {
+        "name_zh": "陳研究",
+        "role_text": "研究人員",
+        "title": "助理研究員",
+        "unit": "疫情中心第三科",
+        "work_description": "資料處理、統計分析輔助"
+      },
+      {
+        "name_zh": "張聯絡",
+        "role_text": "計畫聯絡人",
+        "title": "技佐",
+        "unit": "疫情中心第三科",
+        "work_description": "行政聯絡窗口"
+      }
+    ],
+    "pi_address": "10050 臺北市中正區林森南路 6 號",
+    "pi_email": "daming.wang@cdc.gov.tw",
+    "pi_fax": "02-23959825",
+    "pi_name_zh": "王大明",
+    "pi_phone": "02-23959825 分機 1234",
+    "pi_same": "■",
+    "pi_same_text": "同申請人員",
+    "pi_title": "研究員",
+    "pi_unit": "疫情中心第三科",
+    "prior_research_text": "前次人體研究參考資料■ 無     □ 有（請檢附）",
+    "privacy_after": "分析資料於計畫結束後保留三年，届滿後銷毀。",
+    "privacy_during": "資料儲存於符合 ISMS 規範之加密環境。",
+    "privacy_withdrawal": "本研究使用次級資料庫，無法回溯識別個別對象，無中途退出情形。",
+    "project_title_en": "Epidemiological Analysis of Domestic Aspergillosis",
+    "project_title_zh": "本土麴黴菌感染症之流行病學分析",
+    "project_type_1yr": "■",
+    "project_type_cover_text": "■新增型計畫：■一年 □多年",
+    "project_type_multi": "□",
+    "project_type_new": "■",
+    "project_type_old": "□",
+    "project_type_text": "新增型一年期計畫",
+    "project_year": "114",
+    "purpose": "本研究旨在分析臺灣本土麴黴菌感染症之流行病學特徵。",
+    "purpose_internal": "□",
+    "purpose_no_fund": "■",
+    "purpose_other": "□",
+    "purpose_other_detail": "",
+    "purpose_thesis": "□",
+    "questionnaire_text": "問卷內容■ 無     □ 有（請檢附）",
+    "recruit_text": "否",
+    "references": "1. Smith J, et al. (2023). Aspergillosis epidemiology. Clin Infect Dis.\n2. 衛生福利部疾病管制署 (2024). 傳染病監測年報。",
+    "research_purpose_type_text": "無需經費研究計畫",
+    "researcher_lines": "研究人員：陳研究",
+    "researcher_name_1": "陳研究",
+    "researcher_name_2": "",
+    "researcher_name_3": "",
+    "researcher_name_4": "",
+    "resource_sufficiency_text": "確保有無足夠資源於受試者保護□ 無     ■ 有",
+    "responsible_unit": "疫情中心第三科",
+    "retention_deadline_roc": "118 年 6 月 30 日",
+    "role_co_pi": "□",
+    "role_other": "□",
+    "role_pi": "□",
+    "role_researcher": "□",
+    "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+    "signing_date_roc": "114 年 5 月 15 日"
+  },
+  "fixture": "exempt-funded",
+  "perPerson": [
+    {
+      "data": {
+        "abstract_en": "This study uses CDC surveillance database to analyze demographic and clinical characteristics of domestic aspergillosis cases from 2024 to 2025.",
+        "abstract_zh": "本研究以疾管署防疫資料庫為資料來源，分析 113 至 114 年本土麴黴菌感染確定個案之人口學與臨床特徵。",
+        "analysis_deadline_roc": "115 年 6 月 30 日",
+        "analysis_location_text": "本署署內辦公場域、個人公務電腦",
+        "apply_amount": "500,000",
+        "apply_condition": "113至114年 aspergillosis 確定個案",
+        "apply_condition_2": "113至114年侵襲性真菌感染通報",
+        "apply_condition_3": "",
+        "apply_date_roc": "114 年 6 月 1 日",
+        "apply_system_text": "倉儲系統",
+        "apply_system_text_2": "全國法定傳染病通報系統",
+        "apply_system_text_3": "",
+        "apply_unit": "疫情中心第三科",
+        "apply_year_text": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_2": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_3": "",
+        "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
+        "budget_business": "90,000",
+        "budget_capital": "80,000",
+        "budget_no_items": false,
+        "budget_personnel": "420,000",
+        "budget_rows": [
+          {
+            "budget_amount": "30,000",
+            "budget_item": "消耗品",
+            "budget_note": "試劑耗材"
+          },
+          {
+            "budget_amount": "20,000",
+            "budget_item": "一般事務費",
+            "budget_note": "文具影印"
+          },
+          {
+            "budget_amount": "40,000",
+            "budget_item": "差旅費",
+            "budget_note": "學術研討會"
+          },
+          {
+            "budget_amount": "80,000",
+            "budget_item": "軟硬體設備費",
+            "budget_note": "統計軟體授權"
+          },
+          {
+            "budget_amount": "240,000",
+            "budget_item": "計畫主持人費",
+            "budget_note": "2 萬×12 月"
+          },
+          {
+            "budget_amount": "180,000",
+            "budget_item": "協同主持人費",
+            "budget_note": "1.5 萬×12 月"
+          },
+          {
+            "budget_amount": "13,500",
+            "budget_item": "管理費",
+            "budget_note": "業務費小計 × 15%"
+          },
+          {
+            "budget_amount": "603,500",
+            "budget_item": "合計",
+            "budget_note": ""
+          }
+        ],
+        "budget_total": "603,500",
+        "co_pi_lines": "協同主持人：李小華",
+        "co_pi_name_1": "李小華",
+        "co_pi_name_2": "",
+        "co_pi_name_3": "",
+        "co_pi_names": "李小華",
+        "conflict_measure_text": "（無利益衝突）",
+        "conflict_of_interest_text": "本研究計畫主持人及所有研究人員聲明，與本研究無利益衝突。",
+        "contact_address": "10050 臺北市中正區林森南路 6 號",
+        "contact_email": "lianluo.chang@cdc.gov.tw",
+        "contact_fax": "02-23959825",
+        "contact_name_zh": "張聯絡",
+        "contact_phone": "02-23959825 分機 1237",
+        "contact_title": "技佐",
+        "contact_unit": "疫情中心第三科",
+        "cross_link_db_name": "",
+        "cross_link_no": "■",
+        "cross_link_text": "否",
+        "cross_link_yes": "□",
+        "data_field_rows": [
+          {
+            "apply_purpose": "個案識別",
+            "field_index": "1",
+            "field_name": "傳染病報告單電腦編號"
+          },
+          {
+            "apply_purpose": "人口學分析",
+            "field_index": "2",
+            "field_name": "性別"
+          },
+          {
+            "apply_purpose": "地理分布分析",
+            "field_index": "3",
+            "field_name": "居住縣市"
+          },
+          {
+            "apply_purpose": "時序分析",
+            "field_index": "4",
+            "field_name": "發病日期(西元-yyyymmdd)"
+          },
+          {
+            "apply_purpose": "臨床表現分析",
+            "field_index": "5",
+            "field_name": "主要症狀"
+          },
+          {
+            "apply_purpose": "致死率計算",
+            "field_index": "6",
+            "field_name": "是否死亡"
+          },
+          {
+            "apply_purpose": "年齡層分析",
+            "field_index": "7",
+            "field_name": "年齡"
+          },
+          {
+            "apply_purpose": "確診標準比對",
+            "field_index": "8",
+            "field_name": "實驗室檢驗結果"
+          }
+        ],
+        "data_field_rows_2": [],
+        "data_field_rows_3": [],
+        "data_source": "本研究使用疾管署防疫資料庫，僅取得去識別化後之群體統計資料。",
+        "db_personnel": [
+          {
+            "name_zh": "李小華",
+            "phone": "02-23959825 分機 1235",
+            "title": "副研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "陳研究",
+            "phone": "02-23959825 分機 1236",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "張聯絡",
+            "phone": "02-23959825 分機 1237",
+            "title": "技佐",
+            "unit": "疫情中心第三科"
+          }
+        ],
+        "db_usage_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "delivery_digital": "■",
+        "delivery_format_text": "數位檔案",
+        "delivery_paper": "□",
+        "doc10_data_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc11_request_desc": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc9_apply_scope_text": "113至114年 113至114年 aspergillosis 確定個案",
+        "exec_end_d": "30",
+        "exec_end_m": "6",
+        "exec_end_y": "115",
+        "exec_start_d": "1",
+        "exec_start_m": "7",
+        "exec_start_y": "114",
+        "execution_end_roc": "115 年 6 月 30 日",
+        "execution_period_text": "114 年 7 月 1 日至115 年 6 月 30 日",
+        "execution_start_roc": "114 年 7 月 1 日",
+        "exempt_category_text": "使用已合法公開之資料或文件，且資訊之使用無涉可辨識之個資",
+        "exempt_reason": "本研究為次級資料研究，資料皆已去識別化，符合免審條件。",
+        "exp_gene": "□",
+        "exp_human": "□",
+        "expected_outcome": "預期產出至少一篇 SCI 期刊論文，並提供疾管署作為防治策略參考。",
+        "experiment_types_text": "無",
+        "filing_date_roc": "114 年 5 月 15 日",
+        "filing_day": "1",
+        "filing_month": " 6",
+        "filing_year": "114",
+        "funding_detail_text": "(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿",
+        "funding_text": "需經費",
+        "gantt_chart_text": "文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "gantt_rows": [
+          {
+            "m1": "■",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "文獻回顧"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "■",
+            "m4": "■",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "資料申請與清理"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "■",
+            "m5": "■",
+            "m6": "■",
+            "m7": "■",
+            "m8": "",
+            "m9": "",
+            "task_name": "統計分析"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "■",
+            "m8": "■",
+            "m9": "■",
+            "task_name": "結果撰寫"
+          },
+          {
+            "m1": "",
+            "m10": "■",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "■",
+            "task_name": "論文投稿"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "■",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "結案報告"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "成果發表"
+          }
+        ],
+        "interact_text": "否",
+        "irb002_pi_name": "王大明",
+        "irb002_pi_title": "研究員",
+        "irb002_pi_unit": "疫情中心第三科",
+        "irb002_project_title": "本土麴黴菌感染症之流行病學分析",
+        "irb_number": "IRB114-0123",
+        "irb_review_type_text": "免審",
+        "keywords_en": "Aspergillosis, Epidemiology, Secondary data analysis",
+        "keywords_zh": "麴黴菌感染症、流行病學、次級資料分析",
+        "loc_data_center": "□",
+        "loc_office": "■",
+        "loc_other": "□",
+        "loc_pc": "■",
+        "medical_record_text": "病歷記錄用紙之格式■ 無     □ 有（請檢附）",
+        "methodology": "本研究採用次級資料分析，透過疾管署防疫資料庫擷取確定個案資料，以描述性統計及迴歸分析探討風險因子。",
+        "needs_funding_no": "□",
+        "needs_funding_yes": "■",
+        "outcome_other": "□",
+        "outcome_other_count": "___",
+        "outcome_paper_publish": "■",
+        "outcome_paper_publish_count": "1",
+        "outcome_paper_publish_date": "115 年 12 月 31 日",
+        "outcome_paper_writing": "□",
+        "outcome_paper_writing_count": "___",
+        "outcome_policy": "□",
+        "outcome_policy_count": "___",
+        "outcome_report": "■",
+        "outcome_report_count": "1",
+        "outcome_type_text": "論文發表 1 件、研究報告 1 件",
+        "outcome_usage_text": "本研究成果歸屬衛生福利部疾病管制署，研究成果得作為傳染病防治政策參考，並投稿學術期刊發表。",
+        "person_email": "daming.wang@cdc.gov.tw",
+        "person_id_number": "A123456789",
+        "person_name_zh": "王大明",
+        "person_phone": "02-23959825 分機 1234",
+        "person_title": "研究員",
+        "person_unit": "疫情中心第三科",
+        "personnel_appendix": [
+          {
+            "pa_birth_date": "1975-03-15",
+            "pa_completed": [
+              {
+                "proj_budget": "300,000",
+                "proj_end_ym": "112/12",
+                "proj_funder": "疾管署",
+                "proj_name": "登革熱境外移入風險評估",
+                "proj_role": "主持人",
+                "proj_start_ym": "112/01"
+              }
+            ],
+            "pa_education": [
+              {
+                "edu_degree": "博士",
+                "edu_grad_year": "98",
+                "edu_school": "國立臺灣大學 流行病學與預防醫學研究所"
+              },
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "91",
+                "edu_school": "國立陽明大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "男",
+            "pa_has_pi_proj": true,
+            "pa_name_zh": "王大明",
+            "pa_no_completed": false,
+            "pa_no_ongoing": false,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": false,
+            "pa_ongoing": [
+              {
+                "proj_budget": "1,200,000",
+                "proj_end_ym": "115/06",
+                "proj_funder": "國科會",
+                "proj_name": "新興傳染病監測系統",
+                "proj_role": "共同主持人",
+                "proj_start_ym": "113/07"
+              }
+            ],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "300,000",
+            "pa_pi_proj_funder": "疾管署",
+            "pa_pi_proj_name": "登革熱境外移入風險評估",
+            "pa_pi_proj_period": "112/01～112/12",
+            "pa_pi_proj_pi": "王大明",
+            "pa_pi_proj_summary": "分析近五年境外移入個案分布與風險因子。",
+            "pa_publications_text": "王大明, 李小華 (2024). 臺灣麻疹流行病學分析. 台灣公共衛生雜誌, 43(2), 145-160.",
+            "pa_role_label": "主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "107/08",
+                "wh_title": "研究員"
+              },
+              {
+                "wh_end_ym": "107/07",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "100/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1982-08-20",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "97",
+                "edu_school": "國立臺灣大學 公共衛生學系"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "李小華",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "李小華",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "協同主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "105/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1990-11-05",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "104",
+                "edu_school": "國立陽明交通大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "陳研究",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "陳研究",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "研究人員",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "110/03",
+                "wh_title": "助理研究員"
+              }
+            ]
+          }
+        ],
+        "personnel_appendix_count": 3,
+        "personnel_count": 4,
+        "personnel_equipment_text": "計畫主持人：王大明（疫情中心第三科 研究員）— 計畫統籌、資料分析與論文撰寫\n協同主持人：李小華（疫情中心第三科 副研究員）— 文獻回顧、資料品質查核\n研究人員：陳研究（疫情中心第三科 助理研究員）— 資料處理、統計分析輔助\n計畫聯絡人：張聯絡（疫情中心第三科 技佐）— 行政聯絡窗口",
+        "personnel_rows": [
+          {
+            "name_zh": "王大明",
+            "role_text": "計畫主持人",
+            "title": "研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "計畫統籌、資料分析與論文撰寫"
+          },
+          {
+            "name_zh": "李小華",
+            "role_text": "協同主持人",
+            "title": "副研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "文獻回顧、資料品質查核"
+          },
+          {
+            "name_zh": "陳研究",
+            "role_text": "研究人員",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "資料處理、統計分析輔助"
+          },
+          {
+            "name_zh": "張聯絡",
+            "role_text": "計畫聯絡人",
+            "title": "技佐",
+            "unit": "疫情中心第三科",
+            "work_description": "行政聯絡窗口"
+          }
+        ],
+        "pi_address": "10050 臺北市中正區林森南路 6 號",
+        "pi_email": "daming.wang@cdc.gov.tw",
+        "pi_fax": "02-23959825",
+        "pi_name_zh": "王大明",
+        "pi_phone": "02-23959825 分機 1234",
+        "pi_same": "■",
+        "pi_same_text": "同申請人員",
+        "pi_title": "研究員",
+        "pi_unit": "疫情中心第三科",
+        "prior_research_text": "前次人體研究參考資料■ 無     □ 有（請檢附）",
+        "privacy_after": "分析資料於計畫結束後保留三年，届滿後銷毀。",
+        "privacy_during": "資料儲存於符合 ISMS 規範之加密環境。",
+        "privacy_withdrawal": "本研究使用次級資料庫，無法回溯識別個別對象，無中途退出情形。",
+        "project_title_en": "Epidemiological Analysis of Domestic Aspergillosis",
+        "project_title_zh": "本土麴黴菌感染症之流行病學分析",
+        "project_type_1yr": "■",
+        "project_type_cover_text": "■新增型計畫：■一年 □多年",
+        "project_type_multi": "□",
+        "project_type_new": "■",
+        "project_type_old": "□",
+        "project_type_text": "新增型一年期計畫",
+        "project_year": "114",
+        "purpose": "本研究旨在分析臺灣本土麴黴菌感染症之流行病學特徵。",
+        "purpose_internal": "□",
+        "purpose_no_fund": "■",
+        "purpose_other": "□",
+        "purpose_other_detail": "",
+        "purpose_thesis": "□",
+        "questionnaire_text": "問卷內容■ 無     □ 有（請檢附）",
+        "recruit_text": "否",
+        "references": "1. Smith J, et al. (2023). Aspergillosis epidemiology. Clin Infect Dis.\n2. 衛生福利部疾病管制署 (2024). 傳染病監測年報。",
+        "research_purpose_type_text": "無需經費研究計畫",
+        "researcher_lines": "研究人員：陳研究",
+        "researcher_name_1": "陳研究",
+        "researcher_name_2": "",
+        "researcher_name_3": "",
+        "researcher_name_4": "",
+        "resource_sufficiency_text": "確保有無足夠資源於受試者保護□ 無     ■ 有",
+        "responsible_unit": "疫情中心第三科",
+        "retention_deadline_roc": "118 年 6 月 30 日",
+        "role_co_pi": "□",
+        "role_other": "□",
+        "role_pi": "■",
+        "role_researcher": "□",
+        "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "signing_date_roc": "114 年 5 月 15 日"
+      },
+      "name_zh": "王大明",
+      "role": "pi"
+    },
+    {
+      "data": {
+        "abstract_en": "This study uses CDC surveillance database to analyze demographic and clinical characteristics of domestic aspergillosis cases from 2024 to 2025.",
+        "abstract_zh": "本研究以疾管署防疫資料庫為資料來源，分析 113 至 114 年本土麴黴菌感染確定個案之人口學與臨床特徵。",
+        "analysis_deadline_roc": "115 年 6 月 30 日",
+        "analysis_location_text": "本署署內辦公場域、個人公務電腦",
+        "apply_amount": "500,000",
+        "apply_condition": "113至114年 aspergillosis 確定個案",
+        "apply_condition_2": "113至114年侵襲性真菌感染通報",
+        "apply_condition_3": "",
+        "apply_date_roc": "114 年 6 月 1 日",
+        "apply_system_text": "倉儲系統",
+        "apply_system_text_2": "全國法定傳染病通報系統",
+        "apply_system_text_3": "",
+        "apply_unit": "疫情中心第三科",
+        "apply_year_text": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_2": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_3": "",
+        "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
+        "budget_business": "90,000",
+        "budget_capital": "80,000",
+        "budget_no_items": false,
+        "budget_personnel": "420,000",
+        "budget_rows": [
+          {
+            "budget_amount": "30,000",
+            "budget_item": "消耗品",
+            "budget_note": "試劑耗材"
+          },
+          {
+            "budget_amount": "20,000",
+            "budget_item": "一般事務費",
+            "budget_note": "文具影印"
+          },
+          {
+            "budget_amount": "40,000",
+            "budget_item": "差旅費",
+            "budget_note": "學術研討會"
+          },
+          {
+            "budget_amount": "80,000",
+            "budget_item": "軟硬體設備費",
+            "budget_note": "統計軟體授權"
+          },
+          {
+            "budget_amount": "240,000",
+            "budget_item": "計畫主持人費",
+            "budget_note": "2 萬×12 月"
+          },
+          {
+            "budget_amount": "180,000",
+            "budget_item": "協同主持人費",
+            "budget_note": "1.5 萬×12 月"
+          },
+          {
+            "budget_amount": "13,500",
+            "budget_item": "管理費",
+            "budget_note": "業務費小計 × 15%"
+          },
+          {
+            "budget_amount": "603,500",
+            "budget_item": "合計",
+            "budget_note": ""
+          }
+        ],
+        "budget_total": "603,500",
+        "co_pi_lines": "協同主持人：李小華",
+        "co_pi_name_1": "李小華",
+        "co_pi_name_2": "",
+        "co_pi_name_3": "",
+        "co_pi_names": "李小華",
+        "conflict_measure_text": "（無利益衝突）",
+        "conflict_of_interest_text": "本研究計畫主持人及所有研究人員聲明，與本研究無利益衝突。",
+        "contact_address": "10050 臺北市中正區林森南路 6 號",
+        "contact_email": "lianluo.chang@cdc.gov.tw",
+        "contact_fax": "02-23959825",
+        "contact_name_zh": "張聯絡",
+        "contact_phone": "02-23959825 分機 1237",
+        "contact_title": "技佐",
+        "contact_unit": "疫情中心第三科",
+        "cross_link_db_name": "",
+        "cross_link_no": "■",
+        "cross_link_text": "否",
+        "cross_link_yes": "□",
+        "data_field_rows": [
+          {
+            "apply_purpose": "個案識別",
+            "field_index": "1",
+            "field_name": "傳染病報告單電腦編號"
+          },
+          {
+            "apply_purpose": "人口學分析",
+            "field_index": "2",
+            "field_name": "性別"
+          },
+          {
+            "apply_purpose": "地理分布分析",
+            "field_index": "3",
+            "field_name": "居住縣市"
+          },
+          {
+            "apply_purpose": "時序分析",
+            "field_index": "4",
+            "field_name": "發病日期(西元-yyyymmdd)"
+          },
+          {
+            "apply_purpose": "臨床表現分析",
+            "field_index": "5",
+            "field_name": "主要症狀"
+          },
+          {
+            "apply_purpose": "致死率計算",
+            "field_index": "6",
+            "field_name": "是否死亡"
+          },
+          {
+            "apply_purpose": "年齡層分析",
+            "field_index": "7",
+            "field_name": "年齡"
+          },
+          {
+            "apply_purpose": "確診標準比對",
+            "field_index": "8",
+            "field_name": "實驗室檢驗結果"
+          }
+        ],
+        "data_field_rows_2": [],
+        "data_field_rows_3": [],
+        "data_source": "本研究使用疾管署防疫資料庫，僅取得去識別化後之群體統計資料。",
+        "db_personnel": [
+          {
+            "name_zh": "李小華",
+            "phone": "02-23959825 分機 1235",
+            "title": "副研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "陳研究",
+            "phone": "02-23959825 分機 1236",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "張聯絡",
+            "phone": "02-23959825 分機 1237",
+            "title": "技佐",
+            "unit": "疫情中心第三科"
+          }
+        ],
+        "db_usage_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "delivery_digital": "■",
+        "delivery_format_text": "數位檔案",
+        "delivery_paper": "□",
+        "doc10_data_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc11_request_desc": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc9_apply_scope_text": "113至114年 113至114年 aspergillosis 確定個案",
+        "exec_end_d": "30",
+        "exec_end_m": "6",
+        "exec_end_y": "115",
+        "exec_start_d": "1",
+        "exec_start_m": "7",
+        "exec_start_y": "114",
+        "execution_end_roc": "115 年 6 月 30 日",
+        "execution_period_text": "114 年 7 月 1 日至115 年 6 月 30 日",
+        "execution_start_roc": "114 年 7 月 1 日",
+        "exempt_category_text": "使用已合法公開之資料或文件，且資訊之使用無涉可辨識之個資",
+        "exempt_reason": "本研究為次級資料研究，資料皆已去識別化，符合免審條件。",
+        "exp_gene": "□",
+        "exp_human": "□",
+        "expected_outcome": "預期產出至少一篇 SCI 期刊論文，並提供疾管署作為防治策略參考。",
+        "experiment_types_text": "無",
+        "filing_date_roc": "114 年 5 月 15 日",
+        "filing_day": "1",
+        "filing_month": " 6",
+        "filing_year": "114",
+        "funding_detail_text": "(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿",
+        "funding_text": "需經費",
+        "gantt_chart_text": "文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "gantt_rows": [
+          {
+            "m1": "■",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "文獻回顧"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "■",
+            "m4": "■",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "資料申請與清理"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "■",
+            "m5": "■",
+            "m6": "■",
+            "m7": "■",
+            "m8": "",
+            "m9": "",
+            "task_name": "統計分析"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "■",
+            "m8": "■",
+            "m9": "■",
+            "task_name": "結果撰寫"
+          },
+          {
+            "m1": "",
+            "m10": "■",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "■",
+            "task_name": "論文投稿"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "■",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "結案報告"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "成果發表"
+          }
+        ],
+        "interact_text": "否",
+        "irb002_pi_name": "王大明",
+        "irb002_pi_title": "研究員",
+        "irb002_pi_unit": "疫情中心第三科",
+        "irb002_project_title": "本土麴黴菌感染症之流行病學分析",
+        "irb_number": "IRB114-0123",
+        "irb_review_type_text": "免審",
+        "keywords_en": "Aspergillosis, Epidemiology, Secondary data analysis",
+        "keywords_zh": "麴黴菌感染症、流行病學、次級資料分析",
+        "loc_data_center": "□",
+        "loc_office": "■",
+        "loc_other": "□",
+        "loc_pc": "■",
+        "medical_record_text": "病歷記錄用紙之格式■ 無     □ 有（請檢附）",
+        "methodology": "本研究採用次級資料分析，透過疾管署防疫資料庫擷取確定個案資料，以描述性統計及迴歸分析探討風險因子。",
+        "needs_funding_no": "□",
+        "needs_funding_yes": "■",
+        "outcome_other": "□",
+        "outcome_other_count": "___",
+        "outcome_paper_publish": "■",
+        "outcome_paper_publish_count": "1",
+        "outcome_paper_publish_date": "115 年 12 月 31 日",
+        "outcome_paper_writing": "□",
+        "outcome_paper_writing_count": "___",
+        "outcome_policy": "□",
+        "outcome_policy_count": "___",
+        "outcome_report": "■",
+        "outcome_report_count": "1",
+        "outcome_type_text": "論文發表 1 件、研究報告 1 件",
+        "outcome_usage_text": "本研究成果歸屬衛生福利部疾病管制署，研究成果得作為傳染病防治政策參考，並投稿學術期刊發表。",
+        "person_email": "xiaohua.li@cdc.gov.tw",
+        "person_id_number": "B223456789",
+        "person_name_zh": "李小華",
+        "person_phone": "02-23959825 分機 1235",
+        "person_title": "副研究員",
+        "person_unit": "疫情中心第三科",
+        "personnel_appendix": [
+          {
+            "pa_birth_date": "1975-03-15",
+            "pa_completed": [
+              {
+                "proj_budget": "300,000",
+                "proj_end_ym": "112/12",
+                "proj_funder": "疾管署",
+                "proj_name": "登革熱境外移入風險評估",
+                "proj_role": "主持人",
+                "proj_start_ym": "112/01"
+              }
+            ],
+            "pa_education": [
+              {
+                "edu_degree": "博士",
+                "edu_grad_year": "98",
+                "edu_school": "國立臺灣大學 流行病學與預防醫學研究所"
+              },
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "91",
+                "edu_school": "國立陽明大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "男",
+            "pa_has_pi_proj": true,
+            "pa_name_zh": "王大明",
+            "pa_no_completed": false,
+            "pa_no_ongoing": false,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": false,
+            "pa_ongoing": [
+              {
+                "proj_budget": "1,200,000",
+                "proj_end_ym": "115/06",
+                "proj_funder": "國科會",
+                "proj_name": "新興傳染病監測系統",
+                "proj_role": "共同主持人",
+                "proj_start_ym": "113/07"
+              }
+            ],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "300,000",
+            "pa_pi_proj_funder": "疾管署",
+            "pa_pi_proj_name": "登革熱境外移入風險評估",
+            "pa_pi_proj_period": "112/01～112/12",
+            "pa_pi_proj_pi": "王大明",
+            "pa_pi_proj_summary": "分析近五年境外移入個案分布與風險因子。",
+            "pa_publications_text": "王大明, 李小華 (2024). 臺灣麻疹流行病學分析. 台灣公共衛生雜誌, 43(2), 145-160.",
+            "pa_role_label": "主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "107/08",
+                "wh_title": "研究員"
+              },
+              {
+                "wh_end_ym": "107/07",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "100/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1982-08-20",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "97",
+                "edu_school": "國立臺灣大學 公共衛生學系"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "李小華",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "李小華",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "協同主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "105/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1990-11-05",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "104",
+                "edu_school": "國立陽明交通大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "陳研究",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "陳研究",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "研究人員",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "110/03",
+                "wh_title": "助理研究員"
+              }
+            ]
+          }
+        ],
+        "personnel_appendix_count": 3,
+        "personnel_count": 4,
+        "personnel_equipment_text": "計畫主持人：王大明（疫情中心第三科 研究員）— 計畫統籌、資料分析與論文撰寫\n協同主持人：李小華（疫情中心第三科 副研究員）— 文獻回顧、資料品質查核\n研究人員：陳研究（疫情中心第三科 助理研究員）— 資料處理、統計分析輔助\n計畫聯絡人：張聯絡（疫情中心第三科 技佐）— 行政聯絡窗口",
+        "personnel_rows": [
+          {
+            "name_zh": "王大明",
+            "role_text": "計畫主持人",
+            "title": "研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "計畫統籌、資料分析與論文撰寫"
+          },
+          {
+            "name_zh": "李小華",
+            "role_text": "協同主持人",
+            "title": "副研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "文獻回顧、資料品質查核"
+          },
+          {
+            "name_zh": "陳研究",
+            "role_text": "研究人員",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "資料處理、統計分析輔助"
+          },
+          {
+            "name_zh": "張聯絡",
+            "role_text": "計畫聯絡人",
+            "title": "技佐",
+            "unit": "疫情中心第三科",
+            "work_description": "行政聯絡窗口"
+          }
+        ],
+        "pi_address": "10050 臺北市中正區林森南路 6 號",
+        "pi_email": "daming.wang@cdc.gov.tw",
+        "pi_fax": "02-23959825",
+        "pi_name_zh": "王大明",
+        "pi_phone": "02-23959825 分機 1234",
+        "pi_same": "■",
+        "pi_same_text": "同申請人員",
+        "pi_title": "研究員",
+        "pi_unit": "疫情中心第三科",
+        "prior_research_text": "前次人體研究參考資料■ 無     □ 有（請檢附）",
+        "privacy_after": "分析資料於計畫結束後保留三年，届滿後銷毀。",
+        "privacy_during": "資料儲存於符合 ISMS 規範之加密環境。",
+        "privacy_withdrawal": "本研究使用次級資料庫，無法回溯識別個別對象，無中途退出情形。",
+        "project_title_en": "Epidemiological Analysis of Domestic Aspergillosis",
+        "project_title_zh": "本土麴黴菌感染症之流行病學分析",
+        "project_type_1yr": "■",
+        "project_type_cover_text": "■新增型計畫：■一年 □多年",
+        "project_type_multi": "□",
+        "project_type_new": "■",
+        "project_type_old": "□",
+        "project_type_text": "新增型一年期計畫",
+        "project_year": "114",
+        "purpose": "本研究旨在分析臺灣本土麴黴菌感染症之流行病學特徵。",
+        "purpose_internal": "□",
+        "purpose_no_fund": "■",
+        "purpose_other": "□",
+        "purpose_other_detail": "",
+        "purpose_thesis": "□",
+        "questionnaire_text": "問卷內容■ 無     □ 有（請檢附）",
+        "recruit_text": "否",
+        "references": "1. Smith J, et al. (2023). Aspergillosis epidemiology. Clin Infect Dis.\n2. 衛生福利部疾病管制署 (2024). 傳染病監測年報。",
+        "research_purpose_type_text": "無需經費研究計畫",
+        "researcher_lines": "研究人員：陳研究",
+        "researcher_name_1": "陳研究",
+        "researcher_name_2": "",
+        "researcher_name_3": "",
+        "researcher_name_4": "",
+        "resource_sufficiency_text": "確保有無足夠資源於受試者保護□ 無     ■ 有",
+        "responsible_unit": "疫情中心第三科",
+        "retention_deadline_roc": "118 年 6 月 30 日",
+        "role_co_pi": "■",
+        "role_other": "□",
+        "role_pi": "□",
+        "role_researcher": "□",
+        "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "signing_date_roc": "114 年 5 月 15 日"
+      },
+      "name_zh": "李小華",
+      "role": "co_pi"
+    },
+    {
+      "data": {
+        "abstract_en": "This study uses CDC surveillance database to analyze demographic and clinical characteristics of domestic aspergillosis cases from 2024 to 2025.",
+        "abstract_zh": "本研究以疾管署防疫資料庫為資料來源，分析 113 至 114 年本土麴黴菌感染確定個案之人口學與臨床特徵。",
+        "analysis_deadline_roc": "115 年 6 月 30 日",
+        "analysis_location_text": "本署署內辦公場域、個人公務電腦",
+        "apply_amount": "500,000",
+        "apply_condition": "113至114年 aspergillosis 確定個案",
+        "apply_condition_2": "113至114年侵襲性真菌感染通報",
+        "apply_condition_3": "",
+        "apply_date_roc": "114 年 6 月 1 日",
+        "apply_system_text": "倉儲系統",
+        "apply_system_text_2": "全國法定傳染病通報系統",
+        "apply_system_text_3": "",
+        "apply_unit": "疫情中心第三科",
+        "apply_year_text": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_2": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_3": "",
+        "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
+        "budget_business": "90,000",
+        "budget_capital": "80,000",
+        "budget_no_items": false,
+        "budget_personnel": "420,000",
+        "budget_rows": [
+          {
+            "budget_amount": "30,000",
+            "budget_item": "消耗品",
+            "budget_note": "試劑耗材"
+          },
+          {
+            "budget_amount": "20,000",
+            "budget_item": "一般事務費",
+            "budget_note": "文具影印"
+          },
+          {
+            "budget_amount": "40,000",
+            "budget_item": "差旅費",
+            "budget_note": "學術研討會"
+          },
+          {
+            "budget_amount": "80,000",
+            "budget_item": "軟硬體設備費",
+            "budget_note": "統計軟體授權"
+          },
+          {
+            "budget_amount": "240,000",
+            "budget_item": "計畫主持人費",
+            "budget_note": "2 萬×12 月"
+          },
+          {
+            "budget_amount": "180,000",
+            "budget_item": "協同主持人費",
+            "budget_note": "1.5 萬×12 月"
+          },
+          {
+            "budget_amount": "13,500",
+            "budget_item": "管理費",
+            "budget_note": "業務費小計 × 15%"
+          },
+          {
+            "budget_amount": "603,500",
+            "budget_item": "合計",
+            "budget_note": ""
+          }
+        ],
+        "budget_total": "603,500",
+        "co_pi_lines": "協同主持人：李小華",
+        "co_pi_name_1": "李小華",
+        "co_pi_name_2": "",
+        "co_pi_name_3": "",
+        "co_pi_names": "李小華",
+        "conflict_measure_text": "（無利益衝突）",
+        "conflict_of_interest_text": "本研究計畫主持人及所有研究人員聲明，與本研究無利益衝突。",
+        "contact_address": "10050 臺北市中正區林森南路 6 號",
+        "contact_email": "lianluo.chang@cdc.gov.tw",
+        "contact_fax": "02-23959825",
+        "contact_name_zh": "張聯絡",
+        "contact_phone": "02-23959825 分機 1237",
+        "contact_title": "技佐",
+        "contact_unit": "疫情中心第三科",
+        "cross_link_db_name": "",
+        "cross_link_no": "■",
+        "cross_link_text": "否",
+        "cross_link_yes": "□",
+        "data_field_rows": [
+          {
+            "apply_purpose": "個案識別",
+            "field_index": "1",
+            "field_name": "傳染病報告單電腦編號"
+          },
+          {
+            "apply_purpose": "人口學分析",
+            "field_index": "2",
+            "field_name": "性別"
+          },
+          {
+            "apply_purpose": "地理分布分析",
+            "field_index": "3",
+            "field_name": "居住縣市"
+          },
+          {
+            "apply_purpose": "時序分析",
+            "field_index": "4",
+            "field_name": "發病日期(西元-yyyymmdd)"
+          },
+          {
+            "apply_purpose": "臨床表現分析",
+            "field_index": "5",
+            "field_name": "主要症狀"
+          },
+          {
+            "apply_purpose": "致死率計算",
+            "field_index": "6",
+            "field_name": "是否死亡"
+          },
+          {
+            "apply_purpose": "年齡層分析",
+            "field_index": "7",
+            "field_name": "年齡"
+          },
+          {
+            "apply_purpose": "確診標準比對",
+            "field_index": "8",
+            "field_name": "實驗室檢驗結果"
+          }
+        ],
+        "data_field_rows_2": [],
+        "data_field_rows_3": [],
+        "data_source": "本研究使用疾管署防疫資料庫，僅取得去識別化後之群體統計資料。",
+        "db_personnel": [
+          {
+            "name_zh": "李小華",
+            "phone": "02-23959825 分機 1235",
+            "title": "副研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "陳研究",
+            "phone": "02-23959825 分機 1236",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "張聯絡",
+            "phone": "02-23959825 分機 1237",
+            "title": "技佐",
+            "unit": "疫情中心第三科"
+          }
+        ],
+        "db_usage_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "delivery_digital": "■",
+        "delivery_format_text": "數位檔案",
+        "delivery_paper": "□",
+        "doc10_data_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc11_request_desc": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc9_apply_scope_text": "113至114年 113至114年 aspergillosis 確定個案",
+        "exec_end_d": "30",
+        "exec_end_m": "6",
+        "exec_end_y": "115",
+        "exec_start_d": "1",
+        "exec_start_m": "7",
+        "exec_start_y": "114",
+        "execution_end_roc": "115 年 6 月 30 日",
+        "execution_period_text": "114 年 7 月 1 日至115 年 6 月 30 日",
+        "execution_start_roc": "114 年 7 月 1 日",
+        "exempt_category_text": "使用已合法公開之資料或文件，且資訊之使用無涉可辨識之個資",
+        "exempt_reason": "本研究為次級資料研究，資料皆已去識別化，符合免審條件。",
+        "exp_gene": "□",
+        "exp_human": "□",
+        "expected_outcome": "預期產出至少一篇 SCI 期刊論文，並提供疾管署作為防治策略參考。",
+        "experiment_types_text": "無",
+        "filing_date_roc": "114 年 5 月 15 日",
+        "filing_day": "1",
+        "filing_month": " 6",
+        "filing_year": "114",
+        "funding_detail_text": "(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿",
+        "funding_text": "需經費",
+        "gantt_chart_text": "文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "gantt_rows": [
+          {
+            "m1": "■",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "文獻回顧"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "■",
+            "m4": "■",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "資料申請與清理"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "■",
+            "m5": "■",
+            "m6": "■",
+            "m7": "■",
+            "m8": "",
+            "m9": "",
+            "task_name": "統計分析"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "■",
+            "m8": "■",
+            "m9": "■",
+            "task_name": "結果撰寫"
+          },
+          {
+            "m1": "",
+            "m10": "■",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "■",
+            "task_name": "論文投稿"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "■",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "結案報告"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "成果發表"
+          }
+        ],
+        "interact_text": "否",
+        "irb002_pi_name": "王大明",
+        "irb002_pi_title": "研究員",
+        "irb002_pi_unit": "疫情中心第三科",
+        "irb002_project_title": "本土麴黴菌感染症之流行病學分析",
+        "irb_number": "IRB114-0123",
+        "irb_review_type_text": "免審",
+        "keywords_en": "Aspergillosis, Epidemiology, Secondary data analysis",
+        "keywords_zh": "麴黴菌感染症、流行病學、次級資料分析",
+        "loc_data_center": "□",
+        "loc_office": "■",
+        "loc_other": "□",
+        "loc_pc": "■",
+        "medical_record_text": "病歷記錄用紙之格式■ 無     □ 有（請檢附）",
+        "methodology": "本研究採用次級資料分析，透過疾管署防疫資料庫擷取確定個案資料，以描述性統計及迴歸分析探討風險因子。",
+        "needs_funding_no": "□",
+        "needs_funding_yes": "■",
+        "outcome_other": "□",
+        "outcome_other_count": "___",
+        "outcome_paper_publish": "■",
+        "outcome_paper_publish_count": "1",
+        "outcome_paper_publish_date": "115 年 12 月 31 日",
+        "outcome_paper_writing": "□",
+        "outcome_paper_writing_count": "___",
+        "outcome_policy": "□",
+        "outcome_policy_count": "___",
+        "outcome_report": "■",
+        "outcome_report_count": "1",
+        "outcome_type_text": "論文發表 1 件、研究報告 1 件",
+        "outcome_usage_text": "本研究成果歸屬衛生福利部疾病管制署，研究成果得作為傳染病防治政策參考，並投稿學術期刊發表。",
+        "person_email": "yanjiu.chen@cdc.gov.tw",
+        "person_id_number": "C323456789",
+        "person_name_zh": "陳研究",
+        "person_phone": "02-23959825 分機 1236",
+        "person_title": "助理研究員",
+        "person_unit": "疫情中心第三科",
+        "personnel_appendix": [
+          {
+            "pa_birth_date": "1975-03-15",
+            "pa_completed": [
+              {
+                "proj_budget": "300,000",
+                "proj_end_ym": "112/12",
+                "proj_funder": "疾管署",
+                "proj_name": "登革熱境外移入風險評估",
+                "proj_role": "主持人",
+                "proj_start_ym": "112/01"
+              }
+            ],
+            "pa_education": [
+              {
+                "edu_degree": "博士",
+                "edu_grad_year": "98",
+                "edu_school": "國立臺灣大學 流行病學與預防醫學研究所"
+              },
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "91",
+                "edu_school": "國立陽明大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "男",
+            "pa_has_pi_proj": true,
+            "pa_name_zh": "王大明",
+            "pa_no_completed": false,
+            "pa_no_ongoing": false,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": false,
+            "pa_ongoing": [
+              {
+                "proj_budget": "1,200,000",
+                "proj_end_ym": "115/06",
+                "proj_funder": "國科會",
+                "proj_name": "新興傳染病監測系統",
+                "proj_role": "共同主持人",
+                "proj_start_ym": "113/07"
+              }
+            ],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "300,000",
+            "pa_pi_proj_funder": "疾管署",
+            "pa_pi_proj_name": "登革熱境外移入風險評估",
+            "pa_pi_proj_period": "112/01～112/12",
+            "pa_pi_proj_pi": "王大明",
+            "pa_pi_proj_summary": "分析近五年境外移入個案分布與風險因子。",
+            "pa_publications_text": "王大明, 李小華 (2024). 臺灣麻疹流行病學分析. 台灣公共衛生雜誌, 43(2), 145-160.",
+            "pa_role_label": "主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "107/08",
+                "wh_title": "研究員"
+              },
+              {
+                "wh_end_ym": "107/07",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "100/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1982-08-20",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "97",
+                "edu_school": "國立臺灣大學 公共衛生學系"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "李小華",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "李小華",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "協同主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "105/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1990-11-05",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "104",
+                "edu_school": "國立陽明交通大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "陳研究",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "陳研究",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "研究人員",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "110/03",
+                "wh_title": "助理研究員"
+              }
+            ]
+          }
+        ],
+        "personnel_appendix_count": 3,
+        "personnel_count": 4,
+        "personnel_equipment_text": "計畫主持人：王大明（疫情中心第三科 研究員）— 計畫統籌、資料分析與論文撰寫\n協同主持人：李小華（疫情中心第三科 副研究員）— 文獻回顧、資料品質查核\n研究人員：陳研究（疫情中心第三科 助理研究員）— 資料處理、統計分析輔助\n計畫聯絡人：張聯絡（疫情中心第三科 技佐）— 行政聯絡窗口",
+        "personnel_rows": [
+          {
+            "name_zh": "王大明",
+            "role_text": "計畫主持人",
+            "title": "研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "計畫統籌、資料分析與論文撰寫"
+          },
+          {
+            "name_zh": "李小華",
+            "role_text": "協同主持人",
+            "title": "副研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "文獻回顧、資料品質查核"
+          },
+          {
+            "name_zh": "陳研究",
+            "role_text": "研究人員",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "資料處理、統計分析輔助"
+          },
+          {
+            "name_zh": "張聯絡",
+            "role_text": "計畫聯絡人",
+            "title": "技佐",
+            "unit": "疫情中心第三科",
+            "work_description": "行政聯絡窗口"
+          }
+        ],
+        "pi_address": "10050 臺北市中正區林森南路 6 號",
+        "pi_email": "daming.wang@cdc.gov.tw",
+        "pi_fax": "02-23959825",
+        "pi_name_zh": "王大明",
+        "pi_phone": "02-23959825 分機 1234",
+        "pi_same": "■",
+        "pi_same_text": "同申請人員",
+        "pi_title": "研究員",
+        "pi_unit": "疫情中心第三科",
+        "prior_research_text": "前次人體研究參考資料■ 無     □ 有（請檢附）",
+        "privacy_after": "分析資料於計畫結束後保留三年，届滿後銷毀。",
+        "privacy_during": "資料儲存於符合 ISMS 規範之加密環境。",
+        "privacy_withdrawal": "本研究使用次級資料庫，無法回溯識別個別對象，無中途退出情形。",
+        "project_title_en": "Epidemiological Analysis of Domestic Aspergillosis",
+        "project_title_zh": "本土麴黴菌感染症之流行病學分析",
+        "project_type_1yr": "■",
+        "project_type_cover_text": "■新增型計畫：■一年 □多年",
+        "project_type_multi": "□",
+        "project_type_new": "■",
+        "project_type_old": "□",
+        "project_type_text": "新增型一年期計畫",
+        "project_year": "114",
+        "purpose": "本研究旨在分析臺灣本土麴黴菌感染症之流行病學特徵。",
+        "purpose_internal": "□",
+        "purpose_no_fund": "■",
+        "purpose_other": "□",
+        "purpose_other_detail": "",
+        "purpose_thesis": "□",
+        "questionnaire_text": "問卷內容■ 無     □ 有（請檢附）",
+        "recruit_text": "否",
+        "references": "1. Smith J, et al. (2023). Aspergillosis epidemiology. Clin Infect Dis.\n2. 衛生福利部疾病管制署 (2024). 傳染病監測年報。",
+        "research_purpose_type_text": "無需經費研究計畫",
+        "researcher_lines": "研究人員：陳研究",
+        "researcher_name_1": "陳研究",
+        "researcher_name_2": "",
+        "researcher_name_3": "",
+        "researcher_name_4": "",
+        "resource_sufficiency_text": "確保有無足夠資源於受試者保護□ 無     ■ 有",
+        "responsible_unit": "疫情中心第三科",
+        "retention_deadline_roc": "118 年 6 月 30 日",
+        "role_co_pi": "□",
+        "role_other": "□",
+        "role_pi": "□",
+        "role_researcher": "■",
+        "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "signing_date_roc": "114 年 5 月 15 日"
+      },
+      "name_zh": "陳研究",
+      "role": "researcher"
+    },
+    {
+      "data": {
+        "abstract_en": "This study uses CDC surveillance database to analyze demographic and clinical characteristics of domestic aspergillosis cases from 2024 to 2025.",
+        "abstract_zh": "本研究以疾管署防疫資料庫為資料來源，分析 113 至 114 年本土麴黴菌感染確定個案之人口學與臨床特徵。",
+        "analysis_deadline_roc": "115 年 6 月 30 日",
+        "analysis_location_text": "本署署內辦公場域、個人公務電腦",
+        "apply_amount": "500,000",
+        "apply_condition": "113至114年 aspergillosis 確定個案",
+        "apply_condition_2": "113至114年侵襲性真菌感染通報",
+        "apply_condition_3": "",
+        "apply_date_roc": "114 年 6 月 1 日",
+        "apply_system_text": "倉儲系統",
+        "apply_system_text_2": "全國法定傳染病通報系統",
+        "apply_system_text_3": "",
+        "apply_unit": "疫情中心第三科",
+        "apply_year_text": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_2": "113 年 1 月 1 日至114 年 12 月 31 日",
+        "apply_year_text_3": "",
+        "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
+        "budget_business": "90,000",
+        "budget_capital": "80,000",
+        "budget_no_items": false,
+        "budget_personnel": "420,000",
+        "budget_rows": [
+          {
+            "budget_amount": "30,000",
+            "budget_item": "消耗品",
+            "budget_note": "試劑耗材"
+          },
+          {
+            "budget_amount": "20,000",
+            "budget_item": "一般事務費",
+            "budget_note": "文具影印"
+          },
+          {
+            "budget_amount": "40,000",
+            "budget_item": "差旅費",
+            "budget_note": "學術研討會"
+          },
+          {
+            "budget_amount": "80,000",
+            "budget_item": "軟硬體設備費",
+            "budget_note": "統計軟體授權"
+          },
+          {
+            "budget_amount": "240,000",
+            "budget_item": "計畫主持人費",
+            "budget_note": "2 萬×12 月"
+          },
+          {
+            "budget_amount": "180,000",
+            "budget_item": "協同主持人費",
+            "budget_note": "1.5 萬×12 月"
+          },
+          {
+            "budget_amount": "13,500",
+            "budget_item": "管理費",
+            "budget_note": "業務費小計 × 15%"
+          },
+          {
+            "budget_amount": "603,500",
+            "budget_item": "合計",
+            "budget_note": ""
+          }
+        ],
+        "budget_total": "603,500",
+        "co_pi_lines": "協同主持人：李小華",
+        "co_pi_name_1": "李小華",
+        "co_pi_name_2": "",
+        "co_pi_name_3": "",
+        "co_pi_names": "李小華",
+        "conflict_measure_text": "（無利益衝突）",
+        "conflict_of_interest_text": "本研究計畫主持人及所有研究人員聲明，與本研究無利益衝突。",
+        "contact_address": "10050 臺北市中正區林森南路 6 號",
+        "contact_email": "lianluo.chang@cdc.gov.tw",
+        "contact_fax": "02-23959825",
+        "contact_name_zh": "張聯絡",
+        "contact_phone": "02-23959825 分機 1237",
+        "contact_title": "技佐",
+        "contact_unit": "疫情中心第三科",
+        "cross_link_db_name": "",
+        "cross_link_no": "■",
+        "cross_link_text": "否",
+        "cross_link_yes": "□",
+        "data_field_rows": [
+          {
+            "apply_purpose": "個案識別",
+            "field_index": "1",
+            "field_name": "傳染病報告單電腦編號"
+          },
+          {
+            "apply_purpose": "人口學分析",
+            "field_index": "2",
+            "field_name": "性別"
+          },
+          {
+            "apply_purpose": "地理分布分析",
+            "field_index": "3",
+            "field_name": "居住縣市"
+          },
+          {
+            "apply_purpose": "時序分析",
+            "field_index": "4",
+            "field_name": "發病日期(西元-yyyymmdd)"
+          },
+          {
+            "apply_purpose": "臨床表現分析",
+            "field_index": "5",
+            "field_name": "主要症狀"
+          },
+          {
+            "apply_purpose": "致死率計算",
+            "field_index": "6",
+            "field_name": "是否死亡"
+          },
+          {
+            "apply_purpose": "年齡層分析",
+            "field_index": "7",
+            "field_name": "年齡"
+          },
+          {
+            "apply_purpose": "確診標準比對",
+            "field_index": "8",
+            "field_name": "實驗室檢驗結果"
+          }
+        ],
+        "data_field_rows_2": [],
+        "data_field_rows_3": [],
+        "data_source": "本研究使用疾管署防疫資料庫，僅取得去識別化後之群體統計資料。",
+        "db_personnel": [
+          {
+            "name_zh": "李小華",
+            "phone": "02-23959825 分機 1235",
+            "title": "副研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "陳研究",
+            "phone": "02-23959825 分機 1236",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科"
+          },
+          {
+            "name_zh": "張聯絡",
+            "phone": "02-23959825 分機 1237",
+            "title": "技佐",
+            "unit": "疫情中心第三科"
+          }
+        ],
+        "db_usage_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "delivery_digital": "■",
+        "delivery_format_text": "數位檔案",
+        "delivery_paper": "□",
+        "doc10_data_scope": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc11_request_desc": "本研究預定使用疾管署下列防疫資料庫之去識別化資料：\n1. 113至114年 aspergillosis 確定個案基本人口學與臨床資料。\n2. 113至114年侵襲性真菌感染通報資料。",
+        "doc9_apply_scope_text": "113至114年 113至114年 aspergillosis 確定個案",
+        "exec_end_d": "30",
+        "exec_end_m": "6",
+        "exec_end_y": "115",
+        "exec_start_d": "1",
+        "exec_start_m": "7",
+        "exec_start_y": "114",
+        "execution_end_roc": "115 年 6 月 30 日",
+        "execution_period_text": "114 年 7 月 1 日至115 年 6 月 30 日",
+        "execution_start_roc": "114 年 7 月 1 日",
+        "exempt_category_text": "使用已合法公開之資料或文件，且資訊之使用無涉可辨識之個資",
+        "exempt_reason": "本研究為次級資料研究，資料皆已去識別化，符合免審條件。",
+        "exp_gene": "□",
+        "exp_human": "□",
+        "expected_outcome": "預期產出至少一篇 SCI 期刊論文，並提供疾管署作為防治策略參考。",
+        "experiment_types_text": "無",
+        "filing_date_roc": "114 年 5 月 15 日",
+        "filing_day": "1",
+        "filing_month": " 6",
+        "filing_year": "114",
+        "funding_detail_text": "(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿",
+        "funding_text": "需經費",
+        "gantt_chart_text": "文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "gantt_rows": [
+          {
+            "m1": "■",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "文獻回顧"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "■",
+            "m3": "■",
+            "m4": "■",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "資料申請與清理"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "■",
+            "m5": "■",
+            "m6": "■",
+            "m7": "■",
+            "m8": "",
+            "m9": "",
+            "task_name": "統計分析"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "■",
+            "m8": "■",
+            "m9": "■",
+            "task_name": "結果撰寫"
+          },
+          {
+            "m1": "",
+            "m10": "■",
+            "m11": "",
+            "m12": "",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "■",
+            "task_name": "論文投稿"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "■",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "結案報告"
+          },
+          {
+            "m1": "",
+            "m10": "",
+            "m11": "",
+            "m12": "■",
+            "m2": "",
+            "m3": "",
+            "m4": "",
+            "m5": "",
+            "m6": "",
+            "m7": "",
+            "m8": "",
+            "m9": "",
+            "task_name": "成果發表"
+          }
+        ],
+        "interact_text": "否",
+        "irb002_pi_name": "王大明",
+        "irb002_pi_title": "研究員",
+        "irb002_pi_unit": "疫情中心第三科",
+        "irb002_project_title": "本土麴黴菌感染症之流行病學分析",
+        "irb_number": "IRB114-0123",
+        "irb_review_type_text": "免審",
+        "keywords_en": "Aspergillosis, Epidemiology, Secondary data analysis",
+        "keywords_zh": "麴黴菌感染症、流行病學、次級資料分析",
+        "loc_data_center": "□",
+        "loc_office": "■",
+        "loc_other": "□",
+        "loc_pc": "■",
+        "medical_record_text": "病歷記錄用紙之格式■ 無     □ 有（請檢附）",
+        "methodology": "本研究採用次級資料分析，透過疾管署防疫資料庫擷取確定個案資料，以描述性統計及迴歸分析探討風險因子。",
+        "needs_funding_no": "□",
+        "needs_funding_yes": "■",
+        "outcome_other": "□",
+        "outcome_other_count": "___",
+        "outcome_paper_publish": "■",
+        "outcome_paper_publish_count": "1",
+        "outcome_paper_publish_date": "115 年 12 月 31 日",
+        "outcome_paper_writing": "□",
+        "outcome_paper_writing_count": "___",
+        "outcome_policy": "□",
+        "outcome_policy_count": "___",
+        "outcome_report": "■",
+        "outcome_report_count": "1",
+        "outcome_type_text": "論文發表 1 件、研究報告 1 件",
+        "outcome_usage_text": "本研究成果歸屬衛生福利部疾病管制署，研究成果得作為傳染病防治政策參考，並投稿學術期刊發表。",
+        "person_email": "lianluo.chang@cdc.gov.tw",
+        "person_id_number": "D423456789",
+        "person_name_zh": "張聯絡",
+        "person_phone": "02-23959825 分機 1237",
+        "person_title": "技佐",
+        "person_unit": "疫情中心第三科",
+        "personnel_appendix": [
+          {
+            "pa_birth_date": "1975-03-15",
+            "pa_completed": [
+              {
+                "proj_budget": "300,000",
+                "proj_end_ym": "112/12",
+                "proj_funder": "疾管署",
+                "proj_name": "登革熱境外移入風險評估",
+                "proj_role": "主持人",
+                "proj_start_ym": "112/01"
+              }
+            ],
+            "pa_education": [
+              {
+                "edu_degree": "博士",
+                "edu_grad_year": "98",
+                "edu_school": "國立臺灣大學 流行病學與預防醫學研究所"
+              },
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "91",
+                "edu_school": "國立陽明大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "男",
+            "pa_has_pi_proj": true,
+            "pa_name_zh": "王大明",
+            "pa_no_completed": false,
+            "pa_no_ongoing": false,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": false,
+            "pa_ongoing": [
+              {
+                "proj_budget": "1,200,000",
+                "proj_end_ym": "115/06",
+                "proj_funder": "國科會",
+                "proj_name": "新興傳染病監測系統",
+                "proj_role": "共同主持人",
+                "proj_start_ym": "113/07"
+              }
+            ],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "300,000",
+            "pa_pi_proj_funder": "疾管署",
+            "pa_pi_proj_name": "登革熱境外移入風險評估",
+            "pa_pi_proj_period": "112/01～112/12",
+            "pa_pi_proj_pi": "王大明",
+            "pa_pi_proj_summary": "分析近五年境外移入個案分布與風險因子。",
+            "pa_publications_text": "王大明, 李小華 (2024). 臺灣麻疹流行病學分析. 台灣公共衛生雜誌, 43(2), 145-160.",
+            "pa_role_label": "主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "107/08",
+                "wh_title": "研究員"
+              },
+              {
+                "wh_end_ym": "107/07",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "100/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1982-08-20",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "97",
+                "edu_school": "國立臺灣大學 公共衛生學系"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "李小華",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "李小華",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "協同主持人",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "105/01",
+                "wh_title": "副研究員"
+              }
+            ]
+          },
+          {
+            "pa_birth_date": "1990-11-05",
+            "pa_completed": [],
+            "pa_education": [
+              {
+                "edu_degree": "碩士",
+                "edu_grad_year": "104",
+                "edu_school": "國立陽明交通大學 公共衛生研究所"
+              }
+            ],
+            "pa_gender_label": "女",
+            "pa_has_pi_proj": false,
+            "pa_name_zh": "陳研究",
+            "pa_no_completed": true,
+            "pa_no_ongoing": true,
+            "pa_no_pending": true,
+            "pa_no_pi_proj": true,
+            "pa_ongoing": [],
+            "pa_pending": [],
+            "pa_pi_proj_budget": "",
+            "pa_pi_proj_funder": "",
+            "pa_pi_proj_name": "",
+            "pa_pi_proj_period": "",
+            "pa_pi_proj_pi": "陳研究",
+            "pa_pi_proj_summary": "",
+            "pa_publications_text": "",
+            "pa_role_label": "研究人員",
+            "pa_work_history": [
+              {
+                "wh_end_ym": "迄今",
+                "wh_institution": "衛生福利部疾病管制署",
+                "wh_start_ym": "110/03",
+                "wh_title": "助理研究員"
+              }
+            ]
+          }
+        ],
+        "personnel_appendix_count": 3,
+        "personnel_count": 4,
+        "personnel_equipment_text": "計畫主持人：王大明（疫情中心第三科 研究員）— 計畫統籌、資料分析與論文撰寫\n協同主持人：李小華（疫情中心第三科 副研究員）— 文獻回顧、資料品質查核\n研究人員：陳研究（疫情中心第三科 助理研究員）— 資料處理、統計分析輔助\n計畫聯絡人：張聯絡（疫情中心第三科 技佐）— 行政聯絡窗口",
+        "personnel_rows": [
+          {
+            "name_zh": "王大明",
+            "role_text": "計畫主持人",
+            "title": "研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "計畫統籌、資料分析與論文撰寫"
+          },
+          {
+            "name_zh": "李小華",
+            "role_text": "協同主持人",
+            "title": "副研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "文獻回顧、資料品質查核"
+          },
+          {
+            "name_zh": "陳研究",
+            "role_text": "研究人員",
+            "title": "助理研究員",
+            "unit": "疫情中心第三科",
+            "work_description": "資料處理、統計分析輔助"
+          },
+          {
+            "name_zh": "張聯絡",
+            "role_text": "計畫聯絡人",
+            "title": "技佐",
+            "unit": "疫情中心第三科",
+            "work_description": "行政聯絡窗口"
+          }
+        ],
+        "pi_address": "10050 臺北市中正區林森南路 6 號",
+        "pi_email": "daming.wang@cdc.gov.tw",
+        "pi_fax": "02-23959825",
+        "pi_name_zh": "王大明",
+        "pi_phone": "02-23959825 分機 1234",
+        "pi_same": "■",
+        "pi_same_text": "同申請人員",
+        "pi_title": "研究員",
+        "pi_unit": "疫情中心第三科",
+        "prior_research_text": "前次人體研究參考資料■ 無     □ 有（請檢附）",
+        "privacy_after": "分析資料於計畫結束後保留三年，届滿後銷毀。",
+        "privacy_during": "資料儲存於符合 ISMS 規範之加密環境。",
+        "privacy_withdrawal": "本研究使用次級資料庫，無法回溯識別個別對象，無中途退出情形。",
+        "project_title_en": "Epidemiological Analysis of Domestic Aspergillosis",
+        "project_title_zh": "本土麴黴菌感染症之流行病學分析",
+        "project_type_1yr": "■",
+        "project_type_cover_text": "■新增型計畫：■一年 □多年",
+        "project_type_multi": "□",
+        "project_type_new": "■",
+        "project_type_old": "□",
+        "project_type_text": "新增型一年期計畫",
+        "project_year": "114",
+        "purpose": "本研究旨在分析臺灣本土麴黴菌感染症之流行病學特徵。",
+        "purpose_internal": "□",
+        "purpose_no_fund": "■",
+        "purpose_other": "□",
+        "purpose_other_detail": "",
+        "purpose_thesis": "□",
+        "questionnaire_text": "問卷內容■ 無     □ 有（請檢附）",
+        "recruit_text": "否",
+        "references": "1. Smith J, et al. (2023). Aspergillosis epidemiology. Clin Infect Dis.\n2. 衛生福利部疾病管制署 (2024). 傳染病監測年報。",
+        "research_purpose_type_text": "無需經費研究計畫",
+        "researcher_lines": "研究人員：陳研究",
+        "researcher_name_1": "陳研究",
+        "researcher_name_2": "",
+        "researcher_name_3": "",
+        "researcher_name_4": "",
+        "resource_sufficiency_text": "確保有無足夠資源於受試者保護□ 無     ■ 有",
+        "responsible_unit": "疫情中心第三科",
+        "retention_deadline_roc": "118 年 6 月 30 日",
+        "role_co_pi": "□",
+        "role_other": "■",
+        "role_pi": "□",
+        "role_researcher": "□",
+        "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1月、第2月\n資料申請與清理：第2月、第3月、第4月\n統計分析：第4月、第5月、第6月、第7月\n結果撰寫：第7月、第8月、第9月\n論文投稿：第9月、第10月\n結案報告：第11月、第12月\n成果發表：第12月",
+        "signing_date_roc": "114 年 5 月 15 日"
+      },
+      "name_zh": "張聯絡",
+      "role": "contact"
+    }
+  ]
+}
