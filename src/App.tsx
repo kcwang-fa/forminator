@@ -25,55 +25,26 @@ import WorkflowGuide from './components/workflow/WorkflowGuide';
 
 import { DOC_NAMES, SDD_VERSION, defaultFormData, type DocId } from './data/defaults';
 import { getPlanConfig, type WizardStepKey } from './data/planConfigs';
+import { STEP_CONFIGS } from './data/stepConfigs';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 
-// 所有可能的步驟定義（key → 元件對應）
-// 實際顯示哪幾步由 planConfigs.ts 的 wizardStepKeys 決定，不是這裡全部都顯示
-const ALL_STEPS: Record<WizardStepKey, { title: string; component: React.ComponentType }> = {
-  basic:      { title: '基本資訊', component: Step1BasicInfo },
-  personnel:  { title: '研究團隊', component: Step2Personnel },
-  research:   { title: '研究內容', component: Step3Research },
-  irb:        { title: 'IRB 審查', component: Step4IRB },
-  budget:     { title: '經費概算', component: Step5Budget },
-  database:   { title: '資料庫申請', component: Step6Database },
+// step key → React 元件對應。實際顯示哪幾步由 planConfigs.wizardStepKeys 決定。
+// title / hint / affectedDocs 集中在 stepConfigs.ts，這裡只負責元件 mapping。
+const STEP_COMPONENTS: Record<WizardStepKey, React.ComponentType> = {
+  basic:     Step1BasicInfo,
+  personnel: Step2Personnel,
+  research:  Step3Research,
+  irb:       Step4IRB,
+  budget:    Step5Budget,
+  database:  Step6Database,
 };
 
 const DOC_GROUPS: Array<{ key: string; label: string; docs: DocId[] }> = [
   { key: 'irb', label: 'IRB', docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'] },
   { key: 'database', label: '資料庫', docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'] },
 ];
-
-const STEP_WORKBENCH_MAP: Record<WizardStepKey, { docs: DocId[] }> = {
-  basic: {
-    docs: ['DOC-1', 'DOC-2'],
-  },
-  personnel: {
-    docs: ['DOC-2', 'DOC-6'],
-  },
-  research: {
-    docs: ['DOC-2', 'DOC-4'],
-  },
-  irb: {
-    docs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
-  },
-  budget: {
-    docs: ['DOC-1', 'DOC-2'],
-  },
-  database: {
-    docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'],
-  },
-};
-
-const STEP_HINT_MAP: Record<WizardStepKey, string> = {
-  basic: '先把計畫的骨架定清楚，後續文件主旨、封面、期間與單位會一起跟著走。',
-  personnel: '這一步決定逐人文件與研究團隊附表內容。',
-  research: '這一步會影響計畫書、資料庫使用範圍與後續簽呈文案，是整份案子的內容核心。',
-  irb: '確認審查類型、資料來源與保護措施，這些內容會直接進入 IRB 文件。',
-  budget: '先整理經費概算與需求，讓簽核文件裡的計畫資訊完整一致。',
-  database: '這一步會影響資料庫申請單、資料庫簽呈、個資表與應用系統維護單。',
-};
 
 function AppContent() {
   const form = useCreateFormStore();
@@ -104,7 +75,11 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   const screens = Grid.useBreakpoint();
   const isDesktop = !!screens.lg;
   const steps = useMemo(() => {
-    return planConfig.wizardStepKeys.map((key) => ({ key, ...ALL_STEPS[key] }));
+    return planConfig.wizardStepKeys.map((key) => ({
+      key,
+      title: STEP_CONFIGS[key].title,
+      component: STEP_COMPONENTS[key],
+    }));
   }, [planConfig]);
 
   const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(steps.length);
@@ -153,9 +128,14 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
     });
   }, [setSelectedDocs]);
 
-  const currentStepDef = steps[currentStep] ?? { key: 'basic' as const, ...ALL_STEPS.basic };
+  const currentStepDef = steps[currentStep] ?? {
+    key: 'basic' as const,
+    title: STEP_CONFIGS.basic.title,
+    component: STEP_COMPONENTS.basic,
+  };
   const CurrentStepComponent = currentStepDef.component;
-  const currentStepDocs = STEP_WORKBENCH_MAP[currentStepDef.key].docs;
+  const currentStepConfig = STEP_CONFIGS[currentStepDef.key];
+  const currentStepDocs = currentStepConfig.affectedDocs;
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -285,7 +265,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
                 <div>
                   <Title level={2} style={{ margin: 0 }}>{currentStepDef.title}</Title>
                   <Text type="secondary" style={{ fontSize: 15 }}>
-                    {STEP_HINT_MAP[currentStepDef.key]}
+                    {currentStepConfig.hint}
                   </Text>
                 </div>
                 <div>
