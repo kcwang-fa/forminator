@@ -144,5 +144,14 @@ export function prepareDatabaseData(data: FormData, pi: Personnel) {
     outcome_paper_publish_date: toRocDate(findOutcome('paper_publish')?.publish_date || ''),
     outcome_other: findOutcome('other') ? '■' : '□',
     outcome_other_count: findOutcome('other')?.count?.toString() || '___',
+
+    // DOC-7（保密切結書，逐人）/ DOC-8（資料庫使用申請單）共同人員清冊：
+    // 帶入除 PI 外的所有已填人員。注意 DOC-7 是 PER_PERSON_DOCS，DOC-8 是表格 loop。
+    db_personnel: data.personnel.filter(p => p.role !== 'pi' && !!p.name_zh.trim()).map(p => ({
+      name_zh: p.name_zh,
+      unit: p.unit,
+      title: p.title,
+      phone: p.phone,
+    })),
   };
 }

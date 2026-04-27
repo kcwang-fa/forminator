@@ -23,9 +23,10 @@ import type { FormData, Personnel } from '../types/form';
 import { toRocDate } from './date';
 import { DOC_NAMES, type DocId } from '../data/defaults';
 import { buildBudgetRows, calcTotal, isPersonnel, isBusiness, isCapital } from './budgetCalc';
-import { ROLE_MAP, EXEMPT_MAP } from './docgenMaps';
+import { EXEMPT_MAP } from './docgenMaps';
 import { prepareDatabaseData } from './docgen/database';
 import { preparePersonnelAppendix } from './docgen/personnelAppendix';
+import { prepareScheduleData } from './docgen/schedule';
 
 // DOC-6（IRB-018 保密切結書）和 DOC-7（資料庫保密切結書）需要每位研究人員各一份
 const PER_PERSON_DOCS = new Set<DocId>(['DOC-6', 'DOC-7']);
@@ -138,35 +139,11 @@ function prepareProjectTypeData(data: FormData) {
   };
 }
 
-function prepareGanttData(data: FormData, pi: Personnel) {
+// 各文件的零碎欄位（DOC-4 樣板字 / DOC-6 角色 checkbox 預設 / IRB-002 / co_pi_names）。
+// 量太小，獨立成檔反而散；先用 holding pen 收一起，將來某類長大再拆。
+function prepareMiscPlaceholders(data: FormData, pi: Personnel) {
   return {
-    schedule_text: `執行期間：${toRocDate(data.execution_start)} 至 ${toRocDate(data.execution_end)}\n${
-      data.gantt_chart.length > 0
-        ? data.gantt_chart.map(g =>
-            `${g.task_name}：${g.months.map((m: boolean, i: number) => m ? `第${i + 1}月` : '').filter(Boolean).join('、')}`
-          ).join('\n')
-        : '（請參閱署內研究計畫書）'
-    }`,
-    gantt_chart_text: data.gantt_chart.length > 0
-      ? data.gantt_chart.map(g =>
-          `${g.task_name}：${g.months.map((m, i) => m ? `第${i + 1}月` : '').filter(Boolean).join('、')}`
-        ).join('\n')
-      : '（請參閱署內研究計畫書）',
-    gantt_rows: data.gantt_chart.map(g => {
-      const row: Record<string, string> = { task_name: g.task_name };
-      for (let i = 0; i < 12; i++) row[`m${i + 1}`] = g.months[i] ? '■' : '';
-      return row;
-    }),
-    personnel_equipment_text: data.personnel.map(p =>
-      `${ROLE_MAP[p.role] || p.role}：${p.name_zh}（${p.unit} ${p.title}）— ${p.work_description || '研究資料分析與報告撰寫'}`
-    ).join('\n'),
-    personnel_rows: data.personnel.map(p => ({
-      role_text: ROLE_MAP[p.role] || p.role,
-      name_zh: p.name_zh,
-      title: p.title,
-      unit: p.unit,
-      work_description: p.work_description || '研究資料分析與報告撰寫',
-    })),
+    // DOC-4 固定樣板字
     funding_detail_text: data.needs_funding
       ? '(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿'
       : '(1)經費需求：＿＿＿千元，■不需經費\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿',
@@ -185,14 +162,7 @@ function prepareGanttData(data: FormData, pi: Personnel) {
     role_co_pi: '□',
     role_researcher: '□',
     role_other: '□',
-    // 資料庫申請單的共同參與研究人員／實際處理資料人員：帶入除 PI 外的所有已填人員
-    db_personnel: data.personnel.filter(p => p.role !== 'pi' && !!p.name_zh.trim()).map(p => ({
-      name_zh: p.name_zh,
-      unit: p.unit,
-      title: p.title,
-      phone: p.phone,
-    })),
-    // IRB-002
+    // IRB-002 計畫送件核對表（DOC-3）
     irb002_project_title: data.project_title_zh,
     irb002_pi_name: pi.name_zh || '',
     irb002_pi_title: pi.title || '',
@@ -231,7 +201,8 @@ export function prepareCommonData(data: FormData) {
     ...prepareIRBData(data),
     ...prepareProjectTypeData(data),
     ...prepareDatabaseData(data, pi),
-    ...prepareGanttData(data, pi),
+    ...prepareScheduleData(data),
+    ...prepareMiscPlaceholders(data, pi),
     ...preparePersonnelAppendix(data),
     ...prepareCoverData(data),
     // 經費概算
