@@ -87,7 +87,7 @@ export function usePersonnelProfile() {
         {pendingProfile && (
           <div style={{ color: '#666', fontSize: 13 }}>
             <div>姓名：{pendingProfile.name_zh}</div>
-            <div>職稱：{pendingProfile.title}　單位：{pendingProfile.unit}</div>
+            <div>職稱：{pendingProfile.title} 單位：{pendingProfile.unit}</div>
           </div>
         )}
       </Form>

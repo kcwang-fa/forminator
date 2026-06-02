@@ -8,22 +8,31 @@ import { useFormStore } from '../../hooks/useFormStore';
 import { translateTitle } from '../../api/llm';
 import { PLAN_CONFIGS, getPlanConfig } from '../../data/planConfigs';
 import type { ReviewType } from '../../types/form';
+import ReviewTypeScreening from './ReviewTypeScreening';
 import dayjs from 'dayjs';
 
 const REVIEW_TYPE_OPTIONS = (Object.values(PLAN_CONFIGS) as typeof PLAN_CONFIGS[ReviewType][]).map((cfg) => ({
   value: cfg.id,
   label: cfg.label,
   description: cfg.description,
-  disabled: !cfg.ready,
+  ready: cfg.ready,
 }));
+
+const REVIEW_TYPE_SOURCE_LABELS = {
+  default: { label: '系統預設', color: 'default' },
+  screening: { label: '由判斷器套用', color: 'processing' },
+  manual: { label: '人工覆寫', color: 'orange' },
+} as const;
 
 export default function Step1BasicInfo() {
   const { control, watch, setValue } = useFormStore();
   const { message } = App.useApp();
   const titleZh = watch('project_title_zh');
   const reviewType = watch('review_type');
+  const reviewTypeSource = watch('review_type_source');
   const planConfig = getPlanConfig(reviewType);
   const [translating, setTranslating] = useState(false);
+  const reviewTypeSourceLabel = REVIEW_TYPE_SOURCE_LABELS[reviewTypeSource] || REVIEW_TYPE_SOURCE_LABELS.default;
 
   const handleTitleTranslate = useCallback(async () => {
     if (!titleZh || titleZh.length < 4) return;
@@ -42,6 +51,8 @@ export default function Step1BasicInfo() {
     <div>
       <h3>基本資訊</h3>
 
+      <ReviewTypeScreening />
+
       {/* 審查類型（計畫類型配置的入口） */}
       <Controller
         name="review_type"
@@ -53,22 +64,31 @@ export default function Step1BasicInfo() {
           >
             <Select
               {...field}
+              onChange={(value) => {
+                field.onChange(value);
+                setValue('review_type_source', 'manual', { shouldDirty: true });
+              }}
               options={REVIEW_TYPE_OPTIONS.map((opt) => ({
                 value: opt.value,
                 label: (
                   <Space>
                     {opt.label}
-                    {!opt.disabled
+                    {opt.ready
                       ? <Tag color="blue" style={{ marginLeft: 4 }}>支援</Tag>
                       : <Tag color="default" style={{ marginLeft: 4 }}>模板準備中</Tag>}
                   </Space>
                 ),
-                disabled: opt.disabled,
               }))}
               style={{ width: 320 }}
             />
             <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
               {planConfig.description}
+              <Tag color={reviewTypeSourceLabel.color} style={{ marginLeft: 8 }}>
+                {reviewTypeSourceLabel.label}
+              </Tag>
+              {!planConfig.ready && (
+                <Tag color="warning" style={{ marginLeft: 4 }}>文件模板尚未完整支援</Tag>
+              )}
             </div>
           </Form.Item>
         )}

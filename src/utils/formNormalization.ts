@@ -1,5 +1,5 @@
-import { defaultFormData, emptyDatabaseRequest } from '../data/defaults';
-import type { DatabaseFieldPurpose, DatabaseRequest, FormData, OutcomeTypeDetail } from '../types/form';
+import { defaultFormData, emptyDatabaseRequest, emptyReviewScreening } from '../data/defaults';
+import type { DatabaseFieldPurpose, DatabaseRequest, FormData, OutcomeTypeDetail, ReviewScreening } from '../types/form';
 
 type LegacyDatabaseFields = {
   apply_system?: DatabaseRequest['apply_system'];
@@ -14,6 +14,7 @@ type LegacyDatabaseFields = {
 
 type MaybeLegacyFormData = Partial<FormData> & LegacyDatabaseFields & {
   outcome_type_detail?: Partial<OutcomeTypeDetail>[];
+  review_screening?: Partial<ReviewScreening>;
   database_requests?: Array<Partial<DatabaseRequest> & {
     data_fields_other?: string[] | string;
     doc8_field_purposes?: Partial<DatabaseFieldPurpose>[];
@@ -64,8 +65,11 @@ function normalizeDatabaseRequest(request: Partial<DatabaseRequest> & { data_fie
 function normalizeDatabaseRequests(data: MaybeLegacyFormData): DatabaseRequest[] {
   if (Array.isArray(data.database_requests) && data.database_requests.length > 0) {
     return data.database_requests.map((rawRequest) => {
-      const { apply_year_start: _applyYearStart, apply_year_end: _applyYearEnd, ...request } =
-        rawRequest as Partial<DatabaseRequest> & { data_fields_other?: string[] | string; apply_year_start?: string; apply_year_end?: string };
+      const request = {
+        ...rawRequest,
+      } as Partial<DatabaseRequest> & { data_fields_other?: string[] | string; apply_year_start?: string; apply_year_end?: string };
+      delete request.apply_year_start;
+      delete request.apply_year_end;
       return normalizeDatabaseRequest(request);
     });
   }
@@ -98,6 +102,24 @@ function normalizeDatabaseRequests(data: MaybeLegacyFormData): DatabaseRequest[]
   return [{ ...emptyDatabaseRequest }];
 }
 
+function normalizeReviewScreening(screening: Partial<ReviewScreening> | undefined): ReviewScreening {
+  return {
+    ...emptyReviewScreening,
+    ...screening,
+    data_use_types: Array.isArray(screening?.data_use_types) ? screening.data_use_types : [],
+    specimen_use_types: Array.isArray(screening?.specimen_use_types) ? screening.specimen_use_types : [],
+    vulnerable_populations: Array.isArray(screening?.vulnerable_populations) ? screening.vulnerable_populations : [],
+    data_identifiability: screening?.data_identifiability || '',
+    is_minimal_risk: typeof screening?.is_minimal_risk === 'boolean' ? screening.is_minimal_risk : null,
+    has_direct_subject_contact: Boolean(screening?.has_direct_subject_contact),
+    has_high_risk_procedure: Boolean(screening?.has_high_risk_procedure),
+    has_discrimination_risk: Boolean(screening?.has_discrimination_risk),
+    recording_is_identifiable_or_sensitive: Boolean(screening?.recording_is_identifiable_or_sensitive),
+    has_other_irb_approval: Boolean(screening?.has_other_irb_approval),
+    notes: screening?.notes || '',
+  };
+}
+
 export function normalizeFormData(data: MaybeLegacyFormData | null | undefined): FormData {
   const next = data || {};
   const normalizedDatabaseRequests = normalizeDatabaseRequests(next);
@@ -108,6 +130,8 @@ export function normalizeFormData(data: MaybeLegacyFormData | null | undefined):
     ...defaultFormData,
     ...next,
     outcome_type_detail: normalizeOutcomeTypeDetails(next.outcome_type_detail),
+    review_type_source: next.review_type_source || defaultFormData.review_type_source,
+    review_screening: normalizeReviewScreening(next.review_screening),
     apply_year_start: globalApplyYearStart,
     apply_year_end: globalApplyYearEnd,
     database_requests: normalizedDatabaseRequests,

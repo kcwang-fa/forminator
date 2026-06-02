@@ -39,12 +39,13 @@ export function exportToJson(data: FormData): void {
  * 匯出單一人員 Profile 為 JSON
  */
 export function exportPersonnelProfile(person: Personnel): void {
-  const { role: _role, ...rest } = person;
+  const rest: Partial<Personnel> = { ...person };
+  delete rest.role;
   const profile: PersonnelProfileExport = {
     type: 'pi_profile',
     version: PROFILE_VERSION,
     exported_at: new Date().toISOString(),
-    personnel: rest,
+    personnel: rest as Omit<Personnel, 'role'>,
   };
   const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
   const name = person.name_zh || 'personnel';

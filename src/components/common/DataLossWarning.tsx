@@ -8,7 +8,7 @@ interface Props {
   hasData: boolean;
 }
 
-export default function DataLossWarning({ onExport: _onExport, hasData }: Props) {
+export default function DataLossWarning({ hasData }: Props) {
   const [dismissed, setDismissed] = useState(false);
 
   // 關閉分頁時仍提醒（多一層保險）

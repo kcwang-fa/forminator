@@ -1,8 +1,10 @@
 // ===== 第 4 頁：IRB 審查 =====
 
-import { Form, Input, Select, Collapse } from 'antd';
-import { Controller } from 'react-hook-form';
+import { useMemo } from 'react';
+import { Form, Input, Select, Collapse, Alert, Space, Tag } from 'antd';
+import { Controller, useWatch } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
+import { classifyReviewType, REVIEW_TYPE_LABELS } from '../../utils/reviewClassifier';
 
 const REVIEW_TYPE_OPTIONS = [
   { value: 'exempt', label: '免審' },
@@ -19,19 +21,51 @@ const EXEMPT_CATEGORY_OPTIONS = [
 ];
 
 export default function Step4IRB() {
-  const { control, watch } = useFormStore();
+  const { control, watch, setValue } = useFormStore();
   const reviewType = watch('review_type');
+  const reviewTypeSource = watch('review_type_source');
+  const screening = useWatch({ control, name: 'review_screening' });
+  const decision = useMemo(() => classifyReviewType(screening), [screening]);
 
   return (
     <div>
       <h3>IRB 審查資訊</h3>
+
+      <Alert
+        type={decision.review_type && decision.review_type !== reviewType ? 'warning' : 'info'}
+        showIcon
+        style={{ marginBottom: 16 }}
+        message={(
+          <Space wrap>
+            <span>Step 1 判斷結果</span>
+            {decision.review_type ? (
+              <Tag color={decision.review_type === 'exempt' ? 'green' : decision.review_type === 'expedited' ? 'blue' : 'volcano'}>
+                {REVIEW_TYPE_LABELS[decision.review_type]}
+              </Tag>
+            ) : (
+              <Tag color="default">尚未完成判斷</Tag>
+            )}
+            {reviewTypeSource === 'manual' && <Tag color="orange">目前為人工覆寫</Tag>}
+          </Space>
+        )}
+        description={decision.review_type && decision.review_type !== reviewType
+          ? '目前套用的審查類型與判斷器建議不同，請確認是否有人工覆寫或條件尚未更新。'
+          : decision.reasons.join('；') || '可回到 Step 1 補齊審查類型判斷。'}
+      />
 
       <Controller
         name="review_type"
         control={control}
         render={({ field }) => (
           <Form.Item label="審查類型">
-            <Select {...field} options={REVIEW_TYPE_OPTIONS} />
+            <Select
+              {...field}
+              options={REVIEW_TYPE_OPTIONS}
+              onChange={(value) => {
+                field.onChange(value);
+                setValue('review_type_source', 'manual', { shouldDirty: true });
+              }}
+            />
           </Form.Item>
         )}
       />

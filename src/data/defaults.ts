@@ -1,8 +1,8 @@
 // ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
 
-import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest } from '../types/form';
+import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest, ReviewScreening } from '../types/form';
 
-export const SDD_VERSION = '1.4.0';
+export const SDD_VERSION = '1.5.0';
 
 export const emptyEducation: Education = {
   degree: '',
@@ -39,6 +39,20 @@ export const emptyDatabaseRequest: DatabaseRequest = {
   doc8_field_purposes: [],
   db_usage_scope_item: '',
   db_usage_scope_item_manual: false,
+};
+
+export const emptyReviewScreening: ReviewScreening = {
+  data_use_types: [],
+  specimen_use_types: [],
+  vulnerable_populations: [],
+  data_identifiability: '',
+  is_minimal_risk: null,
+  has_direct_subject_contact: false,
+  has_high_risk_procedure: false,
+  has_discrimination_risk: false,
+  recording_is_identifiable_or_sensitive: false,
+  has_other_irb_approval: false,
+  notes: '',
 };
 
 
@@ -129,8 +143,10 @@ export const defaultFormData: FormData = {
   references: '',
   gantt_chart: [],
 
-  // IRB 審查 — MVP 預設免審
+  // IRB 審查 — MVP 預設免審；使用者可用 Step 1 篩檢器改判。
   review_type: 'exempt',
+  review_type_source: 'default',
+  review_screening: { ...emptyReviewScreening },
   exempt_category: 'public_info',
   exempt_reason: '本研究為次級資料研究，資料皆已去識別化。',
   data_source: '本研究使用疾管署防疫資料庫，依據「衛生福利部疾病管制署防疫資料庫員工研究計畫使用申請作業說明」提出申請，並檢附本 IRB 審查通過證明文件後，依序完成資料權責單位、資訊室及企劃組審核，經一層核定後取得去識別化資料。',

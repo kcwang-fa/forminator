@@ -31,7 +31,7 @@ function PersonnelCardTitle({ index }: { index: number }) {
   const role = useWatch({ control, name: `personnel.${index}.role` });
   const name = useWatch({ control, name: `personnel.${index}.name_zh` });
   const roleLabel = ROLE_OPTIONS.find(o => o.value === role)?.label || `成員 ${index + 1}`;
-  return <>{name ? `${roleLabel}　${name}` : roleLabel}</>;
+  return <>{name ? `${roleLabel} ${name}` : roleLabel}</>;
 }
 
 export default function Step2Personnel() {
@@ -69,7 +69,11 @@ export default function Step2Personnel() {
                     onClick={() => {
                       const pi = getValues('personnel').find(p => p.role === 'pi');
                       if (!pi) { message.warning('尚未設定計畫主持人'); return; }
-                      const { role: _role, work_history, projects, publications, ...piData } = pi;
+                      const piData: Partial<typeof pi> = { ...pi };
+                      delete piData.role;
+                      delete piData.work_history;
+                      delete piData.projects;
+                      delete piData.publications;
                       const current = getValues(`personnel.${index}`);
                       setValue(`personnel.${index}`, { ...current, ...piData }, { shouldDirty: true });
                       message.success('已複製計畫主持人資料');

@@ -2,6 +2,7 @@
 
 export type ProjectType = 'new_1yr' | 'new_multi' | 'continuing_multi';
 export type ReviewType = 'exempt' | 'expedited' | 'full';
+export type ReviewTypeSource = 'default' | 'screening' | 'manual';
 export type ExemptCategory = 'public_non_interactive' | 'public_info' | 'public_policy' | 'education' | 'minimal_risk';
 export type PersonnelRole = 'pi' | 'co_pi' | 'researcher' | 'contact' | 'assistant';
 export type Gender = 'male' | 'female';
@@ -12,6 +13,49 @@ export type AnalysisLocation = 'office' | 'personal_pc' | 'other_platform' | 'da
 export type ExperimentType = 'human_research' | 'gene_recombination' | 'animal' | 'biosafety_level2' | 'high_risk_pathogen';
 export type FundingSource = 'cdc' | 'mohw' | 'nstc' | 'other';
 export type ApplySystem = 'warehouse' | 'other';
+export type ReviewDataUseType =
+  | 'education_evaluation'
+  | 'public_policy_evaluation'
+  | 'public_non_interactive_observation'
+  | 'minimal_risk_new_data'
+  | 'noninvasive_measurement'
+  | 'behavior_or_trait'
+  | 'recording_or_image'
+  | 'deidentified_database'
+  | 'medical_record'
+  | 'business_data'
+  | 'public_info'
+  | 'other_existing_data'
+  | 'other_new_data';
+export type ReviewSpecimenUseType =
+  | 'limited_blood_draw'
+  | 'new_noninvasive_specimen'
+  | 'cdc_residual_specimen'
+  | 'remaining_specimen_original_consent'
+  | 'external_remaining_specimen_original_consent'
+  | 'legal_biobank_unlinkable'
+  | 'cdc_residual_non_original_with_clinical_report'
+  | 'strain_or_virus'
+  | 'other_specimen';
+export type ReviewVulnerablePopulation =
+  | 'minor'
+  | 'prisoner'
+  | 'indigenous'
+  | 'pregnant'
+  | 'disability'
+  | 'mental_illness'
+  | 'hiv_positive'
+  | 'tb_case'
+  | 'new_immigrant_or_migrant'
+  | 'long_term_care_resident'
+  | 'other_vulnerable';
+export type ReviewDataIdentifiability =
+  | 'provider_deidentified_unidentifiable'
+  | 'coded_researcher_unidentifiable'
+  | 'identifiable_or_linkable'
+  | 'public_or_legally_open'
+  | 'unknown';
+export type ReviewDecisionConfidence = 'incomplete' | 'clear' | 'needs_review';
 // 倉儲系統可選的中文欄位；other 表示自填
 export type DataFieldKey =
   | 'case_id'        // 傳染病報告單電腦編號
@@ -121,6 +165,29 @@ export interface DatabaseRequest {
   db_usage_scope_item_manual: boolean;  // true 表示使用者已手動修改，不再自動覆寫
 }
 
+export interface ReviewScreening {
+  data_use_types: ReviewDataUseType[];
+  specimen_use_types: ReviewSpecimenUseType[];
+  vulnerable_populations: ReviewVulnerablePopulation[];
+  data_identifiability: ReviewDataIdentifiability | '';
+  is_minimal_risk: boolean | null;
+  has_direct_subject_contact: boolean;
+  has_high_risk_procedure: boolean;
+  has_discrimination_risk: boolean;
+  recording_is_identifiable_or_sensitive: boolean;
+  has_other_irb_approval: boolean;
+  notes: string;
+}
+
+export interface ReviewDecision {
+  review_type: ReviewType | null;
+  confidence: ReviewDecisionConfidence;
+  suggested_exempt_category?: ExemptCategory;
+  reasons: string[];
+  matched_rules: string[];
+  warnings: string[];
+}
+
 // ===== 主表單資料結構 =====
 
 export interface FormData {
@@ -159,6 +226,8 @@ export interface FormData {
 
   // §2.2.4 IRB 審查資訊
   review_type: ReviewType;
+  review_type_source: ReviewTypeSource;
+  review_screening: ReviewScreening;
   exempt_category: ExemptCategory | '';
   exempt_reason: string;
   data_source: string;
