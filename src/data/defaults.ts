@@ -2,7 +2,7 @@
 
 import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest, ReviewScreening } from '../types/form';
 
-export const SDD_VERSION = '1.5.0';
+export const SDD_VERSION = '1.7.0';
 
 export const emptyEducation: Education = {
   degree: '',
@@ -54,7 +54,6 @@ export const emptyReviewScreening: ReviewScreening = {
   has_other_irb_approval: false,
   notes: '',
 };
-
 
 /** 空白人員模板 */
 export const emptyPersonnel: Personnel = {
@@ -115,8 +114,11 @@ export const defaultFormData: FormData = {
   project_year: String(new Date().getFullYear() - 1911), // 民國年
   project_id: '',
   project_type: 'new_1yr',
+  project_years: '1',
   execution_start: '',
   execution_end: '',
+  full_execution_start: '',
+  full_execution_end: '',
   responsible_unit: '',
   filing_date: '',
   research_focus: '',
@@ -147,16 +149,18 @@ export const defaultFormData: FormData = {
   review_type: 'exempt',
   review_type_source: 'default',
   review_screening: { ...emptyReviewScreening },
-  exempt_category: 'public_info',
+  exempt_category: ['public_info'],  // 可複選，預設「使用已合法公開之資料」
   exempt_reason: '本研究為次級資料研究，資料皆已去識別化。',
-  data_source: '本研究使用疾管署防疫資料庫，依據「衛生福利部疾病管制署防疫資料庫員工研究計畫使用申請作業說明」提出申請，並檢附本 IRB 審查通過證明文件後，依序完成資料權責單位、資訊室及企劃組審核，經一層核定後取得去識別化資料。',
+  data_source: '',  // 研究方法及工具描述，使用者自填（或用「帶入 Step 3 研究方法」按鈕帶入）
+  inclusion_criteria: '',  // 研究對象納入條件，使用者據實填寫
+  exclusion_criteria: '',  // 研究對象排除條件，使用者據實填寫
   recruit_subjects: false,
   recruit_method: '',
   interact_subjects: false,
   interact_detail: '',
-  privacy_during: '本研究使用之資料庫已去除個人識別資訊，研究過程中所有資料皆儲存於符合 ISMS 資訊安全管理規範之加密環境中，僅限經授權之研究人員得以接觸分析資料。',
-  privacy_after: '研究成果僅以群體統計量呈現，不揭露任何個案資訊。原始分析資料於計畫結束後保留三年，届滿後依機關資料銷毀程序辦理。',
-  privacy_withdrawal: '本研究採用次級資料庫進行分析，無法回溯識別個別研究對象，故無中途退出之情形。',
+  privacy_during: '',
+  privacy_after: '',
+  privacy_withdrawal: '',
 
   // 機關配合協調 — MVP 預設無
   has_coordination: false,

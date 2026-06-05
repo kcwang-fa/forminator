@@ -87,7 +87,7 @@ export function prepareDatabaseData(data: FormData, pi: Personnel) {
 
   return {
     apply_unit: data.apply_unit,
-    analysis_deadline_roc: toRocDate(data.execution_end || data.analysis_deadline),
+    analysis_deadline_roc: toRocDate(data.full_execution_end || data.execution_end || data.analysis_deadline),
     retention_deadline_roc: toRocDate(data.retention_deadline),
     research_purpose_type_text: PURPOSE_MAP[data.research_purpose_type] || data.research_purpose_type,
     delivery_format_text: data.delivery_format === 'digital' ? '數位檔案' : '紙本',

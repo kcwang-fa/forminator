@@ -188,6 +188,14 @@ export interface ReviewDecision {
   warnings: string[];
 }
 
+export interface ExemptIrbDraftText {
+  exempt_reason: string;
+  data_source: string;
+  privacy_during: string;
+  privacy_after: string;
+  privacy_withdrawal: string;
+}
+
 // ===== 主表單資料結構 =====
 
 export interface FormData {
@@ -197,8 +205,11 @@ export interface FormData {
   project_year: string;
   project_id: string;
   project_type: ProjectType;
-  execution_start: string;
-  execution_end: string;
+  project_years: string;          // 多年期計畫共幾年；一年期固定為 1
+  execution_start: string;        // 本年度／本次執行起始日
+  execution_end: string;          // 本年度／本次執行截止日
+  full_execution_start: string;   // 全程計畫起始日；一年期可同 execution_start
+  full_execution_end: string;     // 全程計畫截止日；一年期可同 execution_end
   responsible_unit: string;
   filing_date: string;
   research_focus: string;
@@ -228,9 +239,15 @@ export interface FormData {
   review_type: ReviewType;
   review_type_source: ReviewTypeSource;
   review_screening: ReviewScreening;
-  exempt_category: ExemptCategory | '';
+  // IRB-012 表單「研究類別」原文標注「可複選」，故此處用陣列；
+  // EXEMPT_MAP 會把每個選到的類別轉成文字、以「；」串接帶入文件。
+  exempt_category: ExemptCategory[];
   exempt_reason: string;
   data_source: string;
+  // IRB-012 表單「研究對象納入及排除條件」第 (1)(2) 點，免審也需據實填寫
+  // （例：納入＝2018–2025 確診個案、排除＝資料不全者），由 inject-doc5 注入 DOC-5。
+  inclusion_criteria: string;
+  exclusion_criteria: string;
   recruit_subjects: boolean;
   recruit_method: string;
   interact_subjects: boolean;

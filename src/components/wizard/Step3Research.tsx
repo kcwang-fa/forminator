@@ -1,11 +1,13 @@
 // ===== 第 3 頁：研究內容 =====
 
-import { useState } from 'react';
-import { Form, Input, Button, Spin, Tag, message, Table } from 'antd';
-import { RobotOutlined } from '@ant-design/icons';
+import { useMemo, useState } from 'react';
+import { Form, Input, Button, Spin, Tag, message, Table, Space, Popconfirm } from 'antd';
+import { RobotOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
 import { generateAbstract } from '../../api/llm';
+import { getGanttMonthLabels, generateDefaultGantt } from '../../utils/gantt';
+import type { GanttItem } from '../../types/form';
 
 export default function Step3Research() {
   const { control, watch, setValue, getValues } = useFormStore();
@@ -16,8 +18,47 @@ export default function Step3Research() {
   const methodology = watch('methodology');
   const expectedOutcome = watch('expected_outcome');
   const ganttChart = watch('gantt_chart');
+  const projectType = watch('project_type');
+  const executionStart = watch('execution_start');
+  const fullExecutionStart = watch('full_execution_start');
 
   const canGenerate = purpose && background && methodology && expectedOutcome;
+  const ganttStart = projectType === 'new_1yr'
+    ? executionStart
+    : fullExecutionStart || executionStart;
+  // 甘特圖目前的月數（由第一列的 months 長度決定，所有列等長）
+  const ganttMonths = ganttChart[0]?.months.length || 0;
+  const monthLabels = useMemo(
+    () => getGanttMonthLabels(ganttStart, ganttMonths),
+    [ganttMonths, ganttStart],
+  );
+
+  // 修改某一列的工作項目名稱
+  const handleTaskNameChange = (idx: number, value: string) => {
+    const updated = ganttChart.map((g: GanttItem, i: number) =>
+      i === idx ? { ...g, task_name: value } : g
+    );
+    setValue('gantt_chart', updated);
+  };
+
+  // 新增一列空白工作項目（月數沿用目前甘特圖）
+  const handleAddGanttRow = () => {
+    const blankRow: GanttItem = {
+      task_name: '',
+      months: Array.from({ length: ganttMonths }, () => false),
+    };
+    setValue('gantt_chart', [...ganttChart, blankRow]);
+  };
+
+  // 刪除某一列工作項目
+  const handleDeleteGanttRow = (idx: number) => {
+    setValue('gantt_chart', ganttChart.filter((_: GanttItem, i: number) => i !== idx));
+  };
+
+  // 一鍵帶入「資料分析」7 項預設範本（依目前月數自動分配進度，會覆寫現有工作項目）
+  const handleLoadGanttTemplate = () => {
+    setValue('gantt_chart', generateDefaultGantt(ganttMonths));
+  };
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -42,31 +83,61 @@ export default function Step3Research() {
 
   // 甘特圖月份標頭
   const ganttColumns = ganttChart.length > 0 ? [
-    { title: '工作項目', dataIndex: 'task_name', key: 'task_name', width: 200 },
+    {
+      title: '工作項目',
+      dataIndex: 'task_name',
+      key: 'task_name',
+      width: 200,
+      fixed: 'left' as const,
+      // record.key 是列索引（dataSource 以 key: i 帶入），用它寫回避免同名/空白列互相干擾
+      render: (_: unknown, record: { task_name: string; key: number }) => (
+        <Input
+          value={record.task_name}
+          placeholder="請輸入工作項目"
+          onChange={(e) => handleTaskNameChange(record.key, e.target.value)}
+          size="small"
+        />
+      ),
+    },
     ...ganttChart[0].months.map((_: boolean, i: number) => ({
-      title: `${i + 1}月`,
+      title: monthLabels[i] || `第${i + 1}月`,
       key: `m${i}`,
-      width: 50,
-      render: (_: unknown, record: { task_name: string; months: boolean[] }) => (
+      width: 56,
+      render: (_: unknown, record: { months: boolean[]; key: number }) => (
         <div style={{
           width: 24, height: 24, borderRadius: 4,
           background: record.months[i] ? '#1677ff' : '#f0f0f0',
           cursor: 'pointer',
         }}
+        // 用 record.key（列索引）定位，避免同名/空白列誤判
         onClick={() => {
-          const idx = ganttChart.findIndex((g: { task_name: string }) => g.task_name === record.task_name);
-          if (idx >= 0) {
-            const updated = [...ganttChart];
-            updated[idx] = {
-              ...updated[idx],
-              months: updated[idx].months.map((v: boolean, mi: number) => mi === i ? !v : v),
-            };
-            setValue('gantt_chart', updated);
-          }
+          const idx = record.key;
+          const updated = [...ganttChart];
+          updated[idx] = {
+            ...updated[idx],
+            months: updated[idx].months.map((v: boolean, mi: number) => mi === i ? !v : v),
+          };
+          setValue('gantt_chart', updated);
         }}
         />
       ),
     })),
+    {
+      title: '',
+      key: 'action',
+      width: 48,
+      fixed: 'right' as const,
+      render: (_: unknown, record: { key: number }) => (
+        <Popconfirm
+          title="刪除此工作項目？"
+          okText="刪除"
+          cancelText="取消"
+          onConfirm={() => handleDeleteGanttRow(record.key)}
+        >
+          <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      ),
+    },
   ] : [];
 
   return (
@@ -207,19 +278,35 @@ export default function Step3Research() {
       <Form.Item label="預定進度表">
         {ganttChart.length > 0 ? (
           <div style={{ overflowX: 'auto' }}>
+            {/* 工作項目操作：自行新增、或一鍵帶入「資料分析」7 項範本 */}
+            <Space style={{ marginBottom: 8 }}>
+              <Button icon={<PlusOutlined />} size="small" onClick={handleAddGanttRow}>
+                新增工作項目
+              </Button>
+              <Popconfirm
+                title="帶入「資料分析」7 項預設範本？"
+                description="會覆寫目前所有工作項目"
+                okText="帶入"
+                cancelText="取消"
+                onConfirm={handleLoadGanttTemplate}
+              >
+                <Button size="small">帶入資料分析範本</Button>
+              </Popconfirm>
+            </Space>
             <Table
               dataSource={ganttChart.map((g: { task_name: string; months: boolean[] }, i: number) => ({ ...g, key: i }))}
               columns={ganttColumns}
               pagination={false}
               size="small"
               bordered
+              scroll={{ x: 'max-content' }}
             />
             <p style={{ color: '#999', fontSize: 12, marginTop: 8 }}>
-              點擊格子可切換啟用/停用。進度表由執行起迄日自動生成。
+              工作項目可自行輸入、新增或刪除；點擊格子可切換該月啟用/停用。月份欄由執行起迄日自動生成。
             </p>
           </div>
         ) : (
-          <Tag color="orange">請先在第 1 頁填寫執行起迄日，系統將自動生成預設進度表</Tag>
+          <Tag color="orange">請先在第 1 頁填寫執行起迄日，系統將自動生成預定進度表</Tag>
         )}
       </Form.Item>
     </div>

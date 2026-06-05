@@ -1,6 +1,6 @@
 // ===== 第 1 頁：基本資訊 =====
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Form, Input, DatePicker, Button, Select, Space, Tag, App } from 'antd';
 import { RobotOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { PLAN_CONFIGS, getPlanConfig } from '../../data/planConfigs';
 import type { ReviewType } from '../../types/form';
 import ReviewTypeScreening from './ReviewTypeScreening';
 import dayjs from 'dayjs';
+import { calcProjectYears } from '../../utils/date';
 
 const REVIEW_TYPE_OPTIONS = (Object.values(PLAN_CONFIGS) as typeof PLAN_CONFIGS[ReviewType][]).map((cfg) => ({
   value: cfg.id,
@@ -24,15 +25,63 @@ const REVIEW_TYPE_SOURCE_LABELS = {
   manual: { label: '人工覆寫', color: 'orange' },
 } as const;
 
+const PROJECT_TYPE_OPTIONS = [
+  { value: 'new_1yr', label: '新增型一年期計畫' },
+  { value: 'new_multi', label: '新增型多年期計畫' },
+  { value: 'continuing_multi', label: '延續型多年期計畫' },
+];
+
 export default function Step1BasicInfo() {
   const { control, watch, setValue } = useFormStore();
   const { message } = App.useApp();
   const titleZh = watch('project_title_zh');
   const reviewType = watch('review_type');
   const reviewTypeSource = watch('review_type_source');
+  const projectType = watch('project_type');
+  const executionStart = watch('execution_start');
+  const executionEnd = watch('execution_end');
+  const fullExecutionStart = watch('full_execution_start');
+  const fullExecutionEnd = watch('full_execution_end');
+  const projectYears = watch('project_years');
   const planConfig = getPlanConfig(reviewType);
   const [translating, setTranslating] = useState(false);
   const reviewTypeSourceLabel = REVIEW_TYPE_SOURCE_LABELS[reviewTypeSource] || REVIEW_TYPE_SOURCE_LABELS.default;
+  const isMultiYear = projectType !== 'new_1yr';
+
+  useEffect(() => {
+    if (!isMultiYear) {
+      if (fullExecutionStart !== executionStart) {
+        setValue('full_execution_start', executionStart || '');
+      }
+      if (fullExecutionEnd !== executionEnd) {
+        setValue('full_execution_end', executionEnd || '');
+      }
+      if (projectYears !== '1') {
+        setValue('project_years', '1');
+      }
+      return;
+    }
+
+    if (!fullExecutionStart && executionStart) {
+      setValue('full_execution_start', executionStart);
+    }
+    if (!fullExecutionEnd && executionEnd) {
+      setValue('full_execution_end', executionEnd);
+    }
+
+    const years = calcProjectYears(fullExecutionStart || executionStart, fullExecutionEnd || executionEnd);
+    if (years > 0 && projectYears !== String(years)) {
+      setValue('project_years', String(years));
+    }
+  }, [
+    executionEnd,
+    executionStart,
+    fullExecutionEnd,
+    fullExecutionStart,
+    isMultiYear,
+    projectYears,
+    setValue,
+  ]);
 
   const handleTitleTranslate = useCallback(async () => {
     if (!titleZh || titleZh.length < 4) return;
@@ -51,9 +100,8 @@ export default function Step1BasicInfo() {
     <div>
       <h3>基本資訊</h3>
 
-      <ReviewTypeScreening />
-
-      {/* 審查類型（計畫類型配置的入口） */}
+      {/* 審查類型（計畫類型配置的入口）：先讓使用者直接選——知道要選哪種的人一步到位。
+          不確定的人再用下方「審查類型小幫手」逐項勾選由系統建議。 */}
       <Controller
         name="review_type"
         control={control}
@@ -93,6 +141,9 @@ export default function Step1BasicInfo() {
           </Form.Item>
         )}
       />
+
+      {/* 審查類型小幫手：不確定要選哪種審查時，逐項勾選由系統建議（預設收合，不干擾） */}
+      <ReviewTypeScreening />
 
       <Controller
         name="project_title_zh"
@@ -144,6 +195,23 @@ export default function Step1BasicInfo() {
         />
 
         <Controller
+          name="project_type"
+          control={control}
+          rules={{ required: '請選擇計畫類別' }}
+          render={({ field, fieldState }) => (
+            <Form.Item label="計畫類別" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+              <Select
+                {...field}
+                options={PROJECT_TYPE_OPTIONS}
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+          )}
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Controller
           name="responsible_unit"
           control={control}
           rules={{ required: '請輸入負責單位' }}
@@ -153,7 +221,64 @@ export default function Step1BasicInfo() {
             </Form.Item>
           )}
         />
+
+        {isMultiYear && (
+          <Controller
+            name="project_years"
+            control={control}
+            rules={{
+              required: '請輸入多年期計畫年數',
+              validate: (value) => {
+                const years = Number(value);
+                return Number.isFinite(years) && years >= 2 ? true : '多年期計畫年數至少為 2';
+              },
+            }}
+            render={({ field, fieldState }) => (
+              <Form.Item label="全程年數" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+                <Input {...field} suffix="年" placeholder="例：3" />
+              </Form.Item>
+            )}
+          />
+        )}
       </div>
+
+      {isMultiYear && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <Controller
+            name="full_execution_start"
+            control={control}
+            rules={{
+              validate: (value) => value || '請選擇全程計畫起始日',
+            }}
+            render={({ field, fieldState }) => (
+              <Form.Item label="全程計畫起始日" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+                <DatePicker
+                  value={field.value ? dayjs(field.value) : null}
+                  onChange={(d) => field.onChange(d?.format('YYYY-MM-DD') || '')}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            )}
+          />
+
+          <Controller
+            name="full_execution_end"
+            control={control}
+            rules={{
+              validate: (value) => value || '請選擇全程計畫截止日',
+            }}
+            render={({ field, fieldState }) => (
+              <Form.Item label="全程計畫截止日" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+                <DatePicker
+                  value={field.value ? dayjs(field.value) : null}
+                  onChange={(d) => field.onChange(d?.format('YYYY-MM-DD') || '')}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            )}
+          />
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <Controller
@@ -161,7 +286,7 @@ export default function Step1BasicInfo() {
           control={control}
           rules={{ required: '請選擇執行起始日' }}
           render={({ field, fieldState }) => (
-            <Form.Item label="執行起始日" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+            <Form.Item label={isMultiYear ? '本年度執行起始日' : '執行起始日'} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
               <DatePicker
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(d) => field.onChange(d?.format('YYYY-MM-DD') || '')}
@@ -176,7 +301,7 @@ export default function Step1BasicInfo() {
           control={control}
           rules={{ required: '請選擇執行截止日' }}
           render={({ field, fieldState }) => (
-            <Form.Item label="執行截止日" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+            <Form.Item label={isMultiYear ? '本年度執行截止日' : '執行截止日'} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
               <DatePicker
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(d) => field.onChange(d?.format('YYYY-MM-DD') || '')}

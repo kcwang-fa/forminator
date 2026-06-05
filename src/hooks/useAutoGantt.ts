@@ -2,24 +2,34 @@
 
 import { useEffect } from 'react';
 import { useFormStore } from './useFormStore';
-import { generateDefaultGantt, calcMonthsBetween } from '../utils/gantt';
+import { calcMonthsBetween, resizeGantt } from '../utils/gantt';
 
 export function useAutoGantt() {
   const { watch, setValue, getValues } = useFormStore();
 
+  const projectType = watch('project_type');
   const executionStart = watch('execution_start');
   const executionEnd = watch('execution_end');
+  const fullExecutionStart = watch('full_execution_start');
+  const fullExecutionEnd = watch('full_execution_end');
 
   useEffect(() => {
-    if (executionStart && executionEnd) {
-      const months = calcMonthsBetween(executionStart, executionEnd);
+    const ganttStart = projectType === 'new_1yr'
+      ? executionStart
+      : fullExecutionStart || executionStart;
+    const ganttEnd = projectType === 'new_1yr'
+      ? executionEnd
+      : fullExecutionEnd || executionEnd;
+
+    if (ganttStart && ganttEnd) {
+      const months = calcMonthsBetween(ganttStart, ganttEnd);
       if (months > 0) {
         const currentGantt = getValues('gantt_chart');
-        if (currentGantt.length === 0) {
-          setValue('gantt_chart', generateDefaultGantt(months));
+        const currentMonths = currentGantt[0]?.months.length || 0;
+        if (currentGantt.length === 0 || currentMonths !== months) {
+          setValue('gantt_chart', resizeGantt(currentGantt, months));
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [executionStart, executionEnd]);
+  }, [executionStart, executionEnd, fullExecutionStart, fullExecutionEnd, getValues, projectType, setValue]);
 }

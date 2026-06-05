@@ -20,7 +20,7 @@ import JSZip from 'jszip';
 import fileSaver from 'file-saver';
 const { saveAs } = fileSaver;
 import type { FormData, Personnel } from '../types/form';
-import { toRocDate } from './date';
+import { calcProjectYears, getRocDateParts, toRocDate } from './date';
 import { DOC_NAMES, type DocId } from '../data/defaults';
 import { buildBudgetRows, calcTotal, isPersonnel, isBusiness, isCapital } from './budgetCalc';
 import { EXEMPT_MAP } from './docgenMaps';
@@ -41,31 +41,51 @@ function findByRole(personnel: Personnel[], role: string): Personnel | undefined
 
 function prepareBasicData(data: FormData, pi: Personnel, contact: Personnel) {
   const applyDate = data.apply_date || data.filing_date;
-  const executionPeriodText = data.execution_start && data.execution_end
-    ? `${toRocDate(data.execution_start)}至${toRocDate(data.execution_end)}`
-    : data.execution_start
-      ? toRocDate(data.execution_start)
-      : data.execution_end
-        ? toRocDate(data.execution_end)
-        : '';
+  const fullExecutionStart = data.full_execution_start || data.execution_start;
+  const fullExecutionEnd = data.full_execution_end || data.execution_end;
+  const currentExecutionStart = data.execution_start || fullExecutionStart;
+  const currentExecutionEnd = data.execution_end || fullExecutionEnd;
+  const currentStartParts = getRocDateParts(currentExecutionStart);
+  const currentEndParts = getRocDateParts(currentExecutionEnd);
+  const fullStartParts = getRocDateParts(fullExecutionStart);
+  const fullEndParts = getRocDateParts(fullExecutionEnd);
+  const formatPeriod = (start: string, end: string) => {
+    if (start && end) return `${toRocDate(start)}至${toRocDate(end)}`;
+    return start ? toRocDate(start) : end ? toRocDate(end) : '';
+  };
+  const currentExecutionPeriodText = formatPeriod(currentExecutionStart, currentExecutionEnd);
+  const fullExecutionPeriodText = formatPeriod(fullExecutionStart, fullExecutionEnd);
 
   return {
     project_title_zh: data.project_title_zh,
     project_title_en: data.project_title_en,
     project_year: data.project_year,
+    project_years: data.project_years || String(calcProjectYears(fullExecutionStart, fullExecutionEnd) || ''),
     responsible_unit: data.responsible_unit,
-    execution_start_roc: toRocDate(data.execution_start),
-    execution_end_roc: toRocDate(data.execution_end),
-    exec_start_y: data.execution_start ? String(new Date(data.execution_start).getFullYear() - 1911) : '',
-    exec_start_m: data.execution_start ? String(new Date(data.execution_start).getMonth() + 1) : '',
-    exec_start_d: data.execution_start ? String(new Date(data.execution_start).getDate()) : '',
-    exec_end_y: data.execution_end ? String(new Date(data.execution_end).getFullYear() - 1911) : '',
-    exec_end_m: data.execution_end ? String(new Date(data.execution_end).getMonth() + 1) : '',
-    exec_end_d: data.execution_end ? String(new Date(data.execution_end).getDate()) : '',
+    execution_start_roc: toRocDate(fullExecutionStart),
+    execution_end_roc: toRocDate(fullExecutionEnd),
+    current_execution_start_roc: toRocDate(currentExecutionStart),
+    current_execution_end_roc: toRocDate(currentExecutionEnd),
+    full_execution_start_roc: toRocDate(fullExecutionStart),
+    full_execution_end_roc: toRocDate(fullExecutionEnd),
+    exec_start_y: currentStartParts.y,
+    exec_start_m: currentStartParts.m,
+    exec_start_d: currentStartParts.d,
+    exec_end_y: currentEndParts.y,
+    exec_end_m: currentEndParts.m,
+    exec_end_d: currentEndParts.d,
+    full_exec_start_y: fullStartParts.y,
+    full_exec_start_m: fullStartParts.m,
+    full_exec_start_d: fullStartParts.d,
+    full_exec_end_y: fullEndParts.y,
+    full_exec_end_m: fullEndParts.m,
+    full_exec_end_d: fullEndParts.d,
     filing_date_roc: toRocDate(data.filing_date),
     signing_date_roc: toRocDate(data.filing_date),
     apply_date_roc: toRocDate(applyDate),
-    execution_period_text: executionPeriodText,
+    execution_period_text: fullExecutionPeriodText,
+    current_execution_period_text: currentExecutionPeriodText,
+    full_execution_period_text: fullExecutionPeriodText,
 
     // PI
     pi_name_zh: pi.name_zh || '',
@@ -104,10 +124,13 @@ function prepareResearchData(data: FormData) {
 function prepareIRBData(data: FormData) {
   return {
     data_source: data.data_source,
+    inclusion_criteria: data.inclusion_criteria,
+    exclusion_criteria: data.exclusion_criteria,
     privacy_during: data.privacy_during,
     privacy_after: data.privacy_after,
     privacy_withdrawal: data.privacy_withdrawal,
-    exempt_category_text: data.exempt_category ? (EXEMPT_MAP[data.exempt_category] || data.exempt_category) : '',
+    // 研究類別可複選：把每個選到的類別轉成文字、以「；」串接
+    exempt_category_text: data.exempt_category.map((c) => EXEMPT_MAP[c] || c).join('；'),
     exempt_reason: data.exempt_reason,
     recruit_text: data.recruit_subjects ? `是。${data.recruit_method}` : '否',
     interact_text: data.interact_subjects ? `是。${data.interact_detail}` : '否',
@@ -124,7 +147,9 @@ function prepareProjectTypeData(data: FormData) {
         : '延續型多年期計畫',
     project_type_cover_text: data.project_type === 'new_1yr'
       ? '■新增型計畫：■一年 □多年'
-      : '□新增型計畫',
+      : data.project_type === 'new_multi'
+        ? '■新增型計畫：□一年 ■多年'
+        : '□新增型計畫',
     experiment_types_text: data.experiment_types.length === 0 ? '無' : data.experiment_types.join('、'),
     funding_text: data.needs_funding ? '需經費' : '不需經費',
     // DOC-2 checkbox

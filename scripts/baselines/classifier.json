@@ -1,0 +1,638 @@
+{
+  "results": [
+    {
+      "decision": {
+        "confidence": "incomplete",
+        "matched_rules": [],
+        "reasons": [
+          "請先選擇研究使用的資料、研究方法、檢體或菌株類型。"
+        ],
+        "review_type": null,
+        "warnings": [
+          "此工具僅提供送件前初判，最後審查類型仍以本署人體研究倫理審查會裁定為準。"
+        ]
+      },
+      "name": "empty"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：資料提供單位去個資且無法辨識特定個人之資料庫分析。"
+        ],
+        "reasons": [
+          "申請防疫資料庫、衛福資料科學中心、健保資料庫等資料，且由資料提供單位去個資、研究者無法辨識特定個人，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "public_info",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "deidentified_db + 提供單位去個資 + 最低風險 → 免審(clear)"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：免審資料庫分析須經資料提供單位去個資且無法辨識特定個人。"
+        ],
+        "reasons": [
+          "使用資料庫資料但尚未確認由資料提供單位去個資且無法辨識特定個人，需人工確認或從嚴審查。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "若只是研究團隊自行匿名編碼，請勿寫成「去連結」；新案審查說明特別提醒這個名詞差異。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "deidentified_db + 未確認可識別性 → full(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：一般教學環境中之教育評量或教學成效研究。"
+        ],
+        "reasons": [
+          "於一般教學環境中進行教育評量、測試、教學技巧或成效評估，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "education",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "education_evaluation → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：公務機關執行法定職務之公共政策成效評估研究。"
+        ],
+        "reasons": [
+          "公務機關執行法定職務所進行的公共政策成效評估研究，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "public_policy",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "public_policy_evaluation → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：公開場合非記名、非互動且非介入性研究。"
+        ],
+        "reasons": [
+          "於公開場合進行非記名、非互動且非介入性研究，且無從辨識特定個人，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "public_non_interactive",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "public_non_interactive_observation → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用已合法公開週知之資訊。"
+        ],
+        "reasons": [
+          "使用已合法公開週知之資訊，且符合其公開週知目的，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "public_info",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "public_info → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：研究計畫屬最低風險且風險不高於未參加者。"
+        ],
+        "reasons": [
+          "新收集資料若屬最低風險，且研究對象風險不高於未參加者，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "minimal_risk",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "minimal_risk_new_data + 最低風險:true → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：研究計畫屬最低風險且風險不高於未參加者。"
+        ],
+        "reasons": [
+          "使用新收集資料但研究風險高於最低風險，不宜判為免審。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "minimal_risk_new_data + 最低風險:false → 一般審"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：研究計畫屬最低風險且風險不高於未參加者。"
+        ],
+        "reasons": [
+          "新收集資料若屬最低風險，且研究對象風險不高於未參加者，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "minimal_risk",
+        "warnings": [
+          "尚未確認是否屬最低風險；若風險高於日常生活中遭受的危害或不適，審查層級可能需要提高。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "minimal_risk_new_data + 最低風險:null → 免審(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：非侵入性方法收集資料。"
+        ],
+        "reasons": [
+          "使用非侵入性方法收集資料，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "noninvasive_measurement → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：研究個人或群體特質或行為。"
+        ],
+        "reasons": [
+          "研究個人或群體特質或行為，且未標示歧視風險，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "behavior_or_trait → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：研究個人或群體特質或行為之簡易審查，不含造成歧視之潛在可能者。",
+          "新案審查類型評檢表：研究個人或群體特質或行為。"
+        ],
+        "reasons": [
+          "研究可能造成個人或族群歧視風險，不符合簡易審查表列的低風險行為研究條件。",
+          "研究個人或群體特質或行為，且未標示歧視風險，原則上屬簡易審查。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "behavior_or_trait + 歧視風險 → 一般審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：以研究為目的所蒐集之錄音、錄影或影像資料。"
+        ],
+        "reasons": [
+          "以研究為目的蒐集錄音、錄影或影像資料，且未標示可識別或敏感影響，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "recording_or_image(非敏感) → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：以研究為目的所蒐集之錄音、錄影或影像資料。"
+        ],
+        "reasons": [
+          "研究使用錄音、錄影或影像資料，且可能識別個人或影響工作、保險、財務及社會關係，需從嚴審查。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "recording_or_image(敏感/可識別) → 一般審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：醫療院所提供無法辨識特定個人且無直接接觸之病歷資料。"
+        ],
+        "reasons": [
+          "向醫療院所申請之病歷資料若已由該單位提供為無法辨識特定個人，且無直接接觸個案資料，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "minimal_risk",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "medical_record + 提供單位去個資 + 無接觸 + 無族群 → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用臨床常規治療或診斷病歷之簡易審查，不含 HIV 陽性患者病歷。"
+        ],
+        "reasons": [
+          "使用 HIV 陽性患者病歷不屬於簡易審查表列病歷研究範圍，需從嚴審查。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "medical_record + HIV 陽性病歷 → 一般審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用臨床常規治療或診斷之病歷，含個案報告。"
+        ],
+        "reasons": [
+          "使用臨床常規治療或診斷之病歷，且未標示 HIV 陽性患者病歷，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "medical_record(臨床常規病歷) → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：直接使用執行業務所蒐集資料，須敘明最低風險及資料隱私保護措施。"
+        ],
+        "reasons": [
+          "直接使用既有業務蒐集資料進行研究，若屬最低風險且資料隱私保護措施清楚，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "minimal_risk",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "business_data + 最低風險 + 非可回連 → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：業務資料免審須清楚敘明最低風險與資料隱私保護措施。"
+        ],
+        "reasons": [
+          "使用既有業務資料但未符合最低風險或資料仍可識別，需人工確認或從嚴審查。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "business_data + 非最低風險 → 一般審(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：不符合以上者，請送一般審查。"
+        ],
+        "reasons": [
+          "研究資料或新收案方式不屬於目前表列免審或簡易審查情境，建議先以一般審查或人工確認處理。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "other_existing_data → 一般審(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：不符合以上者，請送一般審查。"
+        ],
+        "reasons": [
+          "研究資料或新收案方式不屬於目前表列免審或簡易審查情境，建議先以一般審查或人工確認處理。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "other_new_data → 一般審(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：多中心研究計畫已取得其他中心合法審查會之同意證明。"
+        ],
+        "reasons": [
+          "多中心研究已取得其他中心合法審查會同意證明，可列為簡易審查判斷依據。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "has_other_irb_approval 單獨 → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查說明：高風險或人體試驗範圍計畫需提報安全性監測計畫。",
+          "新案審查類型評檢表：資料提供單位去個資且無法辨識特定個人之資料庫分析。"
+        ],
+        "reasons": [
+          "涉及高風險、人體試驗或需要安全性監測的處置，應採一般審查。",
+          "申請防疫資料庫、衛福資料科學中心、健保資料庫等資料，且由資料提供單位去個資、研究者無法辨識特定個人，原則上可列免予審查。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "高風險處置（即使其他條件符合免審）→ 一般審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：自成年人收集血液檢體之採血量與頻率限制。"
+        ],
+        "reasons": [
+          "新收集血液檢體且符合成年人、採血量與頻率限制，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "limited_blood_draw → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：非侵入性方法採集研究用人體檢體。"
+        ],
+        "reasons": [
+          "僅以非侵入性方法採集研究用人體檢體，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "new_noninvasive_specimen → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用防疫驗餘檢體且符合傳染病防治法與最低風險。"
+        ],
+        "reasons": [
+          "僅使用防疫驗餘檢體，且符合傳染病防治法與最低風險條件，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "minimal_risk",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "cdc_residual_specimen + 最低風險 → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用防疫驗餘檢體且符合傳染病防治法與最低風險。"
+        ],
+        "reasons": [
+          "使用防疫驗餘檢體但研究風險高於最低風險，不宜判為免審。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "cdc_residual_specimen + 非最低風險 → 一般審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用剩餘檢體且符合原先同意使用範圍。"
+        ],
+        "reasons": [
+          "使用剩餘檢體且符合檢體提供者原先同意範圍，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "remaining_specimen_original_consent → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用外單位剩餘檢體且符合原先同意使用範圍。"
+        ],
+        "reasons": [
+          "使用外單位剩餘檢體且符合檢體提供者原先同意範圍，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "external_remaining_specimen_original_consent → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：合法人體生物資料庫之去連結或無法辨識檢體。"
+        ],
+        "reasons": [
+          "自合法人體生物資料庫取得去連結或無法辨識特定個人之檢體，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "legal_biobank_unlinkable → 簡審"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：防疫驗餘檢體進行非原通報疾病檢驗且核發臨床報告。"
+        ],
+        "reasons": [
+          "使用防疫驗餘檢體進行非原通報疾病檢驗且需核發檢驗報告至臨床端，原則上屬簡易審查，並應取得知情同意書。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "此情境應取得檢體提供者之知情同意書。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "cdc_residual_non_original_with_clinical_report → 簡審(+知情同意 warning)"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用醫療院所依防疫需求送回本署之菌株/病毒株。"
+        ],
+        "reasons": [
+          "使用醫療院所依防疫需求送回本署之菌株或病毒株，原則上可列免予審查。"
+        ],
+        "review_type": "exempt",
+        "suggested_exempt_category": "minimal_risk",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "strain_or_virus → 免審"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：不符合以上者，請送一般審查。"
+        ],
+        "reasons": [
+          "檢體使用方式不屬於目前表列免審或簡易審查情境，建議先以一般審查或人工確認處理。"
+        ],
+        "review_type": "full",
+        "warnings": [
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "other_specimen → 一般審(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：使用已合法公開週知之資訊。",
+          "新案審查類型評檢表：使用無法辨識特定個人之既有資料，但研究對象為易受傷害族群。"
+        ],
+        "reasons": [
+          "使用已合法公開週知之資訊，且符合其公開週知目的，原則上可列免予審查。",
+          "使用既有資料且研究對象屬易受傷害或敏感族群，即使資料無法辨識特定個人，也應提高為簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "研究對象包含易受傷害族群或免審先決條件排除族群，免審判斷需從嚴處理。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "既有資料(免審) + 敏感族群 → 升簡審"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：使用醫療院所依防疫需求送回本署之菌株/病毒株。",
+          "新案審查類型評檢表：免審先決條件。"
+        ],
+        "reasons": [
+          "使用醫療院所依防疫需求送回本署之菌株或病毒株，原則上可列免予審查。",
+          "免審先決條件排除易受傷害族群，本案需提高審查層級並由 IRB 確認。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "研究對象包含易受傷害族群或免審先決條件排除族群，免審判斷需從嚴處理。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "檢體(免審) + 敏感族群 → 升簡審(needsReview)"
+    },
+    {
+      "decision": {
+        "confidence": "clear",
+        "matched_rules": [
+          "新案審查類型評檢表：資料提供單位去個資且無法辨識特定個人之資料庫分析。",
+          "新案審查類型評檢表：自成年人收集血液檢體之採血量與頻率限制。"
+        ],
+        "reasons": [
+          "申請防疫資料庫、衛福資料科學中心、健保資料庫等資料，且由資料提供單位去個資、研究者無法辨識特定個人，原則上可列免予審查。",
+          "新收集血液檢體且符合成年人、採血量與頻率限制，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "研究涉及兩種以上研究方法，系統已依「從嚴審查」原則採最高審查層級。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "混合：deidentified_db + limited_blood_draw"
+    },
+    {
+      "decision": {
+        "confidence": "needs_review",
+        "matched_rules": [
+          "新案審查類型評檢表：研究個人或群體特質或行為。"
+        ],
+        "reasons": [
+          "研究個人或群體特質或行為，且未標示歧視風險，原則上屬簡易審查。"
+        ],
+        "review_type": "expedited",
+        "warnings": [
+          "資料仍可識別或可回連個人，請補充去識別化、匿名編碼與存取控管措施；必要時需提高審查層級。",
+          "本判斷僅供送件前初步分流，最後裁定權仍為本署人體研究倫理審查會。"
+        ]
+      },
+      "name": "behavior_or_trait + 可識別/可回連 → 簡審(+可識別 warning)"
+    }
+  ]
+}

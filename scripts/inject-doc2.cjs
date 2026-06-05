@@ -215,16 +215,25 @@ xml = replaceText(xml, '□新增計畫：', '{project_type_new}新增計畫：'
 xml = replaceText(xml, '□一年期計畫', '{project_type_1yr}一年期計畫');
 xml = replaceText(xml, '□多年期計畫，共', '{project_type_multi}多年期計畫，共');
 xml = replaceText(xml, '□舊多年期計畫', '{project_type_old}舊多年期計畫');
+xml = xml.replace(
+  /(<w:t>\{project_type_multi\}多年期計畫，共<\/w:t><\/w:r><w:r[\s\S]*?<w:u w:val="single"\/>[\s\S]*?<w:t[^>]*>)[\s\S]*?(<\/w:t>)/,
+  '$1{project_years}$2',
+);
 xml = replaceText(xml, '□人體研究', '{exp_human}人體研究');
 xml = replaceText(xml, '□人體基因重組', '{exp_gene}人體基因重組');
 
 // 執行期限（OOO=年, OO=月/日）
 let oooIdx = 0;
-xml = xml.replace(/>OOO</g, () => { oooIdx++; return oooIdx <= 2 ? '>{exec_start_y}<' : '>{exec_end_y}<'; });
+const oooMapping = ['exec_start_y', 'full_exec_start_y', 'exec_end_y', 'full_exec_end_y'];
+xml = xml.replace(/>OOO</g, () => {
+  const ph = oooMapping[oooIdx] || 'full_exec_end_y';
+  oooIdx++;
+  return `>{${ph}}<`;
+});
 let ooIdx = 0;
 const ooMapping = [
-  'exec_start_m', 'exec_start_d', 'exec_start_m', 'exec_start_d',
-  'exec_end_m',   'exec_end_d',   'exec_end_m',   'exec_end_d',
+  'exec_start_m',      'exec_start_d',      'full_exec_start_m', 'full_exec_start_d',
+  'exec_end_m',        'exec_end_d',        'full_exec_end_m',   'full_exec_end_d',
 ];
 xml = xml.replace(/>OO</g, () => { const ph = ooMapping[ooIdx] || 'exec_end_d'; ooIdx++; return `>{${ph}}<`; });
 
@@ -318,7 +327,11 @@ for (const [anchor, ph] of contentSections) {
 }
 console.log('  ✓ 肆、計畫內容各節注入');
 
-// 七、預定進度 — 甘特圖 loop
+// 七、預定進度 — 甘特圖巢狀 loop（分年）
+// 多年期計畫每年各一張 12 個月甘特表：外層 {#gantt_years} 讓「表頭列 + 資料列」逐年重複，
+// 內層 {#gantt_rows} 在每年內逐個工作項目展開。年度標籤 {year_label} 放在表頭角落欄
+//（單年期時 year_label 為空字串，視覺等同原本單表）。
+// 資料來源：src/utils/docgen/schedule.ts 的 gantt_years（每筆含 year_label + gantt_rows）。
 {
   const ganttAnchor = '月\u3000次';
   const ganttIdx = xml.indexOf(ganttAnchor);
@@ -334,14 +347,30 @@ console.log('  ✓ 肆、計畫內容各節注入');
           '{#gantt_rows}{task_name}',
           '{m1}','{m2}','{m3}','{m4}','{m5}','{m6}',
           '{m7}','{m8}','{m9}','{m10}','{m11}','{m12}',
-          '{/gantt_rows}',
+          // 內層工作項目 loop 收尾後，緊接著收掉外層分年 loop
+          '{/gantt_rows}{/gantt_years}',
         ];
         let gcIdx = 0;
         dataRow = dataRow.replace(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/g,
           (match, before, after) => gcIdx < ganttPhs.length ? `${before}<w:r><w:t>${ganttPhs[gcIdx++]}</w:t></w:r>${after}` : match);
-        const newTable = ganttRowParts[0] + '</w:tr>' + dataRow + ganttRowParts[ganttRowParts.length - 1];
+
+        // 表頭列（ganttRowParts[0] 含 table 開頭 + 表頭 <w:tr>）：在角落欄第一個 </w:tcPr> 後
+        // 插入 {#gantt_years}{year_label} 段落 — 作為外層分年 loop 起點 + 年度標籤。
+        // {#gantt_years} 在表頭列、{/gantt_years} 在資料列 → docxtemplater 會把這兩列整組逐年重複。
+        let headerPart = ganttRowParts[0];
+        const yearOpenPara =
+          '<w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:eastAsia="DFKai-SB" w:hint="eastAsia"/><w:b/></w:rPr></w:pPr>' +
+          '<w:r><w:rPr><w:rFonts w:eastAsia="DFKai-SB" w:hint="eastAsia"/><w:b/></w:rPr><w:t>{#gantt_years}{year_label}</w:t></w:r></w:p>';
+        const firstTcPrEnd = headerPart.indexOf('</w:tcPr>');
+        if (firstTcPrEnd !== -1) {
+          headerPart = headerPart.slice(0, firstTcPrEnd + 9) + yearOpenPara + headerPart.slice(firstTcPrEnd + 9);
+        } else {
+          console.warn('⚠️  甘特表頭找不到 </w:tcPr>，跳過 gantt_years 起點注入');
+        }
+
+        const newTable = headerPart + '</w:tr>' + dataRow + ganttRowParts[ganttRowParts.length - 1];
         xml = xml.substring(0, ganttTblStart) + newTable + xml.substring(ganttTblEnd);
-        console.log('  ✓ 甘特圖 loop 注入');
+        console.log('  ✓ 甘特圖巢狀 loop 注入（分年）');
       }
     }
   }

@@ -5,6 +5,12 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { callLlmJson, GEMINI_MODEL, GROQ_MODEL } from './api/_lib/llm.js';
+import {
+  EXEMPT_IRB_REWRITE_SCHEMA,
+  EXEMPT_IRB_REWRITE_SYSTEM_PROMPT,
+  buildExemptIrbRewritePrompt,
+  validateExemptIrbRewriteRequest,
+} from './api/_lib/exempt-irb-rewrite.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -200,6 +206,33 @@ app.post('/api/llm/generate-db-purpose', async (req, res) => {
     console.error('generate-db-purpose error:', err);
     res.status(500).json({
       error: `生成失敗: ${err instanceof Error ? err.message : '未知錯誤'}`,
+      provider: providerLabel(req.body?.provider),
+      model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
+    });
+  }
+});
+
+// IRB-012：免審文案潤飾
+app.post('/api/llm/rewrite-exempt-irb', async (req, res) => {
+  try {
+    const validationError = validateExemptIrbRewriteRequest(req.body);
+    if (validationError) return res.status(400).json({ error: validationError });
+
+    const { draft, guardrails, provider, apiKey } = req.body;
+    const parsed = await callLlmJson(
+      provider,
+      apiKey,
+      EXEMPT_IRB_REWRITE_SYSTEM_PROMPT,
+      buildExemptIrbRewritePrompt(draft, guardrails),
+      EXEMPT_IRB_REWRITE_SCHEMA,
+      { temperature: 0.25, maxTokens: 2500 },
+    );
+
+    res.json(parsed);
+  } catch (err) {
+    console.error('rewrite-exempt-irb error:', err);
+    res.status(500).json({
+      error: `潤飾失敗: ${err instanceof Error ? err.message : '未知錯誤'}`,
       provider: providerLabel(req.body?.provider),
       model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
     });

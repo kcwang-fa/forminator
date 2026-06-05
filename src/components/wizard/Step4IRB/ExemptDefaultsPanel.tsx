@@ -1,0 +1,107 @@
+// 免審預設選項面板：對應 IRB-012 表單「是否招募研究對象」「是否與研究對象有互動」。
+//
+// 設計理念（回應「免審不會有招募跟互動」）：
+//   免審多為次級資料／資料庫回溯研究，這兩題幾乎都是「否」，所以預設否、收進可展開面板，
+//   不逼使用者每次都手動點否；真的有招募或互動時才展開切「是」並補說明。
+//   另外「利益衝突」在 docgen 已寫死為「無利益衝突／不適用」常數，這裡只做資訊性提示，不需輸入。
+
+import { Alert, Collapse, Form, Input, Radio, Space, Typography } from 'antd';
+import { Controller, useWatch } from 'react-hook-form';
+import { useFormStore } from '../../../hooks/useFormStore';
+
+const { Text } = Typography;
+
+export function ExemptDefaultsPanel() {
+  const { control } = useFormStore();
+  const recruitSubjects = useWatch({ control, name: 'recruit_subjects' });
+  const interactSubjects = useWatch({ control, name: 'interact_subjects' });
+
+  // 任一題為「是」時自動展開面板，避免使用者切了是卻被收合藏住說明欄
+  const defaultActiveKey = recruitSubjects || interactSubjects ? ['defaults'] : [];
+
+  return (
+    <Collapse
+      defaultActiveKey={defaultActiveKey}
+      style={{ marginBottom: 16 }}
+      items={[{
+        key: 'defaults',
+        label: (
+          <Space>
+            <Text strong>免審預設選項</Text>
+            <Text type="secondary">招募：{recruitSubjects ? '是' : '否'}&nbsp;&nbsp;互動：{interactSubjects ? '是' : '否'}</Text>
+          </Space>
+        ),
+        children: (
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Alert
+              type="info"
+              showIcon
+              message="免審（次級資料研究）通常不招募、不互動，已預設為「否」；如有需要才改「是」並說明。"
+            />
+
+            {/* 是否招募研究對象 */}
+            <Controller
+              name="recruit_subjects"
+              control={control}
+              render={({ field }) => (
+                <Form.Item label="是否招募研究對象" style={{ marginBottom: 0 }}>
+                  <Radio.Group
+                    value={field.value}
+                    onChange={(event) => field.onChange(event.target.value)}
+                  >
+                    <Radio value={false}>否</Radio>
+                    <Radio value={true}>是</Radio>
+                  </Radio.Group>
+                </Form.Item>
+              )}
+            />
+            {recruitSubjects && (
+              <Controller
+                name="recruit_method"
+                control={control}
+                render={({ field }) => (
+                  <Form.Item label="招募方式及退出機制">
+                    <Input.TextArea {...field} rows={3} placeholder="請說明招募方式及退出機制" />
+                  </Form.Item>
+                )}
+              />
+            )}
+
+            {/* 是否與研究對象有互動 */}
+            <Controller
+              name="interact_subjects"
+              control={control}
+              render={({ field }) => (
+                <Form.Item label="是否與研究對象有互動過程" style={{ marginBottom: 0 }}>
+                  <Radio.Group
+                    value={field.value}
+                    onChange={(event) => field.onChange(event.target.value)}
+                  >
+                    <Radio value={false}>否</Radio>
+                    <Radio value={true}>是</Radio>
+                  </Radio.Group>
+                </Form.Item>
+              )}
+            />
+            {interactSubjects && (
+              <Controller
+                name="interact_detail"
+                control={control}
+                render={({ field }) => (
+                  <Form.Item label="告知研究對象之資訊及取得同意之程序">
+                    <Input.TextArea {...field} rows={3} placeholder="請說明將告知研究對象之資訊及取得同意之程序" />
+                  </Form.Item>
+                )}
+              />
+            )}
+
+            {/* 利益衝突：docgen 已寫死常數，這裡只做資訊性顯示 */}
+            <Text type="secondary">
+              利益衝突聲明：本計畫主持人及所有研究人員聲明與本研究無利益衝突，減緩措施不適用（文件自動帶入）。
+            </Text>
+          </Space>
+        ),
+      }]}
+    />
+  );
+}

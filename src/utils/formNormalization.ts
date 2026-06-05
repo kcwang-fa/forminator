@@ -1,5 +1,12 @@
 import { defaultFormData, emptyDatabaseRequest, emptyReviewScreening } from '../data/defaults';
-import type { DatabaseFieldPurpose, DatabaseRequest, FormData, OutcomeTypeDetail, ReviewScreening } from '../types/form';
+import type { DatabaseFieldPurpose, DatabaseRequest, ExemptCategory, FormData, OutcomeTypeDetail, ReviewScreening } from '../types/form';
+import { calcProjectYears } from './date';
+
+const LEGACY_PRIVACY_DEFAULTS = {
+  privacy_during: '本研究使用之資料庫已去除個人識別資訊，研究過程中所有資料皆儲存於符合 ISMS 資訊安全管理規範之加密環境中，僅限經授權之研究人員得以接觸分析資料。',
+  privacy_after: '研究成果僅以群體統計量呈現，不揭露任何個案資訊。原始分析資料於計畫結束後保留三年，届滿後依機關資料銷毀程序辦理。',
+  privacy_withdrawal: '本研究採用次級資料庫進行分析，無法回溯識別個別研究對象，故無中途退出之情形。',
+} as const;
 
 type LegacyDatabaseFields = {
   apply_system?: DatabaseRequest['apply_system'];
@@ -15,6 +22,8 @@ type LegacyDatabaseFields = {
 type MaybeLegacyFormData = Partial<FormData> & LegacyDatabaseFields & {
   outcome_type_detail?: Partial<OutcomeTypeDetail>[];
   review_screening?: Partial<ReviewScreening>;
+  // 舊草稿 exempt_category 是單一字串（或空字串表示未選），新版改成可複選陣列
+  exempt_category?: ExemptCategory[] | ExemptCategory | '';
   database_requests?: Array<Partial<DatabaseRequest> & {
     data_fields_other?: string[] | string;
     doc8_field_purposes?: Partial<DatabaseFieldPurpose>[];
@@ -120,18 +129,49 @@ function normalizeReviewScreening(screening: Partial<ReviewScreening> | undefine
   };
 }
 
+function normalizePrivacyText(
+  value: string | undefined,
+  legacyDefault: string,
+): string {
+  if (!value) return '';
+  return value.trim() === legacyDefault ? '' : value;
+}
+
+// exempt_category 從舊版「單一字串」相容到新版「可複選陣列」：
+//   陣列 → 原樣；空字串（未選）→ []；其他字串 → 包成單元素陣列；缺 → 用預設值。
+function normalizeExemptCategory(value: ExemptCategory[] | ExemptCategory | '' | undefined): ExemptCategory[] {
+  if (Array.isArray(value)) return value;
+  if (value === '') return [];
+  if (typeof value === 'string') return [value];
+  return [...defaultFormData.exempt_category];
+}
+
 export function normalizeFormData(data: MaybeLegacyFormData | null | undefined): FormData {
   const next = data || {};
   const normalizedDatabaseRequests = normalizeDatabaseRequests(next);
   const globalApplyYearStart = next.apply_year_start || next.database_requests?.[0]?.apply_year_start || '';
   const globalApplyYearEnd = next.apply_year_end || next.database_requests?.[0]?.apply_year_end || '';
+  const projectType = next.project_type || defaultFormData.project_type;
+  const fullExecutionStart = next.full_execution_start || next.execution_start || '';
+  const fullExecutionEnd = next.full_execution_end || next.execution_end || '';
+  const inferredProjectYears = projectType === 'new_1yr'
+    ? '1'
+    : next.project_years || String(calcProjectYears(fullExecutionStart, fullExecutionEnd) || '');
 
   return {
     ...defaultFormData,
     ...next,
+    project_type: projectType,
+    project_years: inferredProjectYears,
+    full_execution_start: fullExecutionStart,
+    full_execution_end: fullExecutionEnd,
     outcome_type_detail: normalizeOutcomeTypeDetails(next.outcome_type_detail),
     review_type_source: next.review_type_source || defaultFormData.review_type_source,
     review_screening: normalizeReviewScreening(next.review_screening),
+    exempt_category: normalizeExemptCategory(next.exempt_category),
+    privacy_during: normalizePrivacyText(next.privacy_during, LEGACY_PRIVACY_DEFAULTS.privacy_during),
+    privacy_after: normalizePrivacyText(next.privacy_after, LEGACY_PRIVACY_DEFAULTS.privacy_after),
+    privacy_withdrawal: normalizePrivacyText(next.privacy_withdrawal, LEGACY_PRIVACY_DEFAULTS.privacy_withdrawal),
     apply_year_start: globalApplyYearStart,
     apply_year_end: globalApplyYearEnd,
     database_requests: normalizedDatabaseRequests,

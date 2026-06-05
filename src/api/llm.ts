@@ -1,6 +1,7 @@
 // ===== §4 LLM 輔助生成 — 前端呼叫 =====
 
 import { getLLMSettings } from '../hooks/useLLMSettings';
+import type { ExemptIrbDraftText } from '../types/form';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
@@ -31,6 +32,11 @@ interface GenerateDbPurposeResponse {
     field_name: string;
     apply_purpose: string;
   }>;
+}
+
+interface RewriteExemptIrbResponse {
+  rewritten: ExemptIrbDraftText;
+  cautions: string[];
 }
 
 /**
@@ -94,6 +100,27 @@ export async function generateDbApplyPurpose(params: {
   });
   if (!res.ok) {
     throw new Error(await readApiError(res, '生成失敗'));
+  }
+  return res.json();
+}
+
+/**
+ * Prompt D：IRB-012 免審文案潤飾
+ */
+export async function rewriteExemptIrbText(params: {
+  draft: ExemptIrbDraftText;
+  guardrails: Record<string, unknown>;
+}): Promise<RewriteExemptIrbResponse> {
+  const { provider, apiKey } = getLLMSettings();
+  if (!apiKey) throw new Error('請先至「AI 設定」輸入 API Key');
+
+  const res = await fetch(`${API_BASE}/llm/rewrite-exempt-irb`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...params, provider, apiKey }),
+  });
+  if (!res.ok) {
+    throw new Error(await readApiError(res, '潤飾失敗'));
   }
   return res.json();
 }
