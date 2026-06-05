@@ -1,12 +1,12 @@
 // ===== 第 1 頁：基本資訊 =====
 
 import { useCallback, useEffect, useState } from 'react';
-import { Form, Input, DatePicker, Button, Select, Space, Tag, App } from 'antd';
+import { Form, Input, DatePicker, Button, Select, Space, Tag, Checkbox, Alert, App } from 'antd';
 import { RobotOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
 import { translateTitle } from '../../api/llm';
-import { PLAN_CONFIGS, getPlanConfig } from '../../data/planConfigs';
+import { PLAN_CONFIGS, getPlanConfig, OUTPUT_CATEGORIES, OUTPUT_CATEGORY_CONFIGS } from '../../data/planConfigs';
 import type { ReviewType } from '../../types/form';
 import ReviewTypeScreening from './ReviewTypeScreening';
 import dayjs from 'dayjs';
@@ -35,6 +35,8 @@ export default function Step1BasicInfo() {
   const { control, watch, setValue } = useFormStore();
   const { message } = App.useApp();
   const titleZh = watch('project_title_zh');
+  const outputCategories = watch('output_categories') ?? [];
+  const irbSelected = outputCategories.includes('irb');
   const reviewType = watch('review_type');
   const reviewTypeSource = watch('review_type_source');
   const projectType = watch('project_type');
@@ -100,50 +102,93 @@ export default function Step1BasicInfo() {
     <div>
       <h3>基本資訊</h3>
 
-      {/* 審查類型（計畫類型配置的入口）：先讓使用者直接選——知道要選哪種的人一步到位。
-          不確定的人再用下方「審查類型小幫手」逐項勾選由系統建議。 */}
+      {/* 成果類別（整個流程的入口）：先選這次要產出哪幾類成果，後續步驟與文件會跟著收斂。
+          可複選；預設三項全勾。審查類型只跟 IRB 這包有關，故只在勾了 IRB 時才顯示。 */}
       <Controller
-        name="review_type"
+        name="output_categories"
         control={control}
         render={({ field }) => (
           <Form.Item
-            label="審查類型"
-            tooltip="決定申請流程、所需文件與表單步驟"
+            label="要產出哪些成果"
+            tooltip="可複選。決定後續要填的步驟與最後產出的文件"
+            required
           >
-            <Select
-              {...field}
-              onChange={(value) => {
-                field.onChange(value);
-                setValue('review_type_source', 'manual', { shouldDirty: true });
-              }}
-              options={REVIEW_TYPE_OPTIONS.map((opt) => ({
-                value: opt.value,
-                label: (
-                  <Space>
-                    {opt.label}
-                    {opt.ready
-                      ? <Tag color="blue" style={{ marginLeft: 4 }}>支援</Tag>
-                      : <Tag color="default" style={{ marginLeft: 4 }}>模板準備中</Tag>}
-                  </Space>
-                ),
-              }))}
-              style={{ width: 320 }}
-            />
-            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-              {planConfig.description}
-              <Tag color={reviewTypeSourceLabel.color} style={{ marginLeft: 8 }}>
-                {reviewTypeSourceLabel.label}
-              </Tag>
-              {!planConfig.ready && (
-                <Tag color="warning" style={{ marginLeft: 4 }}>文件模板尚未完整支援</Tag>
-              )}
-            </div>
+            <Checkbox.Group
+              value={field.value}
+              onChange={(vals) => field.onChange(vals)}
+            >
+              <Space direction="vertical" size={4}>
+                {OUTPUT_CATEGORIES.map((key) => (
+                  <Checkbox key={key} value={key}>
+                    {OUTPUT_CATEGORY_CONFIGS[key].label}
+                    <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>
+                      {OUTPUT_CATEGORY_CONFIGS[key].description}
+                    </span>
+                  </Checkbox>
+                ))}
+              </Space>
+            </Checkbox.Group>
+            {outputCategories.length === 0 && (
+              <Alert
+                type="warning"
+                showIcon
+                message="請至少選擇一項成果類別，才能決定後續步驟與文件。"
+                style={{ marginTop: 8 }}
+              />
+            )}
           </Form.Item>
         )}
       />
 
-      {/* 審查類型小幫手：不確定要選哪種審查時，逐項勾選由系統建議（預設收合，不干擾） */}
-      <ReviewTypeScreening />
+      {/* 審查類型（IRB 那一包的設定入口）：先讓使用者直接選——知道要選哪種的人一步到位。
+          不確定的人再用下方「審查類型小幫手」逐項勾選由系統建議。
+          只在勾了「IRB 審查」時才顯示，因為審查類型只決定 IRB 文件。 */}
+      {irbSelected && (
+        <>
+          <Controller
+            name="review_type"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="審查類型"
+                tooltip="決定 IRB 送審流程與所需的 IRB 文件"
+              >
+                <Select
+                  {...field}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    setValue('review_type_source', 'manual', { shouldDirty: true });
+                  }}
+                  options={REVIEW_TYPE_OPTIONS.map((opt) => ({
+                    value: opt.value,
+                    label: (
+                      <Space>
+                        {opt.label}
+                        {opt.ready
+                          ? <Tag color="blue" style={{ marginLeft: 4 }}>支援</Tag>
+                          : <Tag color="default" style={{ marginLeft: 4 }}>模板準備中</Tag>}
+                      </Space>
+                    ),
+                  }))}
+                  style={{ width: 320 }}
+                />
+                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  {planConfig.description}
+                  <Tag color={reviewTypeSourceLabel.color} style={{ marginLeft: 8 }}>
+                    {reviewTypeSourceLabel.label}
+                  </Tag>
+                  {!planConfig.ready && (
+                    <Tag color="warning" style={{ marginLeft: 4 }}>文件模板尚未完整支援</Tag>
+                  )}
+                </div>
+              </Form.Item>
+            )}
+          />
+
+          {/* 審查類型小幫手：不確定要選哪種審查時，逐項勾選由系統建議（預設收合，不干擾） */}
+          <ReviewTypeScreening />
+        </>
+      )}
 
       <Controller
         name="project_title_zh"

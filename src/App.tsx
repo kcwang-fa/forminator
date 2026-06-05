@@ -1,6 +1,6 @@
 // ===== 研究計畫表單終結者 Forminator — 主應用 =====
 
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback } from 'react';
 import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, Collapse, Card, Tag, Grid, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
@@ -24,7 +24,7 @@ import Step6Database from './components/wizard/Step5Database';
 import WorkflowGuide from './components/workflow/WorkflowGuide';
 
 import { DOC_NAMES, SDD_VERSION, defaultFormData, type DocId } from './data/defaults';
-import { getPlanConfig, type WizardStepKey } from './data/planConfigs';
+import { resolveActivePlan, OUTPUT_CATEGORIES, OUTPUT_CATEGORY_CONFIGS, type WizardStepKey } from './data/planConfigs';
 import { STEP_CONFIGS } from './data/stepConfigs';
 
 const { Header, Content, Footer } = Layout;
@@ -40,11 +40,6 @@ const STEP_COMPONENTS: Record<WizardStepKey, React.ComponentType> = {
   budget:    Step5Budget,
   database:  Step6Database,
 };
-
-const DOC_GROUPS: Array<{ key: string; label: string; docs: DocId[] }> = [
-  { key: 'irb', label: 'IRB', docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'] },
-  { key: 'database', label: '資料庫', docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'] },
-];
 
 function AppContent() {
   const form = useCreateFormStore();
@@ -69,18 +64,28 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   setLLMSettings: ReturnType<typeof useLLMSettings>['setSettings'];
   contentRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  // 根據 review_type 動態決定步驟清單
+  // 步驟與文件 = review_type 全集 ∩ 勾選的成果類別
+  // （本專案開啟 React Compiler，會自動 memo，不需手寫 useMemo）
   const reviewType = form.watch('review_type');
-  const planConfig = useMemo(() => getPlanConfig(reviewType), [reviewType]);
+  const outputCategories = form.watch('output_categories') ?? [];
+  const active = resolveActivePlan(reviewType, outputCategories);
+  const planConfig = active.planConfig;
   const screens = Grid.useBreakpoint();
   const isDesktop = !!screens.lg;
-  const steps = useMemo(() => {
-    return planConfig.wizardStepKeys.map((key) => ({
+  const steps = active.wizardStepKeys.map((key) => ({
+    key,
+    title: STEP_CONFIGS[key].title,
+    component: STEP_COMPONENTS[key],
+  }));
+
+  // 結果頁的文件勾選群組：依成果類別分組，只保留目前實際會產出的文件
+  const docGroups = OUTPUT_CATEGORIES
+    .map((key) => ({
       key,
-      title: STEP_CONFIGS[key].title,
-      component: STEP_COMPONENTS[key],
-    }));
-  }, [planConfig]);
+      label: OUTPUT_CATEGORY_CONFIGS[key].label,
+      docs: OUTPUT_CATEGORY_CONFIGS[key].docs.filter((doc) => active.docs.includes(doc)),
+    }))
+    .filter((group) => group.docs.length > 0);
 
   const { currentStep, showResult, next, prev, goTo, enterResult, exitResult, isFirst, isLast } = useWizardNavigation(steps.length);
   const { selectedDocs, setSelectedDocs, generating, download } = useDocumentGeneration();
@@ -204,7 +209,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
                   <Space wrap size={8}>
                     <Tag color="blue">{planConfig.label}</Tag>
                     <Tag color="default">{steps.length} 個填寫步驟</Tag>
-                    <Tag color="default">{planConfig.docs.length} 份文件</Tag>
+                    <Tag color="default">{active.docs.length} 份文件</Tag>
                   </Space>
                   <Text type="secondary">{planConfig.description}</Text>
                   <Steps
@@ -318,7 +323,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
               <h4>選擇要產生的文件</h4>
               <Collapse
                 ghost
-                items={DOC_GROUPS.map((group) => ({
+                items={docGroups.map((group) => ({
                   key: group.key,
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

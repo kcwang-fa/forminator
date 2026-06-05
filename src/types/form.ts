@@ -3,6 +3,10 @@
 export type ProjectType = 'new_1yr' | 'new_multi' | 'continuing_multi';
 export type ReviewType = 'exempt' | 'expedited' | 'full';
 export type ReviewTypeSource = 'default' | 'screening' | 'manual';
+// 本次要產出的「成果類別」（可複選），與 review_type 是正交的兩個軸：
+// review_type 決定「IRB 那一包是哪幾份文件」，OutputCategory 決定「整體要產出哪幾類成果」。
+// 配置（每類涵蓋的文件與步驟）放在 data/planConfigs.ts 的 OUTPUT_CATEGORY_CONFIGS。
+export type OutputCategory = 'research_plan' | 'irb' | 'database';
 export type ExemptCategory = 'public_non_interactive' | 'public_info' | 'public_policy' | 'education' | 'minimal_risk';
 export type PersonnelRole = 'pi' | 'co_pi' | 'researcher' | 'contact' | 'assistant';
 export type Gender = 'male' | 'female';
@@ -74,7 +78,13 @@ export interface BudgetItem {
   name: string;        // 項目名稱
   category: string;    // '人事費' | '業務費' | '管理費'
   is_custom: boolean;  // 使用者自訂項目
-  amount: string;      // 金額（字串，空白表示未填）
+  // 多年期分年金額：year_amounts[k] = 第 k 年此項目金額（字串，空白表示未填）。
+  // 一年期長度為 1。長度應等於 project_years（formNormalization 會補裁）。
+  year_amounts: string[];
+  // amount = 全程總額（= year_amounts 加總），保留欄位名以相容舊存檔與既有讀取點
+  //（calcTotal 等讀此欄，代表「全程」金額）。
+  // 真相來源是 year_amounts；任何寫入 year_amounts 後都要重算此欄。
+  amount: string;
   note: string;        // 說明
   active?: boolean;    // false = 使用者手動停用（目前只用於管理費）
 }
@@ -199,6 +209,9 @@ export interface ExemptIrbDraftText {
 // ===== 主表單資料結構 =====
 
 export interface FormData {
+  // §2.2.0 成果類別（Step1 最前面選，決定後續步驟與產出文件）
+  output_categories: OutputCategory[];
+
   // §2.2.1 基本資訊
   project_title_zh: string;
   project_title_en: string;

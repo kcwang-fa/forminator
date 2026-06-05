@@ -3,7 +3,7 @@
 import { Steps, Card, Tag, Space, Typography } from 'antd';
 import { MailOutlined, PhoneOutlined, FileTextOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { DOC_NAMES, type DocId } from '../../data/defaults';
-import { getPlanConfig } from '../../data/planConfigs';
+import { resolveActivePlan } from '../../data/planConfigs';
 import { useFormStore } from '../../hooks/useFormStore';
 
 const { Text, Link } = Typography;
@@ -11,7 +11,14 @@ const { Text, Link } = Typography;
 export default function WorkflowGuide() {
   const { watch } = useFormStore();
   const reviewType = watch('review_type');
-  const { workflowSteps } = getPlanConfig(reviewType);
+  const outputCategories = watch('output_categories') ?? [];
+  const active = resolveActivePlan(reviewType, outputCategories);
+
+  // 跑關流程依勾選的成果類別過濾：整關文件都沒被選到就整關隱藏，保留的關卡內也只留會產出的文件。
+  const activeDocSet = new Set<string>(active.docs);
+  const workflowSteps = active.planConfig.workflowSteps
+    .map((step) => ({ ...step, documents: step.documents.filter((doc) => activeDocSet.has(doc)) }))
+    .filter((step) => step.documents.length > 0);
 
   if (workflowSteps.length === 0) {
     return (

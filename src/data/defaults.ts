@@ -102,12 +102,16 @@ export const defaultBudgetItems: BudgetItem[] = BUDGET_PRESETS.map(p => ({
   name: p.name,
   category: p.category,
   is_custom: false,
-  amount: '',
+  year_amounts: [''],  // 預設一年期，一格空白；多年期由 formNormalization 依 project_years 補長度
+  amount: '',          // 全程總額（= year_amounts 加總），衍生欄位
   note: '',
 }));
 
 /** §1.5 MVP 預設值 */
 export const defaultFormData: FormData = {
+  // 成果類別：預設三項全勾，維持原本「免審一次產出全部文件」的行為
+  output_categories: ['research_plan', 'irb', 'database'],
+
   // 基本資訊
   project_title_zh: '',
   project_title_en: '',

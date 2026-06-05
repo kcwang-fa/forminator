@@ -5,22 +5,26 @@ import { message } from 'antd';
 import { useFormStore } from './useFormStore';
 import { generateAllDocuments } from '../utils/docgen';
 import { DOC_NAMES, type DocId } from '../data/defaults';
-import { getPlanConfig } from '../data/planConfigs';
+import { resolveActivePlan } from '../data/planConfigs';
 
 const ALL_DOCS = Object.keys(DOC_NAMES) as DocId[];
 
 export function useDocumentGeneration() {
   const { getValues, watch } = useFormStore();
   const reviewType = watch('review_type');
-  const planConfig = getPlanConfig(reviewType);
+  const outputCategories = watch('output_categories') ?? [];
+  // 預選文件 = review_type 全集 ∩ 勾選的成果類別
+  const activeDocs = resolveActivePlan(reviewType, outputCategories).docs;
 
-  const [selectedDocs, setSelectedDocs] = useState<DocId[]>(() => planConfig.docs);
+  const [selectedDocs, setSelectedDocs] = useState<DocId[]>(() => activeDocs);
   const [generating, setGenerating] = useState(false);
 
-  // 切換計畫類型時，自動更新預選文件
+  // 切換審查類型或成果類別時，自動更新預選文件。
+  // 用 join 後的字串當依賴，避免 RHF watch 每次回傳新陣列導致 effect 反覆觸發。
+  const activeDocsKey = activeDocs.join(',');
   useEffect(() => {
-    setSelectedDocs(planConfig.docs);
-  }, [reviewType]); // eslint-disable-line react-hooks/exhaustive-deps
+    setSelectedDocs(activeDocs);
+  }, [activeDocsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const download = useCallback(async () => {
     if (selectedDocs.length === 0) {

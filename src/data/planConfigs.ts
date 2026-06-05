@@ -8,7 +8,7 @@
 //   - 模板尚未備妥時先設 ready: false，UI 會自動顯示 disabled
 //   - docs 只能填 DocId（'DOC-1' ~ 'DOC-8'），填錯 TypeScript 會報錯
 
-import type { ReviewType, WorkflowStep } from '../types/form';
+import type { ReviewType, WorkflowStep, OutputCategory } from '../types/form';
 import type { DocId } from './defaults';
 
 // 每種計畫類型的靜態配置
@@ -110,4 +110,67 @@ export const PLAN_CONFIGS: Record<ReviewType, PlanConfig> = {
 
 export function getPlanConfig(reviewType: ReviewType): PlanConfig {
   return PLAN_CONFIGS[reviewType] ?? PLAN_CONFIGS.exempt;
+}
+
+// ===== 成果類別配置 =====
+//
+// 「成果類別」是與 review_type 正交的第二個軸：使用者在 Step1 先選「這次要產出哪幾類成果」
+// （研究計畫 / IRB / 資料庫申請，可複選）。每類涵蓋哪些文件、需要哪些步驟，定義在這裡。
+// 注意：這裡是「類別涵蓋的全集」，最終實際顯示的文件/步驟，會再與 review_type 的 planConfig
+// 取交集（見 resolveActivePlan）——所以簡審/一般審沒有資料庫文件時，選了資料庫也不會無中生有。
+
+export const OUTPUT_CATEGORIES = ['research_plan', 'irb', 'database'] as const;
+
+interface OutputCategoryConfig {
+  label: string;
+  description: string;
+  docs: DocId[];
+  steps: WizardStepKey[];
+}
+
+export const OUTPUT_CATEGORY_CONFIGS: Record<OutputCategory, OutputCategoryConfig> = {
+  research_plan: {
+    label: '研究計畫',
+    description: '研究計畫簽呈與署內研究計畫書',
+    docs: ['DOC-1', 'DOC-2'],
+    steps: ['basic', 'personnel', 'research', 'budget'],
+  },
+  irb: {
+    label: 'IRB 審查',
+    description: 'IRB 送審相關文件（審查類型決定實際包含哪幾份）',
+    docs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
+    steps: ['basic', 'personnel', 'research', 'irb'],
+  },
+  database: {
+    label: '資料庫申請',
+    description: '資料庫使用申請相關文件',
+    docs: ['DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11'],
+    steps: ['basic', 'personnel', 'database'],
+  },
+};
+
+export interface ResolvedPlan {
+  planConfig: PlanConfig;       // review_type 對應的原始配置（全集）
+  wizardStepKeys: WizardStepKey[]; // 篩選後實際顯示的步驟
+  docs: DocId[];               // 篩選後實際產出的文件
+}
+
+// 在 planConfig（由 review_type 決定的「全集」）之上，依勾選的成果類別做交集篩選。
+// 維持 planConfig 既有順序；basic 一律保留（使用者隨時能回第一步重選）。
+// 未勾任何類別時，誠實地回傳「只有基本資訊、零文件」，與 Step1 的「請至少選擇一項」警告一致——
+// 不偷偷退回全選，否則畫面顯示全部取消、背後卻仍當全選跑，會自相矛盾。
+// （正常情況預設三項全勾，只有使用者刻意全部取消才會走到這裡。）
+export function resolveActivePlan(reviewType: ReviewType, categories: OutputCategory[]): ResolvedPlan {
+  const planConfig = getPlanConfig(reviewType);
+  const stepSet = new Set<WizardStepKey>(['basic']);
+  const docSet = new Set<DocId>();
+  for (const c of categories) {
+    OUTPUT_CATEGORY_CONFIGS[c].steps.forEach((s) => stepSet.add(s));
+    OUTPUT_CATEGORY_CONFIGS[c].docs.forEach((d) => docSet.add(d));
+  }
+  return {
+    planConfig,
+    wizardStepKeys: planConfig.wizardStepKeys.filter((s) => stepSet.has(s)),
+    docs: planConfig.docs.filter((d) => docSet.has(d)),
+  };
 }
