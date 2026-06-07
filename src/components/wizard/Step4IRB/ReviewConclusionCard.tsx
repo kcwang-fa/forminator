@@ -35,7 +35,7 @@ export function ReviewConclusionCard() {
         type={isMismatch ? 'warning' : 'info'}
         showIcon
         style={{ marginBottom: 16 }}
-        message={(
+        title={(
           <Space wrap>
             <span>Step 1 判斷結果</span>
             {decision.review_type ? (

@@ -483,7 +483,7 @@ export default function ReviewTypeScreening() {
             <Alert
               type="warning"
               showIcon
-              message="勾選「高風險、人體試驗或安全性監測」或「可能造成歧視」會直接判為一般審查。"
+              title="勾選「高風險、人體試驗或安全性監測」或「可能造成歧視」會直接判為一般審查。"
             />
           )}
 
@@ -508,7 +508,7 @@ export default function ReviewTypeScreening() {
 
           <div>
             <Text strong>特殊風險條件</Text>
-            <Space direction="vertical" size={8} style={{ marginTop: 8 }}>
+            <Space orientation="vertical" size={8} style={{ marginTop: 8 }}>
                 <Controller
                   name="review_screening.has_direct_subject_contact"
                   control={control}
@@ -611,7 +611,7 @@ export default function ReviewTypeScreening() {
           <Alert
             type="info"
             showIcon
-            message="請到上方「資料性質」面板補填可識別性與是否最低風險"
+            title="請到上方「資料性質」面板補填可識別性與是否最低風險"
             description="你已選擇研究素材，但這兩個關鍵題尚未填完。補填後系統才能正確判斷是否符合免審，否則會從嚴判為一般審查。"
           />
         )}
@@ -620,7 +620,7 @@ export default function ReviewTypeScreening() {
           <Alert
             type="warning"
             showIcon
-            message={`${decisionPlan.label}文件模板尚未完整支援`}
+            title={`${decisionPlan.label}文件模板尚未完整支援`}
             description="目前可先協助判斷審查類型；後續文件產生仍需確認模板是否已備妥。"
           />
         )}
@@ -629,7 +629,7 @@ export default function ReviewTypeScreening() {
           <Alert
             type={decision.confidence === 'needs_review' ? 'warning' : 'info'}
             showIcon
-            message="判斷理由"
+            title="判斷理由"
             description={(
               <ul style={{ margin: 0, paddingLeft: 20 }}>
                 {decision.reasons.map((reason) => (
@@ -648,7 +648,7 @@ export default function ReviewTypeScreening() {
           <Alert
             type="warning"
             showIcon
-            message="注意事項"
+            title="注意事項"
             description={(
               <ul style={{ margin: 0, paddingLeft: 20 }}>
                 {decision.warnings.map((warning) => (

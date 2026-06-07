@@ -28,7 +28,7 @@ export function EditableListFields({
   };
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size={8}>
+    <Space orientation="vertical" style={{ width: '100%' }} size={8}>
       {values.map((item, itemIndex) => (
         <div
           key={itemIndex}

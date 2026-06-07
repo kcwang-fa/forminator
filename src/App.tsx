@@ -205,7 +205,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
                   boxShadow: '0 8px 20px rgba(86, 74, 59, 0.05)',
                 }}
               >
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                   <Space wrap size={8}>
                     <Tag color="blue">{planConfig.label}</Tag>
                     <Tag color="default">{steps.length} 個填寫步驟</Tag>
@@ -213,7 +213,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
                   </Space>
                   <Text type="secondary">{planConfig.description}</Text>
                   <Steps
-                    direction="vertical"
+                    orientation="vertical"
                     size="small"
                     current={currentStep}
                     items={steps.map((step, index) => ({
@@ -236,7 +236,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
                 size="small"
                 style={{ borderColor: '#D9D4CC', boxShadow: '0 8px 20px rgba(86, 74, 59, 0.05)' }}
               >
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Text>已完成步驟：{currentStep} / {steps.length - 1}</Text>
                   <Text>目前位置：{currentStepDef.title}</Text>
                   <Text type="secondary">點左側流程可以直接切換步驟。</Text>
@@ -245,7 +245,7 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
             </div>
 
             <Card
-              bordered={false}
+              variant="borderless"
               style={{
                 minHeight: 560,
                 boxShadow: '0 10px 28px rgba(86, 74, 59, 0.08)',

@@ -26,7 +26,7 @@ export default function DataLossWarning({ hasData }: Props) {
     <>
       {!dismissed && (
         <Alert
-          message="填寫內容會自動儲存於瀏覽器中"
+          title="填寫內容會自動儲存於瀏覽器中"
           description="下次開啟網頁會自動還原。如需備份或搬到其他電腦，請使用「匯出 JSON」功能。"
           type="info"
           showIcon

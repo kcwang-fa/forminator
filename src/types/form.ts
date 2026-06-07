@@ -89,9 +89,18 @@ export interface BudgetItem {
   active?: boolean;    // false = 使用者手動停用（目前只用於管理費）
 }
 
+// 一列工作項目：名稱 + 該年內每個月是否執行（months 長度 = 該年實際月數，最後一年可能 < 12）
 export interface GanttItem {
   task_name: string;
   months: boolean[];
+}
+
+// 一個年度的甘特資料：該年自己一組工作項目列。
+// 多年期計畫每年的工作項目可以完全不同（rows 各自獨立），這也是為什麼
+// gantt_chart 從「全程扁平一大張」改成「每年一組」的巢狀結構。
+// 年度標籤（第一年/114 年度…）不存在資料裡，由執行起迄日衍生（UI 與 docgen 各自計算）。
+export interface GanttYear {
+  rows: GanttItem[];
 }
 
 export interface Education {
@@ -237,6 +246,9 @@ export interface FormData {
   // §2.2.3 研究內容
   purpose: string;
   background: string;
+  // 三、多年期計畫之執行成果概要：僅多年期計畫需填寫（新案概述主持人過去相關成果、
+  // 延續案敘明初步成果並逐年檢視分年目標）。一年期計畫由 docgen 自動填入「不適用」字樣。
+  summary_of_results: string;
   methodology: string;
   expected_outcome: string;
   abstract_zh: string;
@@ -246,7 +258,7 @@ export interface FormData {
   outcome_type: OutcomeType[];
   outcome_type_detail: OutcomeTypeDetail[];
   references: string;
-  gantt_chart: GanttItem[];
+  gantt_chart: GanttYear[];
 
   // §2.2.4 IRB 審查資訊
   review_type: ReviewType;

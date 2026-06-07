@@ -45,7 +45,7 @@ export default function WorkflowGuide() {
         </div>
 
         <Steps
-          direction="vertical"
+          orientation="vertical"
           current={-1}
           items={workflowSteps.map((step) => ({
             title: (

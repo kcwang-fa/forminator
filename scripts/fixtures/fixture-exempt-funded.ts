@@ -144,6 +144,9 @@ export const fixtureExemptFunded: FormData = {
   // 研究內容
   purpose: '本研究旨在分析臺灣本土麴黴菌感染症之流行病學特徵。',
   background: '麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。',
+  // 此 fixture 為一年期（new_1yr），故 docgen 會把 summary_of_results 覆蓋為「不適用」；
+  // 此值僅供型別完整，不影響一年期快照輸出。
+  summary_of_results: '',
   methodology: '本研究採用次級資料分析，透過疾管署防疫資料庫擷取確定個案資料，以描述性統計及迴歸分析探討風險因子。',
   expected_outcome: '預期產出至少一篇 SCI 期刊論文，並提供疾管署作為防治策略參考。',
   abstract_zh: '本研究以疾管署防疫資料庫為資料來源，分析 113 至 114 年本土麴黴菌感染確定個案之人口學與臨床特徵。',
@@ -156,14 +159,19 @@ export const fixtureExemptFunded: FormData = {
     { type: 'report', count: 1, note: '結案報告', publish_date: '2026-06-30' },
   ],
   references: '1. Smith J, et al. (2023). Aspergillosis epidemiology. Clin Infect Dis.\n2. 衛生福利部疾病管制署 (2024). 傳染病監測年報。',
+  // 一年期：單一年度，rows 為該年工作項目（months 長度 12）。
   gantt_chart: [
-    { task_name: '文獻回顧', months: [true, true, false, false, false, false, false, false, false, false, false, false] },
-    { task_name: '資料申請與清理', months: [false, true, true, true, false, false, false, false, false, false, false, false] },
-    { task_name: '統計分析', months: [false, false, false, true, true, true, true, false, false, false, false, false] },
-    { task_name: '結果撰寫', months: [false, false, false, false, false, false, true, true, true, false, false, false] },
-    { task_name: '論文投稿', months: [false, false, false, false, false, false, false, false, true, true, false, false] },
-    { task_name: '結案報告', months: [false, false, false, false, false, false, false, false, false, false, true, true] },
-    { task_name: '成果發表', months: [false, false, false, false, false, false, false, false, false, false, false, true] },
+    {
+      rows: [
+        { task_name: '文獻回顧', months: [true, true, false, false, false, false, false, false, false, false, false, false] },
+        { task_name: '資料申請與清理', months: [false, true, true, true, false, false, false, false, false, false, false, false] },
+        { task_name: '統計分析', months: [false, false, false, true, true, true, true, false, false, false, false, false] },
+        { task_name: '結果撰寫', months: [false, false, false, false, false, false, true, true, true, false, false, false] },
+        { task_name: '論文投稿', months: [false, false, false, false, false, false, false, false, true, true, false, false] },
+        { task_name: '結案報告', months: [false, false, false, false, false, false, false, false, false, false, true, true] },
+        { task_name: '成果發表', months: [false, false, false, false, false, false, false, false, false, false, false, true] },
+      ],
+    },
   ],
 
   // IRB 審查
@@ -182,16 +190,17 @@ export const fixtureExemptFunded: FormData = {
   privacy_withdrawal: '本研究使用次級資料庫，無法回溯識別個別對象，無中途退出情形。',
 
   // 經費
+  // 一年期 fixture：year_amounts 長度 1，等同 [amount]（多年期才會有多格）
   budget_items: [
-    { id: 'consumable',  name: '消耗品',     category: '業務費', is_custom: false, amount: '30000',  note: '試劑耗材' },
-    { id: 'maintenance', name: '設備養護費', category: '業務費', is_custom: false, amount: '',       note: '' },
-    { id: 'office',      name: '一般事務費', category: '業務費', is_custom: false, amount: '20000',  note: '文具影印' },
-    { id: 'travel',      name: '差旅費',     category: '業務費', is_custom: false, amount: '40000',  note: '學術研討會' },
-    { id: 'hardware',    name: '軟硬體設備費', category: '資本門', is_custom: false, amount: '80000',  note: '統計軟體授權' },
-    { id: 'pi_fee',      name: '計畫主持人費', category: '人事費', is_custom: false, amount: '240000', note: '2 萬×12 月' },
-    { id: 'co_pi_fee',   name: '協同主持人費', category: '人事費', is_custom: false, amount: '180000', note: '1.5 萬×12 月' },
-    { id: 'ra_fee',      name: '研究人力費',   category: '人事費', is_custom: false, amount: '',       note: '' },
-    { id: 'mgmt',        name: '管理費',       category: '管理費', is_custom: false, amount: '', note: '自動計算' },
+    { id: 'consumable',  name: '消耗品',     category: '業務費', is_custom: false, year_amounts: ['30000'],  amount: '30000',  note: '試劑耗材' },
+    { id: 'maintenance', name: '設備養護費', category: '業務費', is_custom: false, year_amounts: [''],       amount: '',       note: '' },
+    { id: 'office',      name: '一般事務費', category: '業務費', is_custom: false, year_amounts: ['20000'],  amount: '20000',  note: '文具影印' },
+    { id: 'travel',      name: '差旅費',     category: '業務費', is_custom: false, year_amounts: ['40000'],  amount: '40000',  note: '學術研討會' },
+    { id: 'hardware',    name: '軟硬體設備費', category: '資本門', is_custom: false, year_amounts: ['80000'],  amount: '80000',  note: '統計軟體授權' },
+    { id: 'pi_fee',      name: '計畫主持人費', category: '人事費', is_custom: false, year_amounts: ['240000'], amount: '240000', note: '2 萬×12 月' },
+    { id: 'co_pi_fee',   name: '協同主持人費', category: '人事費', is_custom: false, year_amounts: ['180000'], amount: '180000', note: '1.5 萬×12 月' },
+    { id: 'ra_fee',      name: '研究人力費',   category: '人事費', is_custom: false, year_amounts: [''],       amount: '',       note: '' },
+    { id: 'mgmt',        name: '管理費',       category: '管理費', is_custom: false, year_amounts: [''],       amount: '', note: '自動計算' },
   ],
 
   has_coordination: false,

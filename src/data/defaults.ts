@@ -138,6 +138,7 @@ export const defaultFormData: FormData = {
   // 研究內容
   purpose: '',
   background: '',
+  summary_of_results: '',  // 三、多年期計畫之執行成果概要（一年期由 docgen 填「不適用」）
   methodology: '',
   expected_outcome: '',
   abstract_zh: '',

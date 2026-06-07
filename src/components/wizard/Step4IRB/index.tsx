@@ -215,7 +215,7 @@ export default function Step4IRB() {
           type="info"
           showIcon
           style={{ marginTop: 16 }}
-          message="目前僅支援免審（exempt）的表單欄位"
+          title="目前僅支援免審（exempt）的表單欄位"
           description="簡易審查 / 一般審查的專屬欄位待模板備妥後再開放。若需改回免審，可在上方「審查類型」調整。"
         />
       )}

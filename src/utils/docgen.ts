@@ -22,7 +22,7 @@ const { saveAs } = fileSaver;
 import type { FormData, Personnel } from '../types/form';
 import { calcProjectYears, getRocDateParts, toRocDate } from './date';
 import { DOC_NAMES, type DocId } from '../data/defaults';
-import { buildBudgetRows, calcTotal, isPersonnel, isBusiness, isCapital } from './budgetCalc';
+import { buildBudgetRowsByYear, calcTotalYear, buildBudgetSummaryYears, isPersonnel, isBusiness, isCapital } from './budgetCalc';
 import { EXEMPT_MAP } from './docgenMaps';
 import { prepareDatabaseData } from './docgen/database';
 import { preparePersonnelAppendix } from './docgen/personnelAppendix';
@@ -60,7 +60,10 @@ function prepareBasicData(data: FormData, pi: Personnel, contact: Personnel) {
     project_title_zh: data.project_title_zh,
     project_title_en: data.project_title_en,
     project_year: data.project_year,
-    project_years: data.project_years || String(calcProjectYears(fullExecutionStart, fullExecutionEnd) || ''),
+    // 一年期固定 1 年（即使執行期間跨曆年也算一年期）；多年期才用「橫跨年度數」推算
+    project_years: data.project_type === 'new_1yr'
+      ? '1'
+      : (data.project_years || String(calcProjectYears(fullExecutionStart, fullExecutionEnd) || '')),
     responsible_unit: data.responsible_unit,
     execution_start_roc: toRocDate(fullExecutionStart),
     execution_end_roc: toRocDate(fullExecutionEnd),
@@ -108,9 +111,13 @@ function prepareBasicData(data: FormData, pi: Personnel, contact: Personnel) {
 }
 
 function prepareResearchData(data: FormData) {
+  // 多年期判斷與 schedule.ts 一致（一年期 = new_1yr）。
+  // 「三、多年期計畫之執行成果概要」一節：多年期填使用者內容，一年期沿用範本罐頭字「不適用」。
+  const isMultiYear = data.project_type !== 'new_1yr';
   return {
     purpose: data.purpose,
     background: data.background,
+    summary_of_results: isMultiYear ? data.summary_of_results : '為一年期計畫，故不適用。',
     methodology: data.methodology,
     expected_outcome: data.expected_outcome,
     abstract_zh: data.abstract_zh,
@@ -220,6 +227,27 @@ export function prepareCommonData(data: FormData) {
   if (!pi) throw new Error('表單中至少需要一位計畫主持人（PI）');
   const contact = findByRole(data.personnel, 'contact') || pi;
 
+  // 經費分年參數：
+  // - years：年數（一年期=1）；isMultiYear：是否多年期
+  // - rocYears：壹摘要表每列要顯示的民國年（一年期用 project_year，多年期由全程起始日逐年推算）
+  // - grandTotal：全程總額 = 各年計算總額加總，讓壹表合計與逐年列相加一致（一年期等同 calcTotal）
+  const isMultiYear = data.project_type !== 'new_1yr';
+  // years 必須與 isMultiYear 同源：一年期一律 1 張表，避免「project_type=new_1yr 但 project_years
+  // 殘留 3」的矛盾態（即時填表未經 normalize 時可能發生）→ 會產生 3 張表卻年度全用 project_year
+  // （= 經費表「3 張都 115 年」的災情）。多年期才採用使用者填/推算的年數。
+  const years = isMultiYear ? Math.max(1, Number(data.project_years) || 1) : 1;
+  const baseRoc = Number(getRocDateParts(data.full_execution_start || data.execution_start).y);
+  const rocYears = Array.from({ length: years }, (_, k) =>
+    isMultiYear
+      // baseRoc 須為有效民國年（> 0）才逐年遞增；全程/本年度起始日都沒填時 baseRoc 會是 0 或 NaN，
+      // 此時年度留空（讓使用者手填），避免經費表標題出現「0/1/2 年度」這種亂數。
+      ? (Number.isFinite(baseRoc) && baseRoc > 0 ? String(baseRoc + k) : '')
+      : (data.project_year || ''));
+  const budgetItems = data.budget_items || [];
+  const grandTotal = data.needs_funding
+    ? Array.from({ length: years }, (_, k) => calcTotalYear(budgetItems, k, years)).reduce((a, b) => a + b, 0)
+    : 0;
+
   return {
     ...prepareBasicData(data, pi, contact),
     ...prepareResearchData(data),
@@ -230,16 +258,23 @@ export function prepareCommonData(data: FormData) {
     ...prepareMiscPlaceholders(data, pi),
     ...preparePersonnelAppendix(data),
     ...prepareCoverData(data),
-    // 經費概算
-    budget_no_items: !data.needs_funding,
-    budget_rows: buildBudgetRows(data.budget_items || [], data.needs_funding),
+    // 陸、經費需求表（逐年一張表，整張表外包 {#budget_years}、明細內包 {#budget_rows}）
+    budget_years: buildBudgetRowsByYear(budgetItems, data.needs_funding, years, rocYears),
     // 壹、綜合資料經費摘要表
+    // - budget_summary_years：逐年資料列（DOC-2 row10~13 收成的 {#budget_summary_years} loop）
+    // - 其餘 budget_* / apply_amount 是「合計」列；多年期申請金額=全程總額，一年期維持使用者填的 apply_amount
+    budget_summary_years: buildBudgetSummaryYears(
+      budgetItems, data.needs_funding, years,
+      (data.personnel || []).length, isMultiYear, rocYears, data.apply_amount,
+    ),
     personnel_count: (data.personnel || []).length,
-    apply_amount:     data.needs_funding && data.apply_amount ? Number(data.apply_amount).toLocaleString() : '',
-    budget_total:     data.needs_funding ? calcTotal(data.budget_items || []).toLocaleString() : '',
-    budget_personnel: data.needs_funding ? (data.budget_items || []).filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
-    budget_business:  data.needs_funding ? (data.budget_items || []).filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
-    budget_capital:   data.needs_funding ? (data.budget_items || []).filter(isCapital).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
+    apply_amount:     data.needs_funding
+      ? (isMultiYear ? grandTotal.toLocaleString() : (data.apply_amount ? Number(data.apply_amount).toLocaleString() : ''))
+      : '',
+    budget_total:     data.needs_funding ? grandTotal.toLocaleString() : '',
+    budget_personnel: data.needs_funding ? budgetItems.filter(isPersonnel).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
+    budget_business:  data.needs_funding ? budgetItems.filter(isBusiness).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
+    budget_capital:   data.needs_funding ? budgetItems.filter(isCapital).reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString() : '',
   };
 }
 

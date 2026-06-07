@@ -25,6 +25,7 @@
     "gen-templates": "node scripts/legacy/generate-templates.cjs",
     "snapshot:write": "tsx scripts/docgen-snapshot.ts write",
     "snapshot:check": "tsx scripts/docgen-snapshot.ts check",
+    "smoke:budget-docx": "node scripts/budget-docx-smoke.cjs",
     "classifier-snapshot:write": "tsx scripts/classifier-snapshot.ts write",
     "classifier-snapshot:check": "tsx scripts/classifier-snapshot.ts check"
   },

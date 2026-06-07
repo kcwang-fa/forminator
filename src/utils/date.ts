@@ -33,10 +33,15 @@ export function calcInclusiveMonths(start: string, end: string): number {
   return Math.max(0, months);
 }
 
+// 計畫橫跨幾個「年度」。政府的年度對齊曆年，故計算「橫跨的曆年數」而非「月數/12」。
+// 例：115/6 ~ 117/7 → 橫跨 115、116、117 三個年度 → 3。
+// 這樣多年期的「全程年數」「經費分年」「甘特分年」都用同一個年度數，彼此一致。
 export function calcProjectYears(start: string, end: string): number {
-  const months = calcInclusiveMonths(start, end);
-  if (months <= 0) return 0;
-  return Math.max(1, Math.ceil(months / 12));
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return 0;
+  if (endDate < startDate) return 0;
+  return endDate.getFullYear() - startDate.getFullYear() + 1;
 }
 
 /**

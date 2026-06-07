@@ -222,6 +222,48 @@ xml = xml.replace(
 xml = replaceText(xml, '□人體研究', '{exp_human}人體研究');
 xml = replaceText(xml, '□人體基因重組', '{exp_gene}人體基因重組');
 
+// 封面計畫類別勾選排：「■新增型計畫：■一年 □多年 / □多年期計畫（延續）」隨 project_type 動態勾選。
+// ⚠️ 此排與上方壹綜合資料表格的「□新增計畫…」是文件中「不同的兩處」（封面用寫死的 ■/□ 符號），
+//    但語義相同 → 複用同一批 project_type_* 標記（docgen 不需改）。
+//    ■/□ 與後面的文字分屬不同 <w:r> run，故「新增型」「一年」兩個 ■ 用 regex 跨 run 錨定；
+//    「□多年」「□多年期計畫：」各自是單一 run，直接字串取代即可。
+{
+  let coverHits = 0;
+  const mark = (b) => { if (xml !== b) coverHits++; };
+  let b;
+  // ■(新增型計畫) — 後接「新增型計畫」run
+  b = xml;
+  xml = xml.replace(
+    /(<w:t[^>]*>)■(<\/w:t><\/w:r><w:r[^>]*>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?<w:t[^>]*>新增型計畫)/,
+    '$1{project_type_new}$2');
+  mark(b);
+  // ■(一年) — 後接「一年」run
+  b = xml;
+  xml = xml.replace(
+    /(<w:t[^>]*>)■(<\/w:t><\/w:r><w:r[^>]*>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?<w:t[^>]*>一年<)/,
+    '$1{project_type_1yr}$2');
+  mark(b);
+  // □多年（單一 run，含□與「多年」二字）
+  b = xml;
+  xml = xml.replace('□多年</w:t>', '{project_type_multi}多年</w:t>');
+  mark(b);
+  // □多年期計畫：（延續型；封面為冒號版，與壹表格「□多年期計畫，共」逗號版不同）
+  b = xml;
+  xml = xml.replace('□多年期計畫：</w:t>', '{project_type_old}多年期計畫：</w:t>');
+  mark(b);
+  if (coverHits === 4) console.log('  ✓ 封面計畫類別勾選排注入（新增型/一年/多年/延續）');
+  else console.warn(`⚠️  封面計畫類別勾選排注入不完整（命中 ${coverHits}/4）`);
+}
+
+// 填報日期：範本封面「填報日期：　　　　　年　　　月　　　日」（單一 run、全形空格填空）。
+// docgen 已備好 {filing_date_roc}（toRocDate → 「114 年 11 月 28 日」含年月日），整段取代即可。
+{
+  const b = xml;
+  xml = xml.replace(/填報日期：[　]*年[　]*月[　]*日/, '填報日期：{filing_date_roc}');
+  if (xml !== b) console.log('  ✓ 封面填報日期注入（{filing_date_roc}）');
+  else console.warn('⚠️  找不到封面「填報日期：…年…月…日」，填報日期未注入');
+}
+
 // 執行期限（OOO=年, OO=月/日）
 let oooIdx = 0;
 const oooMapping = ['exec_start_y', 'full_exec_start_y', 'exec_end_y', 'full_exec_end_y'];
@@ -268,36 +310,65 @@ xml = insertInNthEmptyCell(xml, '話', '{contact_phone}', 2);
 xml = insertInNthEmptyCell(xml, '真', '{pi_fax}', 1);
 xml = insertInNthEmptyCell(xml, '真', '{contact_fax}', 2);
 
-// 壹、綜合資料 — 經費摘要表（研究人力 / 申請金額 / 人事費 / 業務費 / 設備費）
-// 表格結構：Row 1 = 本年度資料列；Row 5 = 合計列（MVP 1年期故相同）
-// 注入策略：用 paraId 定位各儲存格（paraId 來自source-templates，不應更動）
+// 壹、綜合資料 — 經費摘要表（年度 / 研究人力 / 申請金額 / 核定金額 / 人事費 / 業務費 / 設備費）
+// ─────────────────────────────────────────────
+// source-templates 表格結構（dump 確認）：
+//   Row 10~13：4 個「年度」資料列（cell0 paraId 7F2C6B17 / 012E7D1B / 4F54ED36 / 13E2E5DC）
+//   Row 14   ：「合計」列（cell0 paraId 57E5DF78）
+// 表頭明文要求「逐年填：已執行年度核定數、本年度申請數、未來年度預估數」→ 分年是此表原生設計。
+// 做法：把 Row10 當 loop 模板改成 {#budget_summary_years} 逐年重複一列，刪掉 Row11~13；
+//       一年期 budget_summary_years 只有一筆，視覺等同單一資料列（與改版前相同）。
+// 合計列（Row14）維持 paraId 注入全程合計。
 function injectByParaId(xml, paraId, text) {
   const marker = `paraId="${paraId}"`;
   const idx = xml.indexOf(marker);
   if (idx === -1) { console.warn(`⚠️  找不到 paraId ${paraId} (經費表)`); return xml; }
-  const pStart = xml.lastIndexOf('<w:p ', idx);
-  if (pStart === -1) return xml;
   const pEnd = xml.indexOf('</w:p>', idx);
   if (pEnd === -1) return xml;
   return xml.substring(0, pEnd) + `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>` + xml.substring(pEnd);
 }
-// Row 1 - 第一筆資料列（本年度）
-// 年度欄：把 "年度" 換成 "{project_year}年度"
-xml = xml.replace(/(<w:p[^>]*paraId="7F2C6B17"[\s\S]*?<w:t[^>]*>)年度(<\/w:t>)/, '$1{project_year}年度$2');
-xml = injectByParaId(xml, '66153E86', '{personnel_count}');  // 研究人力
-xml = injectByParaId(xml, '580C8D8B', '{apply_amount}');     // 申請金額
-xml = injectByParaId(xml, '749EF8CA', '{budget_total}');     // 主管機關核定金額
-xml = injectByParaId(xml, '11BB61C9', '{budget_personnel}'); // 人事費
-xml = injectByParaId(xml, '5CA30DFF', '{budget_business}');  // 業務費
-xml = injectByParaId(xml, '765CCF64', '{budget_capital}');   // 設備費（資本門）
-// Row 5 - 合計列
+// 找包含某 paraId 的整個 <w:tr>...</w:tr> 範圍
+function findRowRange(xml, paraId) {
+  const idx = xml.indexOf(`paraId="${paraId}"`);
+  if (idx === -1) return null;
+  const start = xml.lastIndexOf('<w:tr ', idx);
+  const end = xml.indexOf('</w:tr>', idx) + '</w:tr>'.length;
+  if (start === -1 || end < start) return null;
+  return { start, end };
+}
+{
+  const row10 = findRowRange(xml, '7F2C6B17'); // 第一個年度資料列（loop 模板）
+  const row13 = findRowRange(xml, '13E2E5DC'); // 第四個（最後一個）年度資料列
+  if (row10 && row13) {
+    const loopRowRaw = xml.slice(row10.start, row10.end);
+    const header = getRowHeader(loopRowRaw);
+    // stripVMerge：避免 docxtemplater 逐年複製此列時 vMerge restart 造成格式錯亂
+    const cells = splitCells(loopRowRaw).map(stripVMerge);
+    if (cells.length >= 7) {
+      cells[0] = setCellText(cells[0], '{#budget_summary_years}{sy_year}年度');
+      cells[1] = setCellText(cells[1], '{sy_personnel_count}');
+      cells[2] = setCellText(cells[2], '{sy_apply}');
+      cells[3] = setCellText(cells[3], '{sy_approved}');
+      cells[4] = setCellText(cells[4], '{sy_personnel}');
+      cells[5] = setCellText(cells[5], '{sy_business}');
+      cells[6] = setCellText(cells[6], '{sy_capital}{/budget_summary_years}');
+    }
+    const newLoopRow = header + cells.join('') + '</w:tr>';
+    // 取代 Row10~Row13（保留 Row14 合計列不動）
+    xml = xml.slice(0, row10.start) + newLoopRow + xml.slice(row13.end);
+    console.log('  ✓ 壹、綜合資料 經費摘要表逐年 loop 注入');
+  } else {
+    console.warn('⚠️  找不到經費摘要表年度資料列（7F2C6B17/13E2E5DC），跳過壹 loop 注入');
+  }
+}
+// Row 14 - 合計列（全程合計）
 xml = injectByParaId(xml, '28BAD8BC', '{personnel_count}');  // 研究人力合計
 xml = injectByParaId(xml, '23196B7B', '{apply_amount}');     // 申請金額合計
 xml = injectByParaId(xml, '213D1697', '{budget_total}');     // 主管機關核定金額合計
 xml = injectByParaId(xml, '3F986E94', '{budget_personnel}'); // 人事費合計
 xml = injectByParaId(xml, '55D707CB', '{budget_business}');  // 業務費合計
 xml = injectByParaId(xml, '3552E365', '{budget_capital}');   // 設備費合計
-console.log('  ✓ 壹、綜合資料 經費摘要表注入');
+console.log('  ✓ 壹、綜合資料 經費摘要表合計列注入');
 
 // 貳、中文摘要 / 參、英文摘要
 let abstractCount = 0;
@@ -326,6 +397,17 @@ for (const [anchor, ph] of contentSections) {
   xml = xml.substring(0, pEnd + 6) + `<w:p><w:r><w:t>${ph}</w:t></w:r></w:p>` + xml.substring(pEnd + 6);
 }
 console.log('  ✓ 肆、計畫內容各節注入');
+
+// 三、多年期計畫之執行成果概要：範本此節原本寫死罐頭字「為一年期計畫，故不適用。」
+// （在單一 <w:t> run 內、全文唯一）。改成 placeholder，由 docgen 分流：
+//   多年期 → 使用者填的執行成果概要；一年期 → docgen 仍填回「為一年期計畫，故不適用。」。
+// 不放進上面 contentSections（那是「插入新段落」；本節已有現成段落可直接取代）。
+if (xml.includes('為一年期計畫，故不適用。')) {
+  xml = xml.replace('為一年期計畫，故不適用。', '{summary_of_results}');
+  console.log('  ✓ 三、執行成果概要注入（{summary_of_results}）');
+} else {
+  console.warn('⚠️  找不到「為一年期計畫，故不適用。」，三、執行成果概要未注入');
+}
 
 // 七、預定進度 — 甘特圖巢狀 loop（分年）
 // 多年期計畫每年各一張 12 個月甘特表：外層 {#gantt_years} 讓「表頭列 + 資料列」逐年重複，
@@ -510,60 +592,105 @@ console.log('  ✓ 肆、計畫內容各節注入');
 }
 
 // ─────────────────────────────────────────────
-// 二·五、陸、經費需求表 — 注入 budget loop
+// 二·五、陸、經費需求表 — 每年度獨立表格（巢狀 loop）
 // ─────────────────────────────────────────────
-// 表格結構：
-//   Row 0 (1 cell): 說明文字
-//   Row 1 (3 cells): 項目 | 金額 | 說明 (column header)
-//   Row 2 (3 cells): '無經費需求'  ← 改為條件 {#budget_no_items}無經費需求{/budget_no_items}
-//   Row 3 (3 cells): 空白          ← 改為 loop {#budget_rows}{budget_item}...{/budget_rows}
-//   Rows 4-8 (3 cells): 空白       ← 刪除（loop 會自動複製 Row 3）
+// 表單表頭明文「屬多年期計畫者，應分年度提出經費需求」→ 每年一張完整表。
+// source-templates 結構（dump 確認，18 列 R0~R17）：
+//   R0 (1 cell)：標題「　　　年度經費需求…」，首 run 是底線年度空格「　　　」
+//   R1 (3 cells)：項目 | 金額 | 說明（欄頭）
+//   R2 (3 cells)：原「無經費需求」→ 改為明細 loop {#budget_rows}…{/budget_rows}
+//   R3~R16：空白列（保留，逐年重複作為官方表格的手填空間）
+//   R17 (3 cells, paraId 36E03CA7)：最後一列 → 改為「合 計 | {by_total} |」
+// 外層 {#budget_years} 放在表格外的獨立段落，讓 docxtemplater 每年複製一個完整 <w:tbl>。
+// 第二年起由 {#by_page_break} 產生真正的 page break；不能把 pageBreakBefore 放在 table cell，
+// Word 會忽略或延後表格內的分頁設定，導致下一年度標題卡在前一頁底部。
 {
-  const secIdx = xml.indexOf('無經費需求');
-  if (secIdx !== -1) {
-    // 找到包含「無經費需求」的 <w:tr>
-    const row2Start = xml.lastIndexOf('<w:tr ', secIdx);
-    const row2End   = xml.indexOf('</w:tr>', row2Start) + 7;
+  const headIdx = xml.indexOf('年度經費需求');
+  if (headIdx !== -1) {
+    // R0：年度底線空格「　　　」→ {by_year}（外層年度 loop 稍後包在整張表外）
+    const r0Start = xml.lastIndexOf('<w:tr ', headIdx);
+    const r0End   = xml.indexOf('</w:tr>', headIdx) + 7;
+    const r0 = xml.slice(r0Start, r0End)
+      .replace('<w:t xml:space="preserve">　　　</w:t>',
+               '<w:t xml:space="preserve">{by_year}</w:t>');
+    xml = xml.slice(0, r0Start) + r0 + xml.slice(r0End);
 
-    // 找接下來 6 個空白 row（刪掉 rows 4-8，保留 row 3 改成 loop）
-    let loopRowStart = row2End;
-    const loopRowEnd_s = xml.indexOf('<w:tr ', loopRowStart);
-    const loopRowEnd_e = xml.indexOf('</w:tr>', loopRowEnd_s) + 7;
+    // R2：「無經費需求」列 → 明細 loop
+    const noFundIdx = xml.indexOf('無經費需求');
+    const r2Start = xml.lastIndexOf('<w:tr ', noFundIdx);
+    const r2End   = xml.indexOf('</w:tr>', r2Start) + 7;
+    const r2 = xml.slice(r2Start, r2End);
+    const r2cells = splitCells(r2);
+    if (r2cells.length >= 3) {
+      r2cells[0] = setCellText(r2cells[0], '{#budget_rows}{budget_item}');
+      r2cells[1] = setCellText(r2cells[1], '{budget_amount}');
+      r2cells[2] = setCellText(r2cells[2], '{budget_note}{/budget_rows}');
+    }
+    const newR2 = getRowHeader(r2) + r2cells.join('') + '</w:tr>';
+    xml = xml.slice(0, r2Start) + newR2 + xml.slice(r2End);
 
-    // 找後面要刪掉的 rows（rows 4-8，共 5 個）
-    let deleteStart = loopRowEnd_e;
-    let deleteEnd = loopRowEnd_e;
-    for (let i = 0; i < 5; i++) {
-      const s = xml.indexOf('<w:tr ', deleteEnd);
-      if (s === -1) break;
-      const e = xml.indexOf('</w:tr>', s) + 7;
-      // 確認是同一個表格（3-cell 空白 row）
-      const rowChunk = xml.slice(s, e);
-      if (rowChunk.includes('<w:tc>') && !rowChunk.match(/<w:t[^>]*>[^<]{3,}/)) {
-        deleteEnd = e;
-      } else {
-        break;
+    // R3~R16：原 14 列固定空白手填列 → 砍成「1 列空白模板」包 {#budget_blanks}…{/budget_blanks}。
+    // docgen 依每年明細數動態決定 budget_blanks 陣列長度（明細多→空白少），讓每年表填滿一頁。
+    const blankStart = xml.indexOf('<w:tr ', r2Start + newR2.length);
+    const totalAnchor = xml.indexOf('paraId="36E03CA7"');     // R17 合計列
+    const blankEnd = xml.lastIndexOf('<w:tr ', totalAnchor);  // = R17 起點（空白列區間結束）
+    if (blankStart !== -1 && blankEnd > blankStart) {
+      const tmpl = xml.slice(blankStart, xml.indexOf('</w:tr>', blankStart) + 7);
+      const bcells = splitCells(tmpl);
+      if (bcells.length >= 3) {
+        bcells[0] = setCellText(bcells[0], '{#budget_blanks}');
+        bcells[2] = setCellText(bcells[2], '{/budget_blanks}');
       }
+      const newBlank = getRowHeader(tmpl) + bcells.join('') + '</w:tr>';
+      xml = xml.slice(0, blankStart) + newBlank + xml.slice(blankEnd);
+      console.log('  ✓ 陸表空白列 → 動態 loop {#budget_blanks}（每年補滿一頁）');
+    } else {
+      console.warn('⚠️  陸表空白列區間找不到，未轉成 budget_blanks loop');
     }
 
-    // 重建 Row 2：{#budget_no_items}無經費需求{/budget_no_items}
-    const row2 = xml.slice(row2Start, row2End);
-    const newRow2 = row2.replace(/無經費需求/, '{#budget_no_items}無經費需求{/budget_no_items}');
-
-    // 重建 Loop Row（原 Row 3）：3 cells → item | amount | note
-    const loopRow = xml.slice(loopRowEnd_s, loopRowEnd_e);
-    const loopCells = splitCells(loopRow);
-    if (loopCells.length >= 3) {
-      loopCells[0] = setCellText(loopCells[0], '{#budget_rows}{budget_item}');
-      loopCells[1] = setCellText(loopCells[1], '{budget_amount}');
-      loopCells[2] = setCellText(loopCells[2], '{budget_note}{/budget_rows}');
+    // R17：最後一列（paraId 36E03CA7）→ 合計列
+    const lastIdx = xml.indexOf('paraId="36E03CA7"');
+    if (lastIdx !== -1) {
+      const r17Start = xml.lastIndexOf('<w:tr ', lastIdx);
+      const r17End   = xml.indexOf('</w:tr>', lastIdx) + 7;
+      const r17 = xml.slice(r17Start, r17End);
+      const r17cells = splitCells(r17);
+      if (r17cells.length >= 3) {
+        r17cells[0] = setCellText(r17cells[0], '合　計');
+        r17cells[1] = setCellText(r17cells[1], '{by_total}');
+        r17cells[2] = setCellText(r17cells[2], '');
+      }
+      const newR17 = getRowHeader(r17) + r17cells.join('') + '</w:tr>';
+      xml = xml.slice(0, r17Start) + newR17 + xml.slice(r17End);
+    } else {
+      console.warn('⚠️  找不到陸表最後一列 paraId 36E03CA7，合計列未注入');
     }
-    const newLoopRow = getRowHeader(loopRow) + loopCells.join('') + '</w:tr>';
 
-    xml = xml.slice(0, row2Start) + newRow2 + newLoopRow + xml.slice(deleteEnd);
-    console.log('  ✓ 陸、經費需求表 loop 注入');
+    // 外層 loop 必須包在表格外，才能逐年生成獨立表格並在表格之間可靠分頁。
+    const updatedHeadIdx = xml.indexOf('年度經費需求');
+    const tableStart = xml.lastIndexOf('<w:tbl>', updatedHeadIdx);
+    const tableEnd = xml.indexOf('</w:tbl>', updatedHeadIdx) + '</w:tbl>'.length;
+    if (tableStart !== -1 && tableEnd > tableStart) {
+      const loopParagraph = (tag) =>
+        `<w:p><w:r><w:t xml:space="preserve">${tag}</w:t></w:r></w:p>`;
+      const pageBreakParagraph =
+        '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="2" w:lineRule="exact"/></w:pPr>' +
+        '<w:r><w:br w:type="page"/></w:r></w:p>';
+      const tableXml = xml.slice(tableStart, tableEnd);
+      const yearlyTables =
+        loopParagraph('{#budget_years}') +
+        loopParagraph('{#by_page_break}') +
+        pageBreakParagraph +
+        loopParagraph('{/by_page_break}') +
+        tableXml +
+        loopParagraph('{/budget_years}');
+      xml = xml.slice(0, tableStart) + yearlyTables + xml.slice(tableEnd);
+      console.log('  ✓ 陸、經費需求表逐年獨立表格 + 年度間分頁注入');
+    } else {
+      console.warn('⚠️  找不到陸表 <w:tbl> 範圍，未建立逐年獨立表格');
+    }
   } else {
-    console.warn('⚠️  找不到「無經費需求」，跳過陸 loop 注入');
+    console.warn('⚠️  找不到「年度經費需求」，跳過陸表注入');
   }
 }
 

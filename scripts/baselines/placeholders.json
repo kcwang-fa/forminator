@@ -19,51 +19,73 @@
     "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
     "budget_business": "90,000",
     "budget_capital": "80,000",
-    "budget_no_items": false,
     "budget_personnel": "420,000",
-    "budget_rows": [
+    "budget_summary_years": [
       {
-        "budget_amount": "30,000",
-        "budget_item": "消耗品",
-        "budget_note": "試劑耗材"
-      },
-      {
-        "budget_amount": "20,000",
-        "budget_item": "一般事務費",
-        "budget_note": "文具影印"
-      },
-      {
-        "budget_amount": "40,000",
-        "budget_item": "差旅費",
-        "budget_note": "學術研討會"
-      },
-      {
-        "budget_amount": "80,000",
-        "budget_item": "軟硬體設備費",
-        "budget_note": "統計軟體授權"
-      },
-      {
-        "budget_amount": "240,000",
-        "budget_item": "計畫主持人費",
-        "budget_note": "2 萬×12 月"
-      },
-      {
-        "budget_amount": "180,000",
-        "budget_item": "協同主持人費",
-        "budget_note": "1.5 萬×12 月"
-      },
-      {
-        "budget_amount": "13,500",
-        "budget_item": "管理費",
-        "budget_note": "業務費小計 × 15%"
-      },
-      {
-        "budget_amount": "603,500",
-        "budget_item": "合計",
-        "budget_note": ""
+        "sy_apply": "500,000",
+        "sy_approved": "603,500",
+        "sy_business": "90,000",
+        "sy_capital": "80,000",
+        "sy_personnel": "420,000",
+        "sy_personnel_count": "4",
+        "sy_year": "114"
       }
     ],
     "budget_total": "603,500",
+    "budget_years": [
+      {
+        "budget_blanks": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {}
+        ],
+        "budget_rows": [
+          {
+            "budget_amount": "30,000",
+            "budget_item": "消耗品",
+            "budget_note": "試劑耗材"
+          },
+          {
+            "budget_amount": "20,000",
+            "budget_item": "一般事務費",
+            "budget_note": "文具影印"
+          },
+          {
+            "budget_amount": "40,000",
+            "budget_item": "差旅費",
+            "budget_note": "學術研討會"
+          },
+          {
+            "budget_amount": "80,000",
+            "budget_item": "軟硬體設備費",
+            "budget_note": "統計軟體授權"
+          },
+          {
+            "budget_amount": "240,000",
+            "budget_item": "計畫主持人費",
+            "budget_note": "2 萬×12 月"
+          },
+          {
+            "budget_amount": "180,000",
+            "budget_item": "協同主持人費",
+            "budget_note": "1.5 萬×12 月"
+          },
+          {
+            "budget_amount": "13,500",
+            "budget_item": "管理費",
+            "budget_note": "業務費小計 × 15%"
+          }
+        ],
+        "by_page_break": [],
+        "by_total": "603,500",
+        "by_year": "114"
+      }
+    ],
     "co_pi_lines": "協同主持人：李小華",
     "co_pi_name_1": "李小華",
     "co_pi_name_2": "",
@@ -550,7 +572,8 @@
     "role_pi": "□",
     "role_researcher": "□",
     "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1至2月\n資料申請與清理：第2至4月\n統計分析：第4至7月\n結果撰寫：第7至9月\n論文投稿：第9至10月\n結案報告：第11至12月\n成果發表：第12月",
-    "signing_date_roc": "114 年 5 月 15 日"
+    "signing_date_roc": "114 年 5 月 15 日",
+    "summary_of_results": "為一年期計畫，故不適用。"
   },
   "fixture": "exempt-funded",
   "perPerson": [
@@ -575,51 +598,73 @@
         "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
         "budget_business": "90,000",
         "budget_capital": "80,000",
-        "budget_no_items": false,
         "budget_personnel": "420,000",
-        "budget_rows": [
+        "budget_summary_years": [
           {
-            "budget_amount": "30,000",
-            "budget_item": "消耗品",
-            "budget_note": "試劑耗材"
-          },
-          {
-            "budget_amount": "20,000",
-            "budget_item": "一般事務費",
-            "budget_note": "文具影印"
-          },
-          {
-            "budget_amount": "40,000",
-            "budget_item": "差旅費",
-            "budget_note": "學術研討會"
-          },
-          {
-            "budget_amount": "80,000",
-            "budget_item": "軟硬體設備費",
-            "budget_note": "統計軟體授權"
-          },
-          {
-            "budget_amount": "240,000",
-            "budget_item": "計畫主持人費",
-            "budget_note": "2 萬×12 月"
-          },
-          {
-            "budget_amount": "180,000",
-            "budget_item": "協同主持人費",
-            "budget_note": "1.5 萬×12 月"
-          },
-          {
-            "budget_amount": "13,500",
-            "budget_item": "管理費",
-            "budget_note": "業務費小計 × 15%"
-          },
-          {
-            "budget_amount": "603,500",
-            "budget_item": "合計",
-            "budget_note": ""
+            "sy_apply": "500,000",
+            "sy_approved": "603,500",
+            "sy_business": "90,000",
+            "sy_capital": "80,000",
+            "sy_personnel": "420,000",
+            "sy_personnel_count": "4",
+            "sy_year": "114"
           }
         ],
         "budget_total": "603,500",
+        "budget_years": [
+          {
+            "budget_blanks": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ],
+            "budget_rows": [
+              {
+                "budget_amount": "30,000",
+                "budget_item": "消耗品",
+                "budget_note": "試劑耗材"
+              },
+              {
+                "budget_amount": "20,000",
+                "budget_item": "一般事務費",
+                "budget_note": "文具影印"
+              },
+              {
+                "budget_amount": "40,000",
+                "budget_item": "差旅費",
+                "budget_note": "學術研討會"
+              },
+              {
+                "budget_amount": "80,000",
+                "budget_item": "軟硬體設備費",
+                "budget_note": "統計軟體授權"
+              },
+              {
+                "budget_amount": "240,000",
+                "budget_item": "計畫主持人費",
+                "budget_note": "2 萬×12 月"
+              },
+              {
+                "budget_amount": "180,000",
+                "budget_item": "協同主持人費",
+                "budget_note": "1.5 萬×12 月"
+              },
+              {
+                "budget_amount": "13,500",
+                "budget_item": "管理費",
+                "budget_note": "業務費小計 × 15%"
+              }
+            ],
+            "by_page_break": [],
+            "by_total": "603,500",
+            "by_year": "114"
+          }
+        ],
         "co_pi_lines": "協同主持人：李小華",
         "co_pi_name_1": "李小華",
         "co_pi_name_2": "",
@@ -1112,7 +1157,8 @@
         "role_pi": "■",
         "role_researcher": "□",
         "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1至2月\n資料申請與清理：第2至4月\n統計分析：第4至7月\n結果撰寫：第7至9月\n論文投稿：第9至10月\n結案報告：第11至12月\n成果發表：第12月",
-        "signing_date_roc": "114 年 5 月 15 日"
+        "signing_date_roc": "114 年 5 月 15 日",
+        "summary_of_results": "為一年期計畫，故不適用。"
       },
       "name_zh": "王大明",
       "role": "pi"
@@ -1138,51 +1184,73 @@
         "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
         "budget_business": "90,000",
         "budget_capital": "80,000",
-        "budget_no_items": false,
         "budget_personnel": "420,000",
-        "budget_rows": [
+        "budget_summary_years": [
           {
-            "budget_amount": "30,000",
-            "budget_item": "消耗品",
-            "budget_note": "試劑耗材"
-          },
-          {
-            "budget_amount": "20,000",
-            "budget_item": "一般事務費",
-            "budget_note": "文具影印"
-          },
-          {
-            "budget_amount": "40,000",
-            "budget_item": "差旅費",
-            "budget_note": "學術研討會"
-          },
-          {
-            "budget_amount": "80,000",
-            "budget_item": "軟硬體設備費",
-            "budget_note": "統計軟體授權"
-          },
-          {
-            "budget_amount": "240,000",
-            "budget_item": "計畫主持人費",
-            "budget_note": "2 萬×12 月"
-          },
-          {
-            "budget_amount": "180,000",
-            "budget_item": "協同主持人費",
-            "budget_note": "1.5 萬×12 月"
-          },
-          {
-            "budget_amount": "13,500",
-            "budget_item": "管理費",
-            "budget_note": "業務費小計 × 15%"
-          },
-          {
-            "budget_amount": "603,500",
-            "budget_item": "合計",
-            "budget_note": ""
+            "sy_apply": "500,000",
+            "sy_approved": "603,500",
+            "sy_business": "90,000",
+            "sy_capital": "80,000",
+            "sy_personnel": "420,000",
+            "sy_personnel_count": "4",
+            "sy_year": "114"
           }
         ],
         "budget_total": "603,500",
+        "budget_years": [
+          {
+            "budget_blanks": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ],
+            "budget_rows": [
+              {
+                "budget_amount": "30,000",
+                "budget_item": "消耗品",
+                "budget_note": "試劑耗材"
+              },
+              {
+                "budget_amount": "20,000",
+                "budget_item": "一般事務費",
+                "budget_note": "文具影印"
+              },
+              {
+                "budget_amount": "40,000",
+                "budget_item": "差旅費",
+                "budget_note": "學術研討會"
+              },
+              {
+                "budget_amount": "80,000",
+                "budget_item": "軟硬體設備費",
+                "budget_note": "統計軟體授權"
+              },
+              {
+                "budget_amount": "240,000",
+                "budget_item": "計畫主持人費",
+                "budget_note": "2 萬×12 月"
+              },
+              {
+                "budget_amount": "180,000",
+                "budget_item": "協同主持人費",
+                "budget_note": "1.5 萬×12 月"
+              },
+              {
+                "budget_amount": "13,500",
+                "budget_item": "管理費",
+                "budget_note": "業務費小計 × 15%"
+              }
+            ],
+            "by_page_break": [],
+            "by_total": "603,500",
+            "by_year": "114"
+          }
+        ],
         "co_pi_lines": "協同主持人：李小華",
         "co_pi_name_1": "李小華",
         "co_pi_name_2": "",
@@ -1675,7 +1743,8 @@
         "role_pi": "□",
         "role_researcher": "□",
         "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1至2月\n資料申請與清理：第2至4月\n統計分析：第4至7月\n結果撰寫：第7至9月\n論文投稿：第9至10月\n結案報告：第11至12月\n成果發表：第12月",
-        "signing_date_roc": "114 年 5 月 15 日"
+        "signing_date_roc": "114 年 5 月 15 日",
+        "summary_of_results": "為一年期計畫，故不適用。"
       },
       "name_zh": "李小華",
       "role": "co_pi"
@@ -1701,51 +1770,73 @@
         "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
         "budget_business": "90,000",
         "budget_capital": "80,000",
-        "budget_no_items": false,
         "budget_personnel": "420,000",
-        "budget_rows": [
+        "budget_summary_years": [
           {
-            "budget_amount": "30,000",
-            "budget_item": "消耗品",
-            "budget_note": "試劑耗材"
-          },
-          {
-            "budget_amount": "20,000",
-            "budget_item": "一般事務費",
-            "budget_note": "文具影印"
-          },
-          {
-            "budget_amount": "40,000",
-            "budget_item": "差旅費",
-            "budget_note": "學術研討會"
-          },
-          {
-            "budget_amount": "80,000",
-            "budget_item": "軟硬體設備費",
-            "budget_note": "統計軟體授權"
-          },
-          {
-            "budget_amount": "240,000",
-            "budget_item": "計畫主持人費",
-            "budget_note": "2 萬×12 月"
-          },
-          {
-            "budget_amount": "180,000",
-            "budget_item": "協同主持人費",
-            "budget_note": "1.5 萬×12 月"
-          },
-          {
-            "budget_amount": "13,500",
-            "budget_item": "管理費",
-            "budget_note": "業務費小計 × 15%"
-          },
-          {
-            "budget_amount": "603,500",
-            "budget_item": "合計",
-            "budget_note": ""
+            "sy_apply": "500,000",
+            "sy_approved": "603,500",
+            "sy_business": "90,000",
+            "sy_capital": "80,000",
+            "sy_personnel": "420,000",
+            "sy_personnel_count": "4",
+            "sy_year": "114"
           }
         ],
         "budget_total": "603,500",
+        "budget_years": [
+          {
+            "budget_blanks": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ],
+            "budget_rows": [
+              {
+                "budget_amount": "30,000",
+                "budget_item": "消耗品",
+                "budget_note": "試劑耗材"
+              },
+              {
+                "budget_amount": "20,000",
+                "budget_item": "一般事務費",
+                "budget_note": "文具影印"
+              },
+              {
+                "budget_amount": "40,000",
+                "budget_item": "差旅費",
+                "budget_note": "學術研討會"
+              },
+              {
+                "budget_amount": "80,000",
+                "budget_item": "軟硬體設備費",
+                "budget_note": "統計軟體授權"
+              },
+              {
+                "budget_amount": "240,000",
+                "budget_item": "計畫主持人費",
+                "budget_note": "2 萬×12 月"
+              },
+              {
+                "budget_amount": "180,000",
+                "budget_item": "協同主持人費",
+                "budget_note": "1.5 萬×12 月"
+              },
+              {
+                "budget_amount": "13,500",
+                "budget_item": "管理費",
+                "budget_note": "業務費小計 × 15%"
+              }
+            ],
+            "by_page_break": [],
+            "by_total": "603,500",
+            "by_year": "114"
+          }
+        ],
         "co_pi_lines": "協同主持人：李小華",
         "co_pi_name_1": "李小華",
         "co_pi_name_2": "",
@@ -2238,7 +2329,8 @@
         "role_pi": "□",
         "role_researcher": "■",
         "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1至2月\n資料申請與清理：第2至4月\n統計分析：第4至7月\n結果撰寫：第7至9月\n論文投稿：第9至10月\n結案報告：第11至12月\n成果發表：第12月",
-        "signing_date_roc": "114 年 5 月 15 日"
+        "signing_date_roc": "114 年 5 月 15 日",
+        "summary_of_results": "為一年期計畫，故不適用。"
       },
       "name_zh": "陳研究",
       "role": "researcher"
@@ -2264,51 +2356,73 @@
         "background": "麴黴菌感染症於免疫功能低下病人具高度致死率，近年本土通報數逐年上升。",
         "budget_business": "90,000",
         "budget_capital": "80,000",
-        "budget_no_items": false,
         "budget_personnel": "420,000",
-        "budget_rows": [
+        "budget_summary_years": [
           {
-            "budget_amount": "30,000",
-            "budget_item": "消耗品",
-            "budget_note": "試劑耗材"
-          },
-          {
-            "budget_amount": "20,000",
-            "budget_item": "一般事務費",
-            "budget_note": "文具影印"
-          },
-          {
-            "budget_amount": "40,000",
-            "budget_item": "差旅費",
-            "budget_note": "學術研討會"
-          },
-          {
-            "budget_amount": "80,000",
-            "budget_item": "軟硬體設備費",
-            "budget_note": "統計軟體授權"
-          },
-          {
-            "budget_amount": "240,000",
-            "budget_item": "計畫主持人費",
-            "budget_note": "2 萬×12 月"
-          },
-          {
-            "budget_amount": "180,000",
-            "budget_item": "協同主持人費",
-            "budget_note": "1.5 萬×12 月"
-          },
-          {
-            "budget_amount": "13,500",
-            "budget_item": "管理費",
-            "budget_note": "業務費小計 × 15%"
-          },
-          {
-            "budget_amount": "603,500",
-            "budget_item": "合計",
-            "budget_note": ""
+            "sy_apply": "500,000",
+            "sy_approved": "603,500",
+            "sy_business": "90,000",
+            "sy_capital": "80,000",
+            "sy_personnel": "420,000",
+            "sy_personnel_count": "4",
+            "sy_year": "114"
           }
         ],
         "budget_total": "603,500",
+        "budget_years": [
+          {
+            "budget_blanks": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ],
+            "budget_rows": [
+              {
+                "budget_amount": "30,000",
+                "budget_item": "消耗品",
+                "budget_note": "試劑耗材"
+              },
+              {
+                "budget_amount": "20,000",
+                "budget_item": "一般事務費",
+                "budget_note": "文具影印"
+              },
+              {
+                "budget_amount": "40,000",
+                "budget_item": "差旅費",
+                "budget_note": "學術研討會"
+              },
+              {
+                "budget_amount": "80,000",
+                "budget_item": "軟硬體設備費",
+                "budget_note": "統計軟體授權"
+              },
+              {
+                "budget_amount": "240,000",
+                "budget_item": "計畫主持人費",
+                "budget_note": "2 萬×12 月"
+              },
+              {
+                "budget_amount": "180,000",
+                "budget_item": "協同主持人費",
+                "budget_note": "1.5 萬×12 月"
+              },
+              {
+                "budget_amount": "13,500",
+                "budget_item": "管理費",
+                "budget_note": "業務費小計 × 15%"
+              }
+            ],
+            "by_page_break": [],
+            "by_total": "603,500",
+            "by_year": "114"
+          }
+        ],
         "co_pi_lines": "協同主持人：李小華",
         "co_pi_name_1": "李小華",
         "co_pi_name_2": "",
@@ -2801,7 +2915,8 @@
         "role_pi": "□",
         "role_researcher": "□",
         "schedule_text": "執行期間：114 年 7 月 1 日 至 115 年 6 月 30 日\n文獻回顧：第1至2月\n資料申請與清理：第2至4月\n統計分析：第4至7月\n結果撰寫：第7至9月\n論文投稿：第9至10月\n結案報告：第11至12月\n成果發表：第12月",
-        "signing_date_roc": "114 年 5 月 15 日"
+        "signing_date_roc": "114 年 5 月 15 日",
+        "summary_of_results": "為一年期計畫，故不適用。"
       },
       "name_zh": "張聯絡",
       "role": "contact"

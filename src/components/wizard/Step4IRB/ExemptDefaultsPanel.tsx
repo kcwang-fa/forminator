@@ -32,11 +32,11 @@ export function ExemptDefaultsPanel() {
           </Space>
         ),
         children: (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <Alert
               type="info"
               showIcon
-              message="免審（次級資料研究）通常不招募、不互動，已預設為「否」；如有需要才改「是」並說明。"
+              title="免審（次級資料研究）通常不招募、不互動，已預設為「否」；如有需要才改「是」並說明。"
             />
 
             {/* 是否招募研究對象 */}

@@ -264,7 +264,7 @@ export function DatabaseRequestCard({ index, canRemove, onRemove }: DatabaseRequ
                     const values = normalizeDoc8FieldPurposes(fieldNames, field.value);
 
                     return (
-                      <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                      <Space orientation="vertical" style={{ width: '100%' }} size={12}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                           <Text type="secondary">
                             僅在需要修正文案時展開；可先用 AI 生成後再微調。

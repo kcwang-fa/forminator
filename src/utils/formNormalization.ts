@@ -1,6 +1,8 @@
 import { defaultFormData, emptyDatabaseRequest, emptyReviewScreening } from '../data/defaults';
-import type { DatabaseFieldPurpose, DatabaseRequest, ExemptCategory, FormData, OutcomeTypeDetail, ReviewScreening } from '../types/form';
+import type { BudgetItem, DatabaseFieldPurpose, DatabaseRequest, ExemptCategory, FormData, GanttYear, OutcomeTypeDetail, ReviewScreening } from '../types/form';
 import { calcProjectYears } from './date';
+import { getYearAmounts, sumYearAmounts } from './budgetCalc';
+import { monthsPerYear } from './gantt';
 
 const LEGACY_PRIVACY_DEFAULTS = {
   privacy_during: '本研究使用之資料庫已去除個人識別資訊，研究過程中所有資料皆儲存於符合 ISMS 資訊安全管理規範之加密環境中，僅限經授權之研究人員得以接觸分析資料。',
@@ -137,6 +139,18 @@ function normalizePrivacyText(
   return value.trim() === legacyDefault ? '' : value;
 }
 
+// 經費項目分年金額相容：
+//   舊草稿只有 amount（無 year_amounts）→ year_amounts = [amount]；
+//   年數變動時補/裁 year_amounts 長度；amount 一律重算為「全程總額」(= year_amounts 加總)。
+// years 來自正規化後的 project_years，確保 Step5 顯示的欄數與資料長度一致。
+function normalizeBudgetItems(items: BudgetItem[] | undefined, years: number): BudgetItem[] {
+  const list = Array.isArray(items) && items.length > 0 ? items : defaultFormData.budget_items;
+  return list.map(item => {
+    const year_amounts = getYearAmounts(item, years);
+    return { ...item, year_amounts, amount: sumYearAmounts(year_amounts) };
+  });
+}
+
 // exempt_category 從舊版「單一字串」相容到新版「可複選陣列」：
 //   陣列 → 原樣；空字串（未選）→ []；其他字串 → 包成單元素陣列；缺 → 用預設值。
 function normalizeExemptCategory(value: ExemptCategory[] | ExemptCategory | '' | undefined): ExemptCategory[] {
@@ -144,6 +158,51 @@ function normalizeExemptCategory(value: ExemptCategory[] | ExemptCategory | '' |
   if (value === '') return [];
   if (typeof value === 'string') return [value];
   return [...defaultFormData.exempt_category];
+}
+
+// 甘特圖從舊版「全程扁平一大張」相容到新版「每年一組工作項目」：
+//   新格式（每個元素都有 rows）→ 原樣清洗（task_name/months 補預設）；
+//   舊格式（扁平 GanttItem[]，每列 months 為全程長度）→ 按 12 個月切年，
+//     每年「複製一份」工作項目、取該年 12 格切片，讓舊草稿載入後視覺與從前一致，
+//     之後使用者才能各年自行調整（對齊「每年都複製一份」的決策，不讓舊資料消失）。
+type LegacyGanttRow = { task_name?: string; months?: boolean[] };
+
+function cleanRow(row: LegacyGanttRow): { task_name: string; months: boolean[] } {
+  return {
+    task_name: row.task_name || '',
+    months: Array.isArray(row.months) ? row.months.map(Boolean) : [],
+  };
+}
+
+function normalizeGanttChart(value: unknown): GanttYear[] {
+  if (!Array.isArray(value) || value.length === 0) return [];
+
+  // 新格式：每個元素都是 { rows: [...] }
+  const isNewFormat = value.every(
+    entry => entry && typeof entry === 'object' && 'rows' in entry,
+  );
+  if (isNewFormat) {
+    return (value as GanttYear[]).map(year => ({
+      rows: Array.isArray(year.rows) ? year.rows.map(cleanRow) : [],
+    }));
+  }
+
+  // 舊格式：扁平 GanttItem[]（每列 months = 全程長度）→ 按 12 切年、每年複製一份
+  const legacyRows = (value as LegacyGanttRow[]).filter(
+    row => row && typeof row === 'object' && 'months' in row,
+  );
+  if (legacyRows.length === 0) return [];
+
+  const totalMonths = legacyRows[0]?.months?.length || 0;
+  return monthsPerYear(totalMonths).map((monthCount, yearIndex) => {
+    const offset = yearIndex * 12;
+    return {
+      rows: legacyRows.map(row => ({
+        task_name: row.task_name || '',
+        months: Array.from({ length: monthCount }, (_, i) => Boolean(row.months?.[offset + i])),
+      })),
+    };
+  });
 }
 
 export function normalizeFormData(data: MaybeLegacyFormData | null | undefined): FormData {
@@ -157,6 +216,7 @@ export function normalizeFormData(data: MaybeLegacyFormData | null | undefined):
   const inferredProjectYears = projectType === 'new_1yr'
     ? '1'
     : next.project_years || String(calcProjectYears(fullExecutionStart, fullExecutionEnd) || '');
+  const yearsCount = Math.max(1, Number(inferredProjectYears) || 1);
 
   return {
     ...defaultFormData,
@@ -166,9 +226,11 @@ export function normalizeFormData(data: MaybeLegacyFormData | null | undefined):
     full_execution_start: fullExecutionStart,
     full_execution_end: fullExecutionEnd,
     outcome_type_detail: normalizeOutcomeTypeDetails(next.outcome_type_detail),
+    gantt_chart: normalizeGanttChart(next.gantt_chart),
     review_type_source: next.review_type_source || defaultFormData.review_type_source,
     review_screening: normalizeReviewScreening(next.review_screening),
     exempt_category: normalizeExemptCategory(next.exempt_category),
+    budget_items: normalizeBudgetItems(next.budget_items, yearsCount),
     privacy_during: normalizePrivacyText(next.privacy_during, LEGACY_PRIVACY_DEFAULTS.privacy_during),
     privacy_after: normalizePrivacyText(next.privacy_after, LEGACY_PRIVACY_DEFAULTS.privacy_after),
     privacy_withdrawal: normalizePrivacyText(next.privacy_withdrawal, LEGACY_PRIVACY_DEFAULTS.privacy_withdrawal),

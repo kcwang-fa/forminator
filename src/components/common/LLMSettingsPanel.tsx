@@ -45,7 +45,7 @@ export default function LLMSettingsPanel({ settings, onSave }: Props) {
         }
       >
         <Alert
-          message="API Key 僅儲存在您的瀏覽器中，不會上傳至伺服器儲存。"
+          title="API Key 僅儲存在您的瀏覽器中，不會上傳至伺服器儲存。"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

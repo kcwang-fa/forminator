@@ -49,41 +49,40 @@ export function prepareScheduleData(data: FormData) {
     ? `全程計畫期間：${formatPeriod(fullExecutionStart, fullExecutionEnd)}\n本年度執行期間：${formatPeriod(data.execution_start, data.execution_end)}`
     : `執行期間：${formatPeriod(data.execution_start, data.execution_end)}`;
 
-  // 甘特圖分年：gantt_chart 是「全程扁平 N 個月」陣列，這裡切成每年 12 格輸出。
-  // DOC-2 七、預定進度的 12 月甘特表會依年數重複（巢狀 loop {#gantt_years}{#gantt_rows}）。
-  const totalMonths = data.gantt_chart[0]?.months.length || 0;
-  const years = Math.max(1, Math.ceil(totalMonths / 12));
+  // 甘特圖分年：gantt_chart 已是「每年一組工作項目」的巢狀結構，這裡直接逐年輸出
+  // （不再需要切片）。DOC-2 七、預定進度的 12 月甘特表依年數重複（巢狀 loop {#gantt_years}{#gantt_rows}）。
   // 多年期才標年度；一年期 year_label 留空，讓 DOC-2 甘特表呈現與單年期相同（保護 snapshot）。
   const baseRocYear = Number(getRocDateParts(fullExecutionStart).y);
-  const gantt_years = Array.from({ length: years }, (_, yearIndex) => {
-    const monthOffset = yearIndex * 12;
-    const yearLabel = isMultiYear
-      ? Number.isFinite(baseRocYear)
-        ? `${yearOrdinal(yearIndex)}（${baseRocYear + yearIndex} 年度）`
-        : yearOrdinal(yearIndex)
-      : '';
-    const gantt_rows = data.gantt_chart.map(g => {
+  const yearLabelFor = (yearIndex: number): string => {
+    if (!isMultiYear) return '';
+    return Number.isFinite(baseRocYear)
+      ? `${yearOrdinal(yearIndex)}（${baseRocYear + yearIndex} 年度）`
+      : yearOrdinal(yearIndex);
+  };
+  const gantt_years = data.gantt_chart.map((ganttYear, yearIndex) => {
+    const gantt_rows = ganttYear.rows.map(g => {
       const row: Record<string, string> = { task_name: g.task_name };
-      // 取該年的 12 個月切片；超出全程月數的格子留空白
-      for (let i = 0; i < 12; i++) row[`m${i + 1}`] = g.months[monthOffset + i] ? '■' : '';
+      // 每年固定輸出 12 欄（DOC-2 甘特表 12 個月）；超出該年實際月數的格子留空白
+      for (let i = 0; i < 12; i++) row[`m${i + 1}`] = g.months[i] ? '■' : '';
       return row;
     });
-    return { year_label: yearLabel, gantt_rows };
+    return { year_label: yearLabelFor(yearIndex), gantt_rows };
   });
 
+  // DOC-4 純文字版時程：逐年逐列展開；多年期在每年前加年度標題。
+  const scheduleLines = data.gantt_chart.length > 0
+    ? data.gantt_chart.map((ganttYear, yearIndex) => {
+        const rowLines = ganttYear.rows
+          .map(g => `${g.task_name}：${formatMonthRanges(g.months)}`)
+          .join('\n');
+        const label = yearLabelFor(yearIndex);
+        return label ? `${label}\n${rowLines}` : rowLines;
+      }).join('\n')
+    : '（請參閱署內研究計畫書）';
+
   return {
-    schedule_text: `${periodText}\n${
-      data.gantt_chart.length > 0
-        ? data.gantt_chart.map(g =>
-            `${g.task_name}：${formatMonthRanges(g.months)}`
-          ).join('\n')
-        : '（請參閱署內研究計畫書）'
-    }`,
-    gantt_chart_text: data.gantt_chart.length > 0
-      ? data.gantt_chart.map(g =>
-          `${g.task_name}：${formatMonthRanges(g.months)}`
-        ).join('\n')
-      : '（請參閱署內研究計畫書）',
+    schedule_text: `${periodText}\n${scheduleLines}`,
+    gantt_chart_text: scheduleLines,
     gantt_years,
     personnel_equipment_text: data.personnel.map(p =>
       `${ROLE_MAP[p.role] || p.role}：${p.name_zh}（${p.unit} ${p.title}）— ${p.work_description || '研究資料分析與報告撰寫'}`

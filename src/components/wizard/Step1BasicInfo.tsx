@@ -64,16 +64,16 @@ export default function Step1BasicInfo() {
       return;
     }
 
-    if (!fullExecutionStart && executionStart) {
-      setValue('full_execution_start', executionStart);
-    }
-    if (!fullExecutionEnd && executionEnd) {
-      setValue('full_execution_end', executionEnd);
-    }
-
-    const years = calcProjectYears(fullExecutionStart || executionStart, fullExecutionEnd || executionEnd);
-    if (years > 0 && projectYears !== String(years)) {
-      setValue('project_years', String(years));
+    // 多年期：用「全程起訖日」推算年數並同步到「全程年數」欄位。
+    // ⚠️ 只在全程起訖「都」已填時才推算——否則會用本年度日期回推成 1 年，
+    //    把使用者手填的全程年數蓋掉（多年期經費/甘特依賴 project_years 才會分年）。
+    // 不再把本年度日期複製到全程：所有消費端都已有 `full || execution` fallback
+    //（docgen / schedule / database / useAutoGantt / Step3 / Step5）。
+    if (fullExecutionStart && fullExecutionEnd) {
+      const years = calcProjectYears(fullExecutionStart, fullExecutionEnd);
+      if (years > 0 && projectYears !== String(years)) {
+        setValue('project_years', String(years));
+      }
     }
   }, [
     executionEnd,
@@ -117,7 +117,7 @@ export default function Step1BasicInfo() {
               value={field.value}
               onChange={(vals) => field.onChange(vals)}
             >
-              <Space direction="vertical" size={4}>
+              <Space orientation="vertical" size={4}>
                 {OUTPUT_CATEGORIES.map((key) => (
                   <Checkbox key={key} value={key}>
                     {OUTPUT_CATEGORY_CONFIGS[key].label}
@@ -132,7 +132,7 @@ export default function Step1BasicInfo() {
               <Alert
                 type="warning"
                 showIcon
-                message="請至少選擇一項成果類別，才能決定後續步驟與文件。"
+                title="請至少選擇一項成果類別，才能決定後續步驟與文件。"
                 style={{ marginTop: 8 }}
               />
             )}

@@ -88,7 +88,7 @@ export function ExemptRewritePanel() {
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              message="潤飾上方已填的免審理由 / 研究方法 / 隱私三段"
+              title="潤飾上方已填的免審理由 / 研究方法 / 隱私三段"
               description="AI 只改語氣與通順度，不應改變審查類型、資料來源、保存期限或去識別化事實。潤飾結果會先以預覽呈現，確認後再套用。"
             />
 
@@ -110,7 +110,7 @@ export function ExemptRewritePanel() {
                     type="warning"
                     showIcon
                     style={{ marginBottom: 12 }}
-                    message="套用前請確認"
+                    title="套用前請確認"
                     description={(
                       <ul style={{ margin: 0, paddingLeft: 20 }}>
                         {rewriteCautions.map((warning) => (
@@ -120,7 +120,7 @@ export function ExemptRewritePanel() {
                     )}
                   />
                 )}
-                <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                   <div>
                     <Text strong>免審理由</Text>
                     <Input.TextArea value={rewritePreview.exempt_reason} rows={3} readOnly />
