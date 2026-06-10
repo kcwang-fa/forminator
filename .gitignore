@@ -26,6 +26,7 @@ dist-ssr
 *.sw?
 CLAUDE.md
 AGENTS.md
+.claude/
 notes/claude-handoff.md
 notes/learning-guide.md
 docs
