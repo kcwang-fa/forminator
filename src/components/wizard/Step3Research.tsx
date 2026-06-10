@@ -1,6 +1,6 @@
 // ===== 第 3 頁：研究內容 =====
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Form, Input, Button, Spin, Tag, message, Table, Space, Popconfirm, Tabs, Modal } from 'antd';
 import { RobotOutlined, PlusOutlined, DeleteOutlined, ProfileOutlined } from '@ant-design/icons';
 import { Controller } from 'react-hook-form';
@@ -239,83 +239,135 @@ export default function Step3Research() {
     </div>
   );
 
-  return (
-    <div>
-      <h3>研究內容</h3>
+  // ===== 把畫面拆成幾個區塊變數，多年期 / 一年期「共用同一份 JSX」=====
+  // 為什麼這樣寫：多年期內容很長（多了執行成果概要、又有分年甘特），單頁往下捲很久，
+  // 所以多年期改用 Tabs 把內容「按區塊」分成三頁。但欄位本身一年期 / 多年期是一樣的，
+  // 因此把每個區塊各寫成一個變數、只寫一次，再依 isMultiYear 決定「攤平堆疊」或「塞進 Tabs」，
+  // 避免維護兩套重複 JSX。資料流完全不變（同一個 RHF 表單、同樣的 Controller、同樣的 setValue）。
 
-      <Controller
-        name="purpose"
-        control={control}
-        rules={{ required: '請輸入研究目的' }}
-        render={({ field, fieldState }) => (
-          <Form.Item label={<span>研究目的{skeletonButton('purpose')}</span>} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
-            <Input.TextArea {...field} rows={4} placeholder="本研究旨在..." />
-          </Form.Item>
-        )}
-      />
+  // --- 研究論述各欄（多年期會集中放在「研究論述」分頁）---
 
-      <Controller
-        name="background"
-        control={control}
-        rules={{ required: '請輸入背景分析' }}
-        render={({ field, fieldState }) => (
-          <Form.Item label="背景分析" required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
-            <Input.TextArea {...field} rows={6} placeholder="根據文獻回顧..." />
-          </Form.Item>
-        )}
-      />
+  // 多年期子分頁的 tab 標題（卡片）已經是欄位名了，欄位的 Form.Item label「文字」就省略，
+  // 避免 tab 標題與 label 上下出現兩次同名；只保留骨架按鈕（extra）。必填星號（required prop）
+  // 與 tooltip 仍由 Form.Item 自己的 prop 提供——即使 label 文字是空的也照常顯示。
+  // 一年期是攤平堆疊、沒有 tab 標題，label 必須照常顯示「欄位名（＋按鈕）」否則欄位就沒名字了。
+  const narrativeLabel = (text: string, extra?: ReactNode): ReactNode =>
+    isMultiYear ? (extra ?? <span />) : <span>{text}{extra}</span>;
 
-      {/* 三、多年期計畫之執行成果概要：只在多年期計畫顯示（一年期由 docgen 自動填「不適用」）。
-          新案概述主持人過去相關成果；延續案敘明初步成果並逐年檢視分年目標達成情形。 */}
-      {isMultiYear && (
-        <Controller
-          name="summary_of_results"
-          control={control}
-          render={({ field }) => (
-            <Form.Item
-              label="多年期計畫之執行成果概要"
-              tooltip="新案：概述主持人過去曾執行之相關計畫成果及實際應用；延續案：敘明初步成果並逐年檢視分年目標達成情形（頁數上限 5 頁）"
-            >
-              <Input.TextArea {...field} rows={5} placeholder="新案可概述主持人過去相關計畫成果；延續案敘明初步成果與分年目標達成情形..." />
-            </Form.Item>
-          )}
-        />
+  const purposeField = (
+    <Controller
+      name="purpose"
+      control={control}
+      rules={{ required: '請輸入研究主旨' }}
+      render={({ field, fieldState }) => (
+        <Form.Item label={narrativeLabel('研究主旨', skeletonButton('purpose'))} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+          {/* autoSize：minRows 是「框最矮也有這麼高」的下限，maxRows 是捲動前的上限。
+              打字空間夠大，內容多時自動長高，超過 maxRows 才出現捲軸（避免整頁被單一框撐太長）。*/}
+          <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 14 }} placeholder="本研究旨在..." />
+        </Form.Item>
       )}
+    />
+  );
 
-      <Controller
-        name="methodology"
-        control={control}
-        rules={{ required: '請輸入研究方法' }}
-        render={({ field, fieldState }) => (
-          <Form.Item label={<span>研究方法{skeletonButton('methodology')}</span>} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
-            <Input.TextArea {...field} rows={6} placeholder="本研究採用回溯性研究設計..." />
-          </Form.Item>
-        )}
-      />
+  // 分年計劃目的：從研究主旨拆出來的獨立欄位，只在多年期的「研究論述」子分頁出現。
+  // 骨架按鈕產生【分年目的】逐年填空（研究主旨那顆現在只給【全程總目標】）。
+  const yearlyObjectivesField = (
+    <Controller
+      name="yearly_objectives"
+      control={control}
+      render={({ field }) => (
+        <Form.Item
+          label={narrativeLabel('分年計劃目的', skeletonButton('yearly_objectives'))}
+          tooltip="多年期計畫請逐年敘明各年度的分年目的；可按「帶入分年骨架」產生逐年填空。"
+        >
+          <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 16 }} placeholder="逐年敘明各年度目的，例：第1年完成資料清理與描述性分析..." />
+        </Form.Item>
+      )}
+    />
+  );
 
-      <Controller
-        name="expected_outcome"
-        control={control}
-        rules={{ required: '請輸入預期成果' }}
-        render={({ field, fieldState }) => (
-          <Form.Item
-            label={(
-              <span>
-                預期成果
-                <br />
-                及主要效益
-                {skeletonButton('expected_outcome')}
-              </span>
-            )}
-            required
-            validateStatus={fieldState.error ? 'error' : ''}
-            help={fieldState.error?.message}
-          >
-            <Input.TextArea {...field} rows={3} placeholder="本研究預期..." />
-          </Form.Item>
-        )}
-      />
+  const backgroundField = (
+    <Controller
+      name="background"
+      control={control}
+      rules={{ required: '請輸入背景分析' }}
+      render={({ field, fieldState }) => (
+        <Form.Item label={narrativeLabel('背景分析')} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+          {/* 背景分析通常較長，minRows 給到 8（比一般欄位高一點）*/}
+          <Input.TextArea {...field} autoSize={{ minRows: 8, maxRows: 18 }} placeholder="根據文獻回顧..." />
+        </Form.Item>
+      )}
+    />
+  );
 
+  // 三、多年期計畫之執行成果概要：只有多年期才有這個變數（一年期由 docgen 自動填「不適用」）。
+  // 新案概述主持人過去相關成果；延續案敘明初步成果並逐年檢視分年目標達成情形。
+  // 因為只在多年期的「研究論述」分頁引用，一年期分支不會用到它，所以不需要再包 isMultiYear 條件。
+  const summaryField = (
+    <Controller
+      name="summary_of_results"
+      control={control}
+      render={({ field }) => (
+        <Form.Item
+          label={narrativeLabel('多年期計畫之執行成果概要')}
+          tooltip="新案：概述主持人過去曾執行之相關計畫成果及實際應用；延續案：敘明初步成果並逐年檢視分年目標達成情形（頁數上限 5 頁）"
+        >
+          <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 16 }} placeholder="新案可概述主持人過去相關計畫成果；延續案敘明初步成果與分年目標達成情形..." />
+        </Form.Item>
+      )}
+    />
+  );
+
+  const methodologyField = (
+    <Controller
+      name="methodology"
+      control={control}
+      rules={{ required: '請輸入實施方法及進行步驟' }}
+      render={({ field, fieldState }) => (
+        <Form.Item label={narrativeLabel('實施方法及進行步驟', skeletonButton('methodology'))} required validateStatus={fieldState.error ? 'error' : ''} help={fieldState.error?.message}>
+          {/* 研究方法通常較長，minRows 同背景給到 8 */}
+          <Input.TextArea {...field} autoSize={{ minRows: 8, maxRows: 18 }} placeholder="本研究採用回溯性研究設計..." />
+        </Form.Item>
+      )}
+    />
+  );
+
+  const expectedOutcomeField = (
+    <Controller
+      name="expected_outcome"
+      control={control}
+      rules={{ required: '請輸入成果預估' }}
+      render={({ field, fieldState }) => (
+        <Form.Item
+          label={narrativeLabel('成果預估', skeletonButton('expected_outcome'))}
+          required
+          validateStatus={fieldState.error ? 'error' : ''}
+          help={fieldState.error?.message}
+        >
+          {/* 原本只有 rows={3} 特別矮，改 autoSize 後下限拉到 6，跟其他欄位一致 */}
+          <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 14 }} placeholder="本研究預期..." />
+        </Form.Item>
+      )}
+    />
+  );
+
+  const referencesField = (
+    <Controller
+      name="references"
+      control={control}
+      render={({ field }) => (
+        <Form.Item label={narrativeLabel('重要參考文獻')}>
+          <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 16 }} placeholder="請列出主要參考文獻..." />
+        </Form.Item>
+      )}
+    />
+  );
+
+  // --- 摘要與關鍵詞區塊（AI 生成按鈕 + 中/英摘要 + 中/英關鍵詞）---
+  // 提示文案改成「直接點名四個欄位」，不再用「以上」——多年期分頁後這四欄在另一個分頁，
+  // 講「以上」會指錯位置，點名欄位名稱在兩種版面都正確。
+  const abstractSection = (
+    <>
       {/* LLM 自動生成按鈕 */}
       <div style={{ background: '#f6f8fa', borderRadius: 8, padding: 16, marginBottom: 24 }}>
         <Button
@@ -330,7 +382,7 @@ export default function Step3Research() {
         </Button>
         {!canGenerate && (
           <span style={{ marginLeft: 12, color: '#999', fontSize: 13 }}>
-            請先填寫以上 4 個核心欄位
+            請先填寫研究目的、背景分析、研究方法、預期成果
           </span>
         )}
         <p style={{ color: '#666', fontSize: 12, marginTop: 8, marginBottom: 0 }}>
@@ -344,7 +396,7 @@ export default function Step3Research() {
           control={control}
           render={({ field }) => (
             <Form.Item label="中文摘要" tooltip="🤖 LLM 自動生成，可手動編輯">
-              <Input.TextArea {...field} rows={6} placeholder="點擊上方按鈕自動生成，或手動填寫..." />
+              <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 14 }} placeholder="點擊上方按鈕自動生成，或手動填寫..." />
             </Form.Item>
           )}
         />
@@ -354,7 +406,7 @@ export default function Step3Research() {
           control={control}
           render={({ field }) => (
             <Form.Item label="英文摘要" tooltip="🤖 LLM 自動生成，可手動編輯">
-              <Input.TextArea {...field} rows={6} placeholder="Auto-generated or fill manually..." />
+              <Input.TextArea {...field} autoSize={{ minRows: 6, maxRows: 14 }} placeholder="Auto-generated or fill manually..." />
             </Form.Item>
           )}
         />
@@ -380,42 +432,91 @@ export default function Step3Research() {
           />
         </div>
       </Spin>
+    </>
+  );
 
-      <Controller
-        name="references"
-        control={control}
-        render={({ field }) => (
-          <Form.Item label="重要參考文獻">
-            <Input.TextArea {...field} rows={5} placeholder="請列出主要參考文獻..." />
-          </Form.Item>
-        )}
-      />
+  // --- 預定進度表區塊（分年甘特圖，內部本來就已自帶分年 tabs）---
+  const scheduleSection = (
+    <Form.Item label="預定進度表">
+      {ganttChart.length > 0 ? (
+        <div>
+          {isMultiYear ? (
+            <Tabs
+              type="card"
+              items={ganttChart.map((year: GanttYear, yearIndex: number) => ({
+                key: String(yearIndex),
+                label: yearTabLabel(yearIndex),
+                children: renderYearPanel(yearIndex, year),
+              }))}
+            />
+          ) : (
+            renderYearPanel(0, ganttChart[0])
+          )}
+          <p style={{ color: '#999', fontSize: 12, marginTop: 8 }}>
+            工作項目可自行輸入、新增或刪除；點擊格子可切換該月啟用/停用。月份欄由執行起迄日自動生成。
+            {isMultiYear && '多年期計畫請逐年填寫，各年的工作項目可以不同。'}
+          </p>
+        </div>
+      ) : (
+        <Tag color="orange">請先在第 1 頁填寫執行起迄日，系統將自動生成預定進度表</Tag>
+      )}
+    </Form.Item>
+  );
 
-      {/* 甘特圖（分年）：多年期用頁籤一年一年填，一年期直接顯示單一表格 */}
-      <Form.Item label="預定進度表">
-        {ganttChart.length > 0 ? (
-          <div>
-            {isMultiYear ? (
-              <Tabs
-                type="card"
-                items={ganttChart.map((year: GanttYear, yearIndex: number) => ({
-                  key: String(yearIndex),
-                  label: yearTabLabel(yearIndex),
-                  children: renderYearPanel(yearIndex, year),
-                }))}
-              />
-            ) : (
-              renderYearPanel(0, ganttChart[0])
-            )}
-            <p style={{ color: '#999', fontSize: 12, marginTop: 8 }}>
-              工作項目可自行輸入、新增或刪除；點擊格子可切換該月啟用/停用。月份欄由執行起迄日自動生成。
-              {isMultiYear && '多年期計畫請逐年填寫，各年的工作項目可以不同。'}
-            </p>
-          </div>
-        ) : (
-          <Tag color="orange">請先在第 1 頁填寫執行起迄日，系統將自動生成預定進度表</Tag>
-        )}
-      </Form.Item>
+  return (
+    <div>
+      <h3>研究內容</h3>
+
+      {isMultiYear ? (
+        // 多年期：內容長，用 Tabs 按區塊分三頁。
+        // ⚠️ 四個必填欄（purpose / background / methodology / expected_outcome）全部放在第一頁
+        //   「研究論述」，這樣驗證錯誤的紅字一定看得到，不會被藏在沒展開的分頁裡。
+        <Tabs
+          items={[
+            {
+              key: 'narrative',
+              label: '研究論述',
+              // 研究論述再用「水平頂部子分頁」一節一頁（順序貼齊 DOC-2 肆、計畫內容）。
+              // 改水平頂部（非直式）讓子頁內容用滿整個寬度，填寫框更寬；用 type="card"（卡片式）
+              // 跟外層的 line tab 做層級區隔，避免兩排水平 tab 看起來像同一排而混淆。
+              // ⚠️ 不設 destroyInactiveTabPane：保留各子頁 DOM，切頁不丟資料、必填錯誤也不會被藏掉。
+              children: (
+                // 用 Form layout="vertical"（component={false} 只提供版面 context、不接管資料，
+                // 資料仍由 react-hook-form 管）把 label 移到輸入框「上方」——預設 horizontal label 會
+                // 擺左邊吃掉約 200px 寬度、且 label 越長框越窄；改 vertical 後輸入框用滿整個寬度。
+                // 只包多年期子分頁，一年期攤平版面不受影響。
+                <Form layout="vertical" component={false}>
+                  <Tabs
+                    type="card"
+                    items={[
+                      { key: 'purpose', label: '研究主旨', children: purposeField },
+                      { key: 'yearly_objectives', label: '分年計劃目的', children: yearlyObjectivesField },
+                      { key: 'background', label: '背景分析', children: backgroundField },
+                      { key: 'summary', label: '執行成果概要', children: summaryField },
+                      { key: 'methodology', label: '實施方法及進行步驟', children: methodologyField },
+                      { key: 'expected_outcome', label: '成果預估', children: expectedOutcomeField },
+                      { key: 'references', label: '重要參考文獻', children: referencesField },
+                    ]}
+                  />
+                </Form>
+              ),
+            },
+            { key: 'abstract', label: '摘要與關鍵詞', children: abstractSection },
+            { key: 'schedule', label: '預定進度表', children: scheduleSection },
+          ]}
+        />
+      ) : (
+        // 一年期：內容較短，維持原本的單頁堆疊（順序與改版前完全相同，無 summaryField）。
+        <>
+          {purposeField}
+          {backgroundField}
+          {methodologyField}
+          {expectedOutcomeField}
+          {abstractSection}
+          {referencesField}
+          {scheduleSection}
+        </>
+      )}
     </div>
   );
 }

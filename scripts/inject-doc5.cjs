@@ -13,6 +13,13 @@ const PizZip = require('pizzip');
 const SRC = path.join(__dirname, '../../source-templates/IRB-012 免審申請表.docx');
 const OUT = path.join(__dirname, '../public/templates/DOC-5.docx');
 
+// 注入「新建 run」用的字型設定：中文標楷體（DFKai-SB）、英數 Times New Roman。
+// 為什麼要這個？insertInNextCell / injectSectionCell / inline 姓名注入都是新建一個
+// 不帶 rPr 的 <w:r>，Word 找不到字型就 fallback 到範本 docDefaults（新細明體 PMingLiU），
+// 注入的中文就會跟周圍標楷體不一致（變細細的新細明體）。明示 rPr 即可釘住標楷體。
+// w:hint="eastAsia" 告訴 Word「這段照 eastAsia 字型走」；英數沿用 ascii/hAnsi 的 Times New Roman。
+const KAI_RPR = '<w:rPr><w:rFonts w:ascii="Times New Roman" w:eastAsia="DFKai-SB" w:hAnsi="Times New Roman" w:cs="Times New Roman" w:hint="eastAsia"/></w:rPr>';
+
 function readDocXml(p) {
   const zip = new PizZip(fs.readFileSync(p));
   return { zip, xml: zip.file('word/document.xml').asText() };
@@ -33,8 +40,65 @@ function insertInNextCell(xml, labelText, placeholder) {
   const pattern = new RegExp(
     `(${esc}<\\/w:t><\\/w:r><\\/w:p><\\/w:tc><w:tc><w:tcPr>[\\s\\S]*?<\\/w:tcPr><w:p[^>]*><w:pPr>[\\s\\S]*?<\\/w:pPr>)(<\\/w:p>)`
   );
-  const r = xml.replace(pattern, `$1<w:r><w:t>${placeholder}</w:t></w:r>$2`);
+  const r = xml.replace(pattern, `$1<w:r>${KAI_RPR}<w:t>${placeholder}</w:t></w:r>$2`);
   return r !== xml ? r : replaceText(xml, labelText, labelText + placeholder);
+}
+// 在指定「區段」（如「計畫主持人」「聯絡人」）之後，往後找第一個 label 標籤，
+// 把它後面那一格（值欄）填入 placeholder。
+// 為什麼要先錨定區段？因為「職稱」「聯絡電話」「電子信箱」在同一張表會出現多次
+// （主持人/協同主持人/聯絡人各一份），純用 insertInNextCell 只會一直打到第一個（主持人）。
+// labelEnd = label「最後一個 text run」的文字：多數 label 是單一 run，直接傳完整字串即可；
+// 但「電子信箱」在主持人區被拆成「電子」+「信箱」兩個 run，那一格要傳 '信箱'（用結尾 run 當錨點）。
+function injectSectionCell(xml, sectionText, labelEnd, placeholder) {
+  const escS = sectionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escL = labelEnd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(
+    `(${escS}[\\s\\S]*?${escL}<\\/w:t><\\/w:r><\\/w:p><\\/w:tc><w:tc><w:tcPr>[\\s\\S]*?<\\/w:tcPr><w:p[^>]*>)([\\s\\S]*?)(<\\/w:p>)`
+  );
+  return xml.replace(pattern, `$1<w:r>${KAI_RPR}<w:t>${placeholder}</w:t></w:r>$3`);
+}
+
+// 把「某個 placeholder 所在段落」的對齊從兩端對齊（both）改成靠左（left）。
+// why：IRB-012 範本的值欄段落 pPr 預設是 <w:jc w:val="both"/>，長段落本文（如研究計畫目的）
+//      兩端對齊會把每行字距硬拉開、最後一行尤其鬆散難看。
+// how：placeholder 是注入在段落「結尾」，而 jc 在段落「開頭」的 pPr 裡，
+//      所以「placeholder 往前找最近的一個 both」必定就是同段落的那個 jc，改它最精準、
+//      不會誤傷表格裡其他段落的 both。傳入前該 placeholder 必須已注入到 xml。
+function alignPlaceholderLeft(xml, placeholder) {
+  const idx = xml.indexOf(placeholder);
+  if (idx === -1) { console.warn(`⚠️  alignPlaceholderLeft 找不到 ${placeholder}`); return xml; }
+  const both = '<w:jc w:val="both"/>';
+  const jcIdx = xml.lastIndexOf(both, idx);
+  if (jcIdx === -1) return xml; // 該段本來就沒有顯式 both（已是其他對齊），不動
+  return xml.substring(0, jcIdx) + '<w:jc w:val="left"/>' + xml.substring(jcIdx + both.length);
+}
+
+// 第 2 題「預期研究期限」：__年 __月(請填寫送審後的日期) 至 __年__月
+// why：這欄原本完全沒注入，送審後一片空白（Vickie 回報）。
+// 範本值欄裡 4 個「底線空格」run（起始年/起始月/結束年/結束月）夾在「年」「月…至」等
+// 固定文字 run 之間，順序固定。底線空格 run 是這格唯一「整段都是空白」的 <w:t>，
+// 所以可安全地「只在這一格範圍內」依序把 4 個空白 run 的內文換成 placeholder。
+// how：先把「預期研究期限」標籤後面那一格（值欄 <w:tc>…</w:tc>）切出來，
+//      在這段內依序替換 4 個全空白 <w:t>，保留外層帶 <w:u> 的 run（填入值仍有底線）。
+//      placeholders 對應 docgen 已備妥的「全程執行期間」民國年月（送審後～計畫結束）。
+function injectPeriodBlanks(xml) {
+  const anchor = '預期研究期限</w:t></w:r></w:p></w:tc>';
+  const aIdx = xml.indexOf(anchor);
+  if (aIdx === -1) { console.warn('⚠️  injectPeriodBlanks 找不到「預期研究期限」'); return xml; }
+  const cellStart = aIdx + anchor.length;                       // 值欄 <w:tc> 開頭
+  const cellEnd = xml.indexOf('</w:tc>', cellStart) + '</w:tc>'.length;
+  const placeholders = ['{full_exec_start_y}', '{full_exec_start_m}', '{full_exec_end_y}', '{full_exec_end_m}'];
+  let n = 0;
+  const cell = xml.substring(cellStart, cellEnd).replace(
+    /<w:t xml:space="preserve">\s+<\/w:t>/g,
+    () => (n < placeholders.length
+      ? `<w:t xml:space="preserve">${placeholders[n++]}</w:t>`
+      : `<w:t xml:space="preserve">       </w:t>`)
+  );
+  if (n !== placeholders.length) {
+    console.warn(`⚠️  injectPeriodBlanks 預期 4 個底線空格，實際換到 ${n} 個`);
+  }
+  return xml.substring(0, cellStart) + cell + xml.substring(cellEnd);
 }
 
 console.log('📄 Processing DOC-5: IRB-012 免審申請表');
@@ -44,21 +108,52 @@ let { zip, xml } = readDocXml(SRC);
 xml = insertInNextCell(xml, '中文', '{project_title_zh}');
 xml = insertInNextCell(xml, '英文', '{project_title_en}');
 
-// 計畫主持人
-xml = insertInNextCell(xml, '中文姓名', '{pi_name_zh}');
+// 計畫主持人（中文姓名）
+// ⚠️ 模板裡「中文」與「姓名」是兩個獨立的 text run，連起來的「中文姓名」字串並不存在，
+//    所以不能用 insertInNextCell('中文姓名',...)——它找不到連續字串，placeholder 會完全沒注入
+//    （這正是先前 PI 姓名帶不進 DOC-5 的根因）。
+// 改用與「協同主持人」「聯絡人」相同的跨 run regex：從「計畫主持人」往後找第一個「姓名」
+//    （即中文姓名那一格），把它後面那一格（值欄）填入 placeholder。
+xml = xml.replace(
+  /(計畫主持人[\s\S]*?姓名<\/w:t><\/w:r><\/w:p><\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>)([\s\S]*?)(<\/w:p>)/,
+  `$1<w:r>${KAI_RPR}<w:t>{pi_name_zh}</w:t></w:r>$3`);
 
 // 協同主持人
 xml = xml.replace(
   /(協同主持人[\s\S]*?姓名<\/w:t><\/w:r><\/w:p><\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>)([\s\S]*?)(<\/w:p>)/,
-  '$1<w:r><w:t>{co_pi_names}</w:t></w:r>$3');
+  `$1<w:r>${KAI_RPR}<w:t>{co_pi_names}</w:t></w:r>$3`);
 
 // 聯絡人
 xml = xml.replace(
   /(聯絡人[\s\S]*?姓名<\/w:t><\/w:r><\/w:p><\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>)([\s\S]*?)(<\/w:p>)/,
-  '$1<w:r><w:t>{contact_name_zh}</w:t></w:r>$3');
+  `$1<w:r>${KAI_RPR}<w:t>{contact_name_zh}</w:t></w:r>$3`);
 
-// 研究計畫目的
-xml = insertInNextCell(xml, '研究計畫目的', '{purpose}');
+// 計畫主持人 其餘欄位：職稱 / 服務單位 / 聯絡電話 / 電子信箱
+// （都用「計畫主持人」當區段錨點，往後找第一個對應 label，填入下一格。
+//  ⚠️ 主持人區的「電子信箱」是 split run「電子」+「信箱」，故 labelEnd 傳 '信箱'。）
+xml = injectSectionCell(xml, '計畫主持人', '職稱',     '{pi_title}');
+xml = injectSectionCell(xml, '計畫主持人', '服務單位', '{pi_unit}');
+xml = injectSectionCell(xml, '計畫主持人', '聯絡電話', '{pi_phone}');
+xml = injectSectionCell(xml, '計畫主持人', '信箱',     '{pi_email}');
+
+// 協同主持人 其餘欄位：職稱 / 服務單位（多位協同主持人由 docgen 用「、」合併成單一字串）
+xml = injectSectionCell(xml, '協同主持人', '職稱',     '{co_pi_titles}');
+xml = injectSectionCell(xml, '協同主持人', '服務單位', '{co_pi_units}');
+
+// 聯絡人 其餘欄位：職稱 / 聯絡電話 / 電子信箱（聯絡人區無「服務單位」欄）
+// （聯絡人區的「電子信箱」是單一 run，labelEnd 直接傳完整字串。）
+xml = injectSectionCell(xml, '聯絡人', '職稱',     '{contact_title}');
+xml = injectSectionCell(xml, '聯絡人', '聯絡電話', '{contact_phone}');
+xml = injectSectionCell(xml, '聯絡人', '電子信箱', '{contact_email}');
+
+// 預期研究期限（第 2 題）：全程執行期間民國年月填入 4 個底線空格
+xml = injectPeriodBlanks(xml);
+
+// 研究計畫目的：用 {purpose_brief}（只要純研究主旨）。
+// ⚠️ 不可用 {purpose}——那是 DOC-2 用的合併值（多年期含分年目的），DOC-5 免審申請表不需要分年目的。
+xml = insertInNextCell(xml, '研究計畫目的', '{purpose_brief}');
+// 研究計畫目的是長段落本文，改靠左對齊（範本原本是兩端對齊，最後一行字距會被拉鬆）
+xml = alignPlaceholderLeft(xml, '{purpose_brief}');
 
 // 免審理由
 xml = replaceText(xml,

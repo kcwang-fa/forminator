@@ -15,6 +15,7 @@ export type ResearchPurposeType = 'internal_research' | 'thesis' | 'no_fund_rese
 export type DeliveryFormat = 'paper' | 'digital';
 export type AnalysisLocation = 'office' | 'personal_pc' | 'other_platform' | 'data_center';
 export type ExperimentType = 'human_research' | 'gene_recombination' | 'animal' | 'biosafety_level2' | 'high_risk_pathogen';
+// DOC-4 IRB-004「(2)經費來源(可複選)」：可複選的經費來源機關
 export type FundingSource = 'cdc' | 'mohw' | 'nstc' | 'other';
 export type ApplySystem = 'warehouse' | 'other';
 export type ReviewDataUseType =
@@ -239,12 +240,19 @@ export interface FormData {
   experiment_types: ExperimentType[];
   needs_funding: boolean;
   apply_amount: string;  // 申請金額（使用者填寫，帶入壹、綜合資料）
+  // DOC-4 IRB-004「(2)經費來源(可複選)」：勾選的來源機關 + 「其他」自填文字
+  funding_source: FundingSource[];
+  funding_source_other: string;
 
   // §2.2.2 人員
   personnel: Personnel[];
 
   // §2.2.3 研究內容
   purpose: string;
+  // 分年計劃目的：僅多年期計畫需填寫（逐年的分年目的）。原本與 purpose 擠在同一欄位的
+  // 「【分年目的】」段落已獨立成這個欄位；docgen 多年期時會把 purpose（全程總目標）與本欄
+  // 合併注入 DOC-2「一、研究主旨」。一年期不顯示、不進文件。
+  yearly_objectives: string;
   background: string;
   // 三、多年期計畫之執行成果概要：僅多年期計畫需填寫（新案概述主持人過去相關成果、
   // 延續案敘明初步成果並逐年檢視分年目標）。一年期計畫由 docgen 自動填入「不適用」字樣。

@@ -6,13 +6,20 @@ import { useFormStore } from './useFormStore';
 import { exportToJson, importFromJson } from '../utils/exportImport';
 import { SDD_VERSION } from '../data/defaults';
 
-export function useImportExport() {
+interface UseImportExportOptions {
+  /** 匯出完成後呼叫，傳入序列化後的草稿字串（給匯出提醒重設 baseline 用） */
+  onExported?: (serialized: string) => void;
+}
+
+export function useImportExport({ onExported }: UseImportExportOptions = {}) {
   const { getValues, reset } = useFormStore();
 
   const handleExport = useCallback(() => {
-    exportToJson(getValues());
+    const values = getValues();
+    exportToJson(values);
     message.success('JSON 已匯出！');
-  }, [getValues]);
+    onExported?.(JSON.stringify(values));
+  }, [getValues, onExported]);
 
   const handleImport = useCallback(async (file: File) => {
     const result = await importFromJson(file);

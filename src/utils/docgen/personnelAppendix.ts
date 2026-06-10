@@ -18,6 +18,12 @@ const GENDER_LABEL: Record<string, string> = {
   male: '男', female: '女',
 };
 
+// 附表三（著作清單）的空值預設。
+// why：官方範本明文要求「若無此資料，請填無此資料」，留空的表格送出會被退件。
+//      與附表二「無此資料」(pa_no_pi_proj) 的呈現方式一致，避免某一格空白看起來像漏填。
+// how：使用者沒填、或只打了空白字元時，自動帶入「無此資料」；有填則原樣保留。
+const NO_PUBLICATIONS_TEXT = '無此資料';
+
 const toProj = (proj: FormData['personnel'][0]['projects'][0]) => ({
   proj_name:     proj.project_name,
   proj_role:     proj.role,
@@ -67,7 +73,7 @@ export function preparePersonnelAppendix(data: FormData) {
         pa_pi_proj_period:  piProjects[0] ? `${piProjects[0].start_ym}～${piProjects[0].end_ym}` : '',
         pa_pi_proj_budget:  piProjects[0]?.budget || '',
         pa_pi_proj_summary: piProjects[0]?.summary || '',
-        pa_publications_text: p.publications || '',
+        pa_publications_text: (p.publications || '').trim() || NO_PUBLICATIONS_TEXT,
       };
     }),
     personnel_appendix_count: members.length,

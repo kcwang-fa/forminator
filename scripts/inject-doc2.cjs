@@ -18,6 +18,19 @@ const OUT  = path.join(__dirname, '../public/templates/DOC-2.docx');
 
 // ===== 工具 =====
 
+// 標楷體 run 屬性。
+// why：範本 label / 標題大量使用 DFKai-SB（=「標楷體」），但 word/styles.xml 的 docDefaults
+//      預設 eastAsia 字型是 PMingLiU（新細明體）。我們「新建」的注入 run 若不帶 rPr，
+//      就會掉回新細明體，跟標楷體的範本文字不一致。故所有新建注入 run 統一帶 DFKai-SB。
+//      ⚠️ 只作用在「新建 run」；inline 接進既有 run 的注入（封面人名、年度、■/□ checkbox）
+//         會繼承該 run 既有字型，不在此處理（與 DOC-3/DOC-4 一致）。
+const KAI_RPR =
+  '<w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/></w:rPr>';
+
+// 注入本文段落的「段後距」。12pt = 240 twips（w:after 單位為 1/20 pt）。
+// 只套在注入的長文本文段落（肆各節、中英文摘要），不套表格，避免撐爛附表/經費/甘特表。
+const BODY_SPACING_AFTER = 240;
+
 function readDocXml(filePath) {
   const buf = fs.readFileSync(filePath);
   const zip = new PizZip(buf);
@@ -47,7 +60,7 @@ function injectIntoLabelPara(xml, labelText, placeholder, startFrom = 0) {
   const paraEnd = xml.indexOf('</w:p>', labelPos);
   if (paraEnd === -1) { console.warn(`⚠️  找不到段落結尾 "${labelText}"`); return xml; }
   return xml.slice(0, paraEnd) +
-    `<w:r><w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
+    `<w:r>${KAI_RPR}<w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
     xml.slice(paraEnd);
 }
 
@@ -99,9 +112,9 @@ function getRowHeader(rowXml) {
 function setCellText(cellXml, text) {
   // 移除所有 <w:r>...</w:r>（含內容）
   let result = cellXml.replace(/<w:r\b[\s\S]*?<\/w:r>/g, '');
-  // 在 </w:p> 前插入新 run
+  // 在 </w:p> 前插入新 run（標楷體）
   if (text) {
-    result = result.replace(/<\/w:p>/, `<w:r><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`);
+    result = result.replace(/<\/w:p>/, `<w:r>${KAI_RPR}<w:t xml:space="preserve">${text}</w:t></w:r></w:p>`);
   }
   return result;
 }
@@ -202,7 +215,7 @@ function injectIntoNextEmptyPara(xml, labelText, placeholder, startFrom = 0) {
   const valueParaEnd = xml.indexOf('</w:p>', labelParaEnd + 6);
   if (valueParaEnd === -1) { console.warn(`⚠️  找不到 value 段落 "${labelText}"`); return xml; }
   return xml.slice(0, valueParaEnd) +
-    `<w:r><w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
+    `<w:r>${KAI_RPR}<w:t xml:space="preserve">${placeholder}</w:t></w:r>` +
     xml.slice(valueParaEnd);
 }
 
@@ -297,7 +310,7 @@ function insertInNthEmptyCell(xml, labelText, placeholder, nth = 1) {
   const pMatch = afterTc.match(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/);
   if (pMatch) {
     const ip = tcEnd + 7 + pMatch.index + pMatch[1].length;
-    return xml.substring(0, ip) + `<w:r><w:t>${placeholder}</w:t></w:r>` + xml.substring(ip);
+    return xml.substring(0, ip) + `<w:r>${KAI_RPR}<w:t>${placeholder}</w:t></w:r>` + xml.substring(ip);
   }
   return xml;
 }
@@ -325,7 +338,7 @@ function injectByParaId(xml, paraId, text) {
   if (idx === -1) { console.warn(`⚠️  找不到 paraId ${paraId} (經費表)`); return xml; }
   const pEnd = xml.indexOf('</w:p>', idx);
   if (pEnd === -1) return xml;
-  return xml.substring(0, pEnd) + `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>` + xml.substring(pEnd);
+  return xml.substring(0, pEnd) + `<w:r>${KAI_RPR}<w:t xml:space="preserve">${text}</w:t></w:r>` + xml.substring(pEnd);
 }
 // 找包含某 paraId 的整個 <w:tr>...</w:tr> 範圍
 function findRowRange(xml, paraId) {
@@ -371,6 +384,36 @@ xml = injectByParaId(xml, '3552E365', '{budget_capital}');   // 設備費合計
 console.log('  ✓ 壹、綜合資料 經費摘要表合計列注入');
 
 // 貳、中文摘要 / 參、英文摘要
+// 摘要本文段落補「段後距 12pt」。摘要與其標題（貳/參…）在同一段落、文字接在標題後，
+// prompt run 本身已是 DFKai-SB（標楷體），故字型不需另設，只在段落 pPr 補 spacing after。
+// ⚠️ 必須趁 prompt 文字「請摘述…」還在時錨定（下方 replaceText 會把它換成 placeholder）。
+// helper：在「每個含 anchor 的段落」pPr 最前面插入 spacing after。
+// 做法：先收集所有 anchor 位置，再「由後往前」插入——這樣每次插入只位移它後面的文字
+// （都是已處理過的較後段落），不會影響還沒處理的前面索引，避免重複/漏插。
+// 前提：目標段落原本沒有 <w:spacing>（摘要段落符合），故不會產生重複 spacing 元素。
+function addBodySpacingAfterAll(xml, anchor) {
+  const positions = [];
+  let p = xml.indexOf(anchor);
+  while (p !== -1) { positions.push(p); p = xml.indexOf(anchor, p + anchor.length); }
+  let count = 0;
+  for (let k = positions.length - 1; k >= 0; k--) {
+    const i = positions[k];
+    const pStart = xml.lastIndexOf('<w:p ', i);
+    const pprStart = xml.indexOf('<w:pPr>', pStart);
+    if (pStart === -1 || pprStart === -1 || pprStart > i) continue;
+    const insertAt = pprStart + '<w:pPr>'.length; // 緊接 <w:pPr> 後 → 符合 schema（spacing 在 jc 之前）
+    xml = xml.slice(0, insertAt) + `<w:spacing w:after="${BODY_SPACING_AFTER}"/>` + xml.slice(insertAt);
+    count++;
+  }
+  return { xml, count };
+}
+{
+  // 兩個摘要（中/英）都含同一段 prompt 文字
+  const r = addBodySpacingAfterAll(xml, '請摘述本計畫之目的與實施方法及關鍵詞');
+  xml = r.xml;
+  console.log(`  ✓ 中英文摘要段落 spacing after 12pt（${r.count} 段）`);
+}
+
 let abstractCount = 0;
 xml = xml.replace(/請摘述本計畫之目的與實施方法及關鍵詞/g, () => {
   abstractCount++;
@@ -394,7 +437,16 @@ for (const [anchor, ph] of contentSections) {
   if (anchorIdx === -1) { console.warn(`⚠️  找不到 "${anchor}"`); continue; }
   const pEnd = xml.indexOf('</w:p>', anchorIdx);
   if (pEnd === -1) continue;
-  xml = xml.substring(0, pEnd + 6) + `<w:p><w:r><w:t>${ph}</w:t></w:r></w:p>` + xml.substring(pEnd + 6);
+  // 注入的本文段落 pPr：段後距 12pt（spacing after）+ 靠左對齊（jc left）。
+  // why（jc left）：不寫的話會繼承範本預設「兩端對齊（justify）」，導致每段最後一行被硬拉開、
+  //   字距鬆散（先前看到的醜版）。本文是長段落，靠左閱讀最自然。
+  // why（spacing after）：本文各節之間留 12pt 段距，避免段落擠在一起。
+  // run 帶 KAI_RPR → 本文用標楷體（此為全新段落、無可繼承字型，不設會掉回新細明體）。
+  // ⚠️ schema 順序：<w:spacing> 必須在 <w:jc> 之前。
+  xml = xml.substring(0, pEnd + 6) +
+    `<w:p><w:pPr><w:spacing w:after="${BODY_SPACING_AFTER}"/><w:jc w:val="left"/></w:pPr>` +
+    `<w:r>${KAI_RPR}<w:t>${ph}</w:t></w:r></w:p>` +
+    xml.substring(pEnd + 6);
 }
 console.log('  ✓ 肆、計畫內容各節注入');
 
@@ -434,7 +486,7 @@ if (xml.includes('為一年期計畫，故不適用。')) {
         ];
         let gcIdx = 0;
         dataRow = dataRow.replace(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/g,
-          (match, before, after) => gcIdx < ganttPhs.length ? `${before}<w:r><w:t>${ganttPhs[gcIdx++]}</w:t></w:r>${after}` : match);
+          (match, before, after) => gcIdx < ganttPhs.length ? `${before}<w:r>${KAI_RPR}<w:t>${ganttPhs[gcIdx++]}</w:t></w:r>${after}` : match);
 
         // 表頭列（ganttRowParts[0] 含 table 開頭 + 表頭 <w:tr>）：在角落欄第一個 </w:tcPr> 後
         // 插入 {#gantt_years}{year_label} 段落 — 作為外層分年 loop 起點 + 年度標籤。
@@ -477,7 +529,7 @@ if (xml.includes('為一年期計畫，故不適用。')) {
         ];
         let cellIdx = 0;
         rowXml = rowXml.replace(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/g,
-          (match, before, after) => cellIdx < cellPhs.length ? `${before}<w:r><w:t>${cellPhs[cellIdx++]}</w:t></w:r>${after}` : match);
+          (match, before, after) => cellIdx < cellPhs.length ? `${before}<w:r>${KAI_RPR}<w:t>${cellPhs[cellIdx++]}</w:t></w:r>${after}` : match);
         xml = xml.substring(0, insertAt) + rowXml + xml.substring(nextTrEnd + 7);
         console.log('  ✓ 伍、人力配置 loop 注入');
       }
@@ -849,7 +901,7 @@ console.log(`  附表一修改後：${rows.length} rows`);
   if (app2TitlePos !== -1) {
     const app2ParaEnd = xml.indexOf('</w:p>', app2TitlePos) + '</w:p>'.length;
     xml = xml.slice(0, app2ParaEnd) +
-      '<w:p><w:r><w:t xml:space="preserve">{pa_role_label}</w:t></w:r></w:p>' +
+      `<w:p><w:r>${KAI_RPR}<w:t xml:space="preserve">{pa_role_label}</w:t></w:r></w:p>` +
       xml.slice(app2ParaEnd);
     console.log('  ✓ 附表二 角色標題注入（說明文字下方）');
   }
@@ -884,7 +936,7 @@ xml = injectIntoLabelPara(xml, '摘要：',            '{pa_pi_proj_summary}', a
     const paraEnd = xml.indexOf('</w:p>', summaryPos) + '</w:p>'.length;
     xml = xml.slice(0, paraEnd) +
       '<w:p><w:r><w:t>{/pa_has_pi_proj}</w:t></w:r></w:p>' +
-      '<w:p><w:r><w:t>{#pa_no_pi_proj}無此資料{/pa_no_pi_proj}</w:t></w:r></w:p>' +
+      `<w:p><w:r>${KAI_RPR}<w:t>{#pa_no_pi_proj}無此資料{/pa_no_pi_proj}</w:t></w:r></w:p>` +
       xml.slice(paraEnd);
   }
 }
@@ -900,7 +952,7 @@ console.log('  ✓ 附表二 placeholder 注入（含條件判斷）');
   if (app3TitlePos !== -1) {
     const app3ParaEnd = xml.indexOf('</w:p>', app3TitlePos) + '</w:p>'.length;
     xml = xml.slice(0, app3ParaEnd) +
-      '<w:p><w:r><w:t xml:space="preserve">{pa_role_label}</w:t></w:r></w:p>' +
+      `<w:p><w:r>${KAI_RPR}<w:t xml:space="preserve">{pa_role_label}</w:t></w:r></w:p>` +
       xml.slice(app3ParaEnd);
     console.log('  ✓ 附表三 角色標題注入（說明文字下方）');
   }
@@ -914,7 +966,7 @@ if (app3pos !== -1) {
   if (emptyParaMatch) {
     const ip = app3pos + emptyParaMatch.index + emptyParaMatch[1].length;
     xml = xml.slice(0, ip) +
-      '<w:r><w:t xml:space="preserve">{pa_publications_text}</w:t></w:r>' +
+      `<w:r>${KAI_RPR}<w:t xml:space="preserve">{pa_publications_text}</w:t></w:r>` +
       xml.slice(ip);
     console.log('  ✓ 附表三 placeholder 注入');
   }

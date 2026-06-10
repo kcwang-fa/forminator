@@ -15,11 +15,20 @@ import {
   CAPITAL_IDS, PERSONNEL_IDS, BUSINESS_IDS,
 } from '../../utils/budgetCalc';
 import { getRocDateParts } from '../../utils/date';
-import type { BudgetItem } from '../../types/form';
+import type { BudgetItem, FundingSource } from '../../types/form';
 import { Switch, Input, Table, Button, Tooltip, Typography, Checkbox } from 'antd';
 import { QuestionCircleOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
+
+// DOC-4 IRB-004「(2)經費來源(可複選)」選項。value 與 types/form.ts 的 FundingSource 對齊；
+// label 是 DOC-4 表格上的機關名稱（純顯示，實際勾選由 docgen 轉成 ■/□ 注入）。
+const FUNDING_SOURCE_OPTIONS: { value: FundingSource; label: string }[] = [
+  { value: 'cdc',   label: '疾病管制署' },
+  { value: 'mohw',  label: '衛生福利部' },
+  { value: 'nstc',  label: '國家科學及技術委員會' },
+  { value: 'other', label: '其他' },
+];
 
 type ColumnRecord = BudgetItem | { id: string; name: string; _section: true };
 
@@ -151,6 +160,8 @@ export default function Step5Budget() {
   const { watch, setValue } = useFormStore();
   const needs_funding: boolean = watch('needs_funding') ?? false;
   const apply_amount: string = watch('apply_amount') ?? '';
+  const funding_source: FundingSource[] = watch('funding_source') ?? [];
+  const funding_source_other: string = watch('funding_source_other') ?? '';
   const budget_items: BudgetItem[] = watch('budget_items') ?? defaultBudgetItems;
 
   // 年數與每年的民國年標題：多年期由全程起始日逐年推算，一年期用 project_year
@@ -342,6 +353,25 @@ export default function Step5Budget() {
               />
             </div>
           )}
+
+          {/* 經費來源（可複選）：帶入 DOC-4 IRB-004「(2)經費來源」勾選欄 */}
+          <div style={{ marginBottom: 20 }}>
+            <Text style={{ display: 'block', marginBottom: 8 }}>經費來源（可複選）</Text>
+            <Checkbox.Group
+              options={FUNDING_SOURCE_OPTIONS}
+              value={funding_source}
+              onChange={vals => setValue('funding_source', vals as FundingSource[], { shouldDirty: true })}
+            />
+            {/* 勾「其他」才顯示自填欄；自填內容會注入 DOC-4「□其他：___」後方 */}
+            {funding_source.includes('other') && (
+              <Input
+                value={funding_source_other}
+                placeholder="請填寫其他經費來源"
+                onChange={e => setValue('funding_source_other', e.target.value, { shouldDirty: true })}
+                style={{ width: 280, marginTop: 8, display: 'block' }}
+              />
+            )}
+          </div>
 
           {/* 業務費（經常門） */}
           <Text strong style={{ display: 'block', background: '#fafafa', padding: '6px 8px', border: '1px solid #f0f0f0' }}>業務費（經常門）</Text>

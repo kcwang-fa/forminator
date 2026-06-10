@@ -130,6 +130,8 @@ export const defaultFormData: FormData = {
   experiment_types: [],
   needs_funding: false,
   apply_amount: '',
+  funding_source: [],
+  funding_source_other: '',
   budget_items: defaultBudgetItems,
 
   // 人員 — 預設一位 PI
@@ -137,6 +139,7 @@ export const defaultFormData: FormData = {
 
   // 研究內容
   purpose: '',
+  yearly_objectives: '',  // 分年計劃目的（僅多年期顯示，docgen 多年期時併入研究主旨）
   background: '',
   summary_of_results: '',  // 三、多年期計畫之執行成果概要（一年期由 docgen 填「不適用」）
   methodology: '',

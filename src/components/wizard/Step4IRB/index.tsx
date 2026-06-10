@@ -3,7 +3,8 @@
 // 重做重點：主結構「貼齊 IRB-012 表單真實題目順序」。
 //   題目順序＝研究類別 → 免審理由 → 研究方法及工具 → 納入/排除 → 招募/互動 → 隱私三段。
 //   三顆「帶入草稿」link button 皆手動點擊、刻意覆寫：免審理由 ← 審查小幫手判斷理由、
-//   研究方法 ← Step 3 methodology、隱私三段 ← buildPrivacyDraftFromScreening（審查小幫手＋罐頭預設）。
+//   研究方法及工具 ← buildDataSourceDraftFromScreening（依素材情境，數量/範圍留填空）、
+//   隱私三段 ← buildPrivacyDraftFromScreening（審查小幫手＋罐頭預設）。
 //
 // 子元件（皆透過 React Hook Form path 對接，不傳 props）：
 //   - ReviewConclusionCard：Step 1 判斷結果 + 手動覆寫
@@ -18,7 +19,7 @@ import { BulbOutlined } from '@ant-design/icons';
 import { Controller, useWatch } from 'react-hook-form';
 import { useFormStore } from '../../../hooks/useFormStore';
 import { classifyReviewType } from '../../../utils/reviewClassifier';
-import { buildExemptReasonFromDecision, buildPrivacyDraftFromScreening } from '../../../utils/exemptIrbText';
+import { buildDataSourceDraftFromScreening, buildExemptReasonFromDecision, buildPrivacyDraftFromScreening } from '../../../utils/exemptIrbText';
 import type { ExemptCategory } from '../../../types/form';
 import { ReviewConclusionCard } from './ReviewConclusionCard';
 import { ExemptDefaultsPanel } from './ExemptDefaultsPanel';
@@ -52,13 +53,12 @@ export default function Step4IRB() {
     message.success('已帶入審查小幫手的判斷理由，可再手動修改。');
   };
 
-  // 「研究方法及工具描述」直接帶入 Step 3 寫的「研究方法」(methodology)——使用者自己寫的，最精準
-  const methodology = useWatch({ control, name: 'methodology' });
-  const canDraftDataSource = !!methodology?.trim();
-
+  // 「研究方法及工具描述」依審查小幫手勾的素材類型，帶入聚焦「素材/來源/數量/範圍」的草稿。
+  // （刻意不再複製 Step 3 的 methodology——那是分析步驟，與這格要的「素材/工具」scope 對不上。）
+  // 同樣是手動點擊、刻意覆寫，與另外兩顆帶入按鈕一致；generic 情境是有效 fallback，故永遠顯示。
   const handleDraftDataSource = () => {
-    setValue('data_source', methodology, { shouldDirty: true });
-    message.success('已帶入 Step 3 的研究方法，可再手動補充。');
+    setValue('data_source', buildDataSourceDraftFromScreening(getValues()), { shouldDirty: true });
+    message.success('已依素材類型帶入研究方法及工具草稿，請補上數量與蒐集範圍。');
   };
 
   // 隱私三段：用審查類型小幫手已填的「可識別性 / 是否接觸個案」＋ 罐頭預設句生成草稿，再手動改具體值。
@@ -124,18 +124,16 @@ export default function Step4IRB() {
             control={control}
             render={({ field }) => (
               <Form.Item label="研究方法及工具描述" tooltip="如：防疫用剩餘檢體、問卷、資料庫，並說明來源、數量及蒐集範圍">
-                {canDraftDataSource && (
-                  <Button
-                    type="link"
-                    size="small"
-                    icon={<BulbOutlined />}
-                    onClick={handleDraftDataSource}
-                    style={{ padding: 0, height: 'auto', marginBottom: 6 }}
-                  >
-                    帶入 Step 3 研究方法
-                  </Button>
-                )}
-                <Input.TextArea {...field} rows={4} />
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<BulbOutlined />}
+                  onClick={handleDraftDataSource}
+                  style={{ padding: 0, height: 'auto', marginBottom: 6 }}
+                >
+                  帶入研究方法及工具草稿
+                </Button>
+                <Input.TextArea {...field} rows={4} placeholder="可手動填寫，或用上方按鈕依素材帶入草稿，再把句中的 ______ 換成實際數量與範圍" />
               </Form.Item>
             )}
           />

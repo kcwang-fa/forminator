@@ -114,8 +114,14 @@ function prepareResearchData(data: FormData) {
   // 多年期判斷與 schedule.ts 一致（一年期 = new_1yr）。
   // 「三、多年期計畫之執行成果概要」一節：多年期填使用者內容，一年期沿用範本罐頭字「不適用」。
   const isMultiYear = data.project_type !== 'new_1yr';
+  // DOC-2「一、研究主旨」範本要求「總述 + 分年」。多年期時把研究主旨（全程總目標）與獨立的
+  // 「分年計劃目的」欄位合併成一段注入 {purpose}；一年期沒有分年目的，維持純研究主旨。
+  // DOC-5 免審申請表的「研究計畫目的」只要純研究主旨（不帶分年目的），改用獨立的 {purpose_brief}。
+  const yearlyObjectives = isMultiYear ? data.yearly_objectives.trim() : '';
+  const purposeMerged = [data.purpose.trim(), yearlyObjectives].filter(Boolean).join('\n\n');
   return {
-    purpose: data.purpose,
+    purpose: purposeMerged,        // DOC-2「一、研究主旨」：研究主旨（多年期再加分年目的）
+    purpose_brief: data.purpose,   // DOC-5「研究計畫目的」：只要純研究主旨、不帶分年目的
     background: data.background,
     summary_of_results: isMultiYear ? data.summary_of_results : '為一年期計畫，故不適用。',
     methodology: data.methodology,
@@ -168,6 +174,17 @@ function prepareProjectTypeData(data: FormData) {
     exp_gene: data.experiment_types.includes('gene_recombination') ? '■' : '□',
     needs_funding_yes: data.needs_funding ? '■' : '□',
     needs_funding_no: data.needs_funding ? '□' : '■',
+    // DOC-4 IRB-004「(2)經費來源(可複選)」勾選欄。
+    // 全部 gate 在 needs_funding：不需經費時來源一律 □（沒有經費就沒有來源），
+    // 避免 needs_funding 關掉後殘留的 funding_source 仍被勾起。
+    // （funding_source 用 ?? [] 防禦：舊草稿/未正規化資料可能沒有此欄位。）
+    funding_src_cdc:  data.needs_funding && (data.funding_source ?? []).includes('cdc')   ? '■' : '□',
+    funding_src_mohw: data.needs_funding && (data.funding_source ?? []).includes('mohw')  ? '■' : '□',
+    funding_src_nstc: data.needs_funding && (data.funding_source ?? []).includes('nstc')  ? '■' : '□',
+    funding_src_other: data.needs_funding && (data.funding_source ?? []).includes('other') ? '■' : '□',
+    // 「□其他：___」後方自填文字；未勾其他或不需經費時留空
+    funding_src_other_text: data.needs_funding && (data.funding_source ?? []).includes('other')
+      ? (data.funding_source_other || '') : '',
   };
 }
 
@@ -176,9 +193,6 @@ function prepareProjectTypeData(data: FormData) {
 function prepareMiscPlaceholders(data: FormData, pi: Personnel) {
   return {
     // DOC-4 固定樣板字
-    funding_detail_text: data.needs_funding
-      ? '(1)經費需求：＿＿＿千元\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿'
-      : '(1)經費需求：＿＿＿千元，■不需經費\n(2)經費來源(可複選)：\n  □疾病管制署  □衛生福利部  □國家科學及技術委員會 □其他：＿＿＿',
     questionnaire_text: data.has_questionnaire
       ? '問卷內容□ 無     ■ 有（請檢附）'
       : '問卷內容■ 無     □ 有（請檢附）',
@@ -189,6 +203,11 @@ function prepareMiscPlaceholders(data: FormData, pi: Personnel) {
     conflict_measure_text: '（無利益衝突）',
     // DOC-4
     co_pi_names: data.personnel.filter(p => p.role === 'co_pi').map(p => p.name_zh).join('、') || '（無）',
+    // 協同主持人職稱/服務單位（DOC-5 免審申請表用）：與 co_pi_names 同模式，多位用「、」串接。
+    // 因免審表「協同主持人」是單一固定列，多位協同主持人只能合併呈現（非逐列）。
+    // 無協同主持人時留空字串（不要 fallback「（無）」，免得職稱/單位格出現怪字）。
+    co_pi_titles: data.personnel.filter(p => p.role === 'co_pi').map(p => p.title || '').join('、'),
+    co_pi_units:  data.personnel.filter(p => p.role === 'co_pi').map(p => p.unit || '').join('、'),
     // DOC-6 角色 checkbox（單份版，逐人版在 generatePerPersonDoc 覆寫）
     role_pi: '□',
     role_co_pi: '□',
@@ -199,6 +218,8 @@ function prepareMiscPlaceholders(data: FormData, pi: Personnel) {
     irb002_pi_name: pi.name_zh || '',
     irb002_pi_title: pi.title || '',
     irb002_pi_unit: pi.unit || '',
+    // 日期欄帶入「填報日期」（與 DOC-2 封面 filing_date_roc 同源），轉民國年
+    irb002_filing_date: toRocDate(data.filing_date),
   };
 }
 
@@ -268,6 +289,13 @@ export function prepareCommonData(data: FormData) {
       (data.personnel || []).length, isMultiYear, rocYears, data.apply_amount,
     ),
     personnel_count: (data.personnel || []).length,
+    // DOC-4 IRB-004「(1)經費需求：＿＿千元」：把全程總額（grandTotal，單位為元）換算成千元。
+    // why：IRB-004 表格以「千元」為單位，但表單金額一律存「元」，故除以 1000。
+    //      政府計畫書慣例以整數千元呈現，故四捨五入取整數。
+    // 不需經費：填一段空格而非空字串。why：金額注入在範本的「底線 run」內，空字串會讓
+    //      底線空白整段消失（變「經費需求：千元」）；填空格可保留底線，與官方空白表
+    //      「經費需求：＿＿＿千元，■不需經費」一致（■不需經費由 needs_funding_no 勾選）。
+    budget_thousand:  data.needs_funding ? Math.round(grandTotal / 1000).toLocaleString() : '　　　　',
     apply_amount:     data.needs_funding
       ? (isMultiYear ? grandTotal.toLocaleString() : (data.apply_amount ? Number(data.apply_amount).toLocaleString() : ''))
       : '',

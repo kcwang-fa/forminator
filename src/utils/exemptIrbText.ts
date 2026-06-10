@@ -25,12 +25,13 @@ function researcherAccessesPersonalData(identifiability: ReviewDataIdentifiabili
   return identifiability === 'identifiable_or_linkable';
 }
 
-// 隱私文案情境：免審常見的素材各有不同的隱私保護講法（資料庫去識別化 vs 病歷 vs 檢體 vs 公開資料…），
-// 故先把勾選的素材歸成一個主要情境，再套對應的開頭描述。這是讓草稿「會隨素材不同而不同」的關鍵。
-type PrivacyScenario = 'specimen' | 'medical_record' | 'database' | 'business_data' | 'public' | 'new_data' | 'generic';
+// 素材情境：把勾選的資料／檢體類型歸成一個主要情境（資料庫 vs 病歷 vs 檢體 vs 公開資料…）。
+// 免審常見的素材各有不同講法，先分類再套對應描述，是讓草稿「會隨素材不同而不同」的關鍵。
+// 隱私三段（PRIVACY_DURING_LEAD）與研究方法及工具（DATA_SOURCE_LEAD）兩處共用此分類，故命名為「素材」而非「隱私」。
+type MaterialScenario = 'specimen' | 'medical_record' | 'database' | 'business_data' | 'public' | 'new_data' | 'generic';
 
 // 從勾選的資料／檢體類型推主要情境。多選時取「最具體者優先」：檢體 > 病歷 > 資料庫 > 業務 > 公開 > 新收 > 通用。
-function inferPrivacyScenario(screening: ReviewScreening): PrivacyScenario {
+function inferMaterialScenario(screening: ReviewScreening): MaterialScenario {
   const dataTypes = screening.data_use_types || [];
   const specimenTypes = screening.specimen_use_types || [];
 
@@ -48,7 +49,7 @@ function inferPrivacyScenario(screening: ReviewScreening): PrivacyScenario {
 }
 
 // 各情境「研究中」隱私保護的開頭描述（資料如何去識別化／不接觸個人）。
-const PRIVACY_DURING_LEAD: Record<PrivacyScenario, string> = {
+const PRIVACY_DURING_LEAD: Record<MaterialScenario, string> = {
   database: '本研究使用之資料由資料提供單位去識別化後提供，研究團隊取得後無法辨識特定個人',
   medical_record: '本研究向醫療院所申請之病歷資料已去識別化，研究團隊不直接接觸個案',
   business_data: '本研究使用既有業務資料，未新增介入或額外蒐集，並以去識別化方式處理',
@@ -66,7 +67,7 @@ export function buildPrivacyDraftFromScreening(
   data: FormData,
 ): Pick<ExemptIrbDraftText, 'privacy_during' | 'privacy_after' | 'privacy_withdrawal'> {
   const screening = data.review_screening;
-  const scenario = inferPrivacyScenario(screening);
+  const scenario = inferMaterialScenario(screening);
   const hasContact = screening.has_direct_subject_contact;
   const accessesPersonal = researcherAccessesPersonalData(screening.data_identifiability);
   const needsWithdrawal = hasContact || accessesPersonal;
@@ -93,6 +94,28 @@ export function buildPrivacyDraftFromScreening(
       ? '如研究對象依法提出撤回或停止使用之請求，研究團隊將依核准程序及相關法規辦理。'
       : '本研究使用無法辨識特定個人之次級資料，且不直接接觸研究對象，故無中途退出之情形。',
   };
+}
+
+// 各情境「研究方法及工具描述」(IRB-012 / DOC-5 的 data_source) 的草稿句。
+// 設計：這格 tooltip 要的是「用什麼素材/工具、來源、數量、蒐集範圍」（≠ Step3 的 methodology＝分析步驟），
+//   而「素材類型」剛好就在審查小幫手填的 review_screening 裡（與隱私三段同源），故 reuse inferMaterialScenario。
+// 數量、蒐集範圍、年份、提供單位等「自動化猜不到」的具體值，一律留 ______（ASCII 底線）填空，
+//   老實逼使用者補上——這正是舊版「複製 methodology」完全漏掉的部分。
+// ⚠️ 填空只能用 ASCII 底線，不可用全形空格 U+3000（U+3000 進 template 字串會踩雷，見 project_step4_irb_redo）。
+const DATA_SOURCE_LEAD: Record<MaterialScenario, string> = {
+  database: '本研究使用疾管署______防疫資料庫之去識別化資料，資料範圍涵蓋______年至______年，約______筆。',
+  medical_record: '本研究使用______提供之去識別化病歷資料，資料範圍涵蓋______年至______年，約______筆。',
+  business_data: '本研究使用______既有業務資料，資料範圍涵蓋______年至______年，約______筆，未另行介入或蒐集。',
+  specimen: '本研究使用______（如防疫業務剩餘檢體／菌株），來源為______，數量約______，蒐集範圍為______。',
+  public: '本研究使用已合法公開之______資訊，來源為______，範圍涵蓋______。',
+  new_data: '本研究以______（如問卷、量表、非侵入性測量）蒐集資料，預計收案約______人，蒐集範圍為______。',
+  generic: '本研究使用之研究素材／工具為______，來源為______，數量約______，蒐集範圍為______。',
+};
+
+// 依審查小幫手已勾的素材類型，生成「研究方法及工具描述」草稿（單一字串，這格是單一 TextArea）。
+// 帶入後使用者要把句中的 ______ 換成實際的數量、年份與蒐集範圍。
+export function buildDataSourceDraftFromScreening(data: FormData): string {
+  return DATA_SOURCE_LEAD[inferMaterialScenario(data.review_screening)];
 }
 
 // AI 潤飾的 guardrails：把「潤飾不可違背的事實」帶給後端當 context（後端只把它放進 prompt，不要求固定 key）。

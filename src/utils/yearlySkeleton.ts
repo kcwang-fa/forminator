@@ -4,14 +4,15 @@
 // 的寫法（例：研究主旨要先寫全程總目標、再逐年寫分年目的）。對新手來說對著空白
 // textarea 很難下手，所以提供「帶入分年骨架」按鈕，一鍵產生填空骨架讓使用者接著寫。
 //
-// 注意：這只是「填字輔助」，底層仍是單一文字欄位（不改資料模型、不分年存）。
+// 注意：這只是「填字輔助」，底層仍是單一文字欄位（不分年存）。
 // 各節的骨架結構刻意不同，反映範本各節的真實長相：
-//   - 研究主旨：全程總目標 + 分年目的
+//   - 研究主旨：只給全程總目標（「分年目的」已獨立成 yearly_objectives 欄位）
+//   - 分年計劃目的：逐年的分年目的填空（多年期專用欄位）
 //   - 實施方法：偏純分年（每年研究設計/資料收集/分析方法），範本無明顯總述開頭
 //   - 成果預估：全程預期成果 + 分年成果預估
 
-/** 可帶骨架的三個章節 */
-export type YearlySection = 'purpose' | 'methodology' | 'expected_outcome';
+/** 可帶骨架的章節（research 三節 + 已獨立成欄位的「分年計劃目的」）*/
+export type YearlySection = 'purpose' | 'yearly_objectives' | 'methodology' | 'expected_outcome';
 
 /**
  * 產生某一節的分年填空骨架。
@@ -40,8 +41,11 @@ export function buildYearlySkeleton(
 
   switch (section) {
     case 'purpose':
-      // 全程總目標 + 分年目的
-      return ['【全程總目標】', '', '【分年目的】', yearLines()].join('\n');
+      // 只剩全程總目標——「分年目的」已獨立成 yearly_objectives 欄位（見下方 case）。
+      return '【全程總目標】';
+    case 'yearly_objectives':
+      // 分年目的：逐年填空（從 purpose 拆出來的獨立欄位）。
+      return ['【分年目的】', yearLines()].join('\n');
     case 'methodology':
       // 偏純分年；每年提示研究設計/資料收集/分析方法
       return [

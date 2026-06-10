@@ -20,7 +20,7 @@ export function PublicationFields({ personIndex }: { personIndex: number }) {
         )}
       />
       <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-        若無相關著作，請填「無」（附表三將顯示此內容）
+        若無相關著作可留空，附表三會自動填入「無此資料」
       </div>
     </div>
   );
