@@ -74,6 +74,11 @@ export function preparePersonnelAppendix(data: FormData) {
         pa_pi_proj_budget:  piProjects[0]?.budget || '',
         pa_pi_proj_summary: piProjects[0]?.summary || '',
         pa_publications_text: (p.publications || '').trim() || NO_PUBLICATIONS_TEXT,
+        // 附表一「填表人簽章」＝該人自己的簽名。沒簽則 section 不成立、欄位留白可手簽。
+        // 旁邊的「計畫主持人簽章」用頂層的 pi_sig（loop 內查不到的 key，docxtemplater
+        // 會自動往外層 scope 找——這是 docxtemplater 的原生行為，不用在這裡重複塞）。
+        pa_has_sig: Boolean(p.signature_image),
+        pa_sig:     p.signature_image || '',
       };
     }),
     personnel_appendix_count: members.length,

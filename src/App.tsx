@@ -25,6 +25,7 @@ import Step4IRB from './components/wizard/Step4IRB';
 import Step5Budget from './components/wizard/Step5Budget';
 import Step6Database from './components/wizard/Step5Database';
 import WorkflowGuide from './components/workflow/WorkflowGuide';
+import SignaturePanel from './components/signature/SignaturePanel';
 
 import { DOC_NAMES, SDD_VERSION, defaultFormData, type DocId } from './data/defaults';
 import { resolveActivePlan, OUTPUT_CATEGORIES, OUTPUT_CATEGORY_CONFIGS, type WizardStepKey } from './data/planConfigs';
@@ -148,7 +149,8 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   };
   const CurrentStepComponent = currentStepDef.component;
   const currentStepConfig = STEP_CONFIGS[currentStepDef.key];
-  const currentStepDocs = currentStepConfig.affectedDocs;
+  // StepConfig 記錄各審查類型可能影響的文件聯集；畫面只顯示目前計畫真的會產出的文件。
+  const currentStepDocs = currentStepConfig.affectedDocs.filter((doc) => active.docs.includes(doc));
 
   return (
     <Layout style={{
@@ -372,6 +374,9 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
                 <Text style={{ fontSize: 14, color: '#564A3B' }}>{RESULT_ENCOURAGEMENT}</Text>
               </div>
             </div>
+
+            {/* 簽名管理：先簽好再下載，docgen 會把簽名圖嵌進各文件簽章欄 */}
+            <SignaturePanel />
 
             <div style={{ background: '#F0EDE8', borderRadius: 8, padding: 24, marginBottom: 24 }}>
               <h4>選擇要產生的文件</h4>

@@ -33,6 +33,9 @@ function mergePerPersonData(baseData: Record<string, unknown>, person: Personnel
     person_phone: person.phone,
     person_email: person.email,
     person_id_number: person.id_number,
+    // 逐人簽名（與 docgen.ts generatePerPersonDoc 同步）
+    person_has_sig: Boolean(person.signature_image),
+    person_sig: person.signature_image || '',
     role_pi: person.role === 'pi' ? '■' : '□',
     role_co_pi: person.role === 'co_pi' ? '■' : '□',
     role_researcher: person.role === 'researcher' ? '■' : '□',

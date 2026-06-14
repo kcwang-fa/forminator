@@ -1,5 +1,6 @@
 import type {
   ExemptCategory,
+  ExpeditedCategory,
   ReviewDataUseType,
   ReviewDecision,
   ReviewScreening,
@@ -80,10 +81,17 @@ type RuleOutcome = {
   needsReview?: boolean;
 };
 
-// 規則可以是固定結果，也可以是「看其他欄位再決定」的函式
+// ── 新手筆記：為什麼一條規則有「兩種長相」？──
+// 大多數選項的判斷是固定的（例如「合法公開資訊」一定是免審），這種直接寫成「物件」最好讀。
+// 但少數選項要「看其他欄位才能決定」（例如資料庫資料：有沒有去個資會判免審或一般審），
+// 這種就寫成「函式」s => RuleOutcome，拿到整份 screening 再決定。
+// 所以 ReviewRule 同時允許這兩種寫法——下面 DATA_USE_RULES / SPECIMEN_RULES 裡，
+// 你會看到大部分是物件、少數是箭頭函式，差別就在「結果固定 vs 要看條件」。
 type ReviewRule = RuleOutcome | ((screening: ReviewScreening) => RuleOutcome);
 
-function resolveRule(rule: ReviewRule, screening: ReviewScreening): RuleOutcome {
+// 把一條規則「算成最終結果」：是函式就餵 screening 進去執行，是物件就直接用。
+// （改名自舊的 resolveRule，名字講白話一點：對這條規則求值。）
+function evaluateRule(rule: ReviewRule, screening: ReviewScreening): RuleOutcome {
   return typeof rule === 'function' ? rule(screening) : rule;
 }
 
@@ -304,6 +312,16 @@ const SPECIMEN_RULES: Record<ReviewSpecimenUseType, ReviewRule> = {
   },
 };
 
+// ── 新手筆記：跟著一筆資料走一遍 ──
+// 假設使用者勾了「資料庫去個資資料」(deidentified_database)，可識別性選「提供單位已去個資」，
+// 沒有特殊族群。這個函式會這樣跑：
+//   1) 修飾規則：沒命中（沒勾高風險/歧視/他會同意）→ 略過。
+//   2) 查表套用：DATA_USE_RULES['deidentified_database'] 是「函式型」規則，餵 screening 進去，
+//      因為「提供單位已去個資」→ 回傳 exempt（免審）。apply() 把 reviewType 設成 exempt。
+//   3) 後處理：沒有敏感族群、最低風險也答了、資料不可回連 → 不升級、不加警示。
+//   → 最終：免審、confidence='clear'。
+// 換句話說，流程固定是這三步：① 先看會直接拉高層級的修飾規則 → ② 依勾選逐項查表（從嚴取最高）
+// → ③ 後處理（族群升級、沒答完的警示）。看不懂某條規則時，回去看 DATA_USE_RULES / SPECIMEN_RULES 那張表。
 export function classifyReviewType(screening: ReviewScreening): ReviewDecision {
   const dataUseTypes = screening.data_use_types || [];
   const specimenUseTypes = screening.specimen_use_types || [];
@@ -344,16 +362,21 @@ export function classifyReviewType(screening: ReviewScreening): ReviewDecision {
   // 2) 依使用者勾選順序查表套用資料用途與檢體規則（保留順序，理由/警示順序才會穩定）
   dataUseTypes.forEach((type) => {
     const rule = DATA_USE_RULES[type];
-    if (rule) apply(resolveRule(rule, screening));
+    if (rule) apply(evaluateRule(rule, screening));
   });
   specimenUseTypes.forEach((type) => {
     const rule = SPECIMEN_RULES[type];
-    if (rule) apply(resolveRule(rule, screening));
+    if (rule) apply(evaluateRule(rule, screening));
   });
 
   // 3) 後處理：易受傷害族群會把「免審」往上調為「簡審」
+  //    為什麼？免審的先決條件本來就排除易受傷害族群（未成年、收容人、孕婦、HIV 個案…），
+  //    所以即使前面查表判成免審，只要研究對象碰到這些族群，就要「升一級」到簡審讓 IRB 把關。
+  //    這裡只升「免審 → 簡審」；本來就已經是簡審/一般審的不動（已經夠嚴了）。
   const vulnerablePopulations = screening.vulnerable_populations || [];
   const hasVulnerablePopulation = vulnerablePopulations.length > 0;
+  // 兩種情況分開：① 既有資料 + 敏感族群（SENSITIVE_GROUPS）→ 升簡審；
+  //              ② 任何免審 + 有勾任何易受傷害族群 → 升簡審且標「需人工確認」。
   const hasSensitiveExistingGroup = hasAny(vulnerablePopulations, SENSITIVE_GROUPS);
 
   if (hasSensitiveExistingGroup && reviewType === 'exempt' && dataUseTypes.length > 0) {
@@ -411,4 +434,53 @@ export function classifyReviewType(screening: ReviewScreening): ReviewDecision {
     matched_rules: unique(matchedRules),
     warnings: unique(warnings),
   };
+}
+
+// ===== 簡審 IRB-003「研究類別」(A~I) 建議勾選 =====
+//
+// 設計（重用既有規則、不另寫一套判斷）：
+//   Step4 簡審分支的「研究類別」勾選格（ExpeditedCategory，對齊 DOC-13 的 24 個格子），
+//   預設值由「審查類型小幫手」(review_screening) 已勾的素材類型帶入。這裡**不重新判斷審查層級**，
+//   只是把使用者在小幫手已選的「資料/檢體類型」對應到 IRB-003 表單上相同語意的那一格——
+//   素材類型 → 審查層級的判斷仍只在上面 DATA_USE_RULES / SPECIMEN_RULES 那張表。
+//
+//   為什麼只對應「單格」分類、B/C/G 留給使用者手勾？
+//     IRB-003 的 A、D、E、F、H、I1 各只有一個明確勾選格，與小幫手某個素材類型一對一，可安全預帶；
+//     但 B（非侵入採檢體，8 種具體方式）、C（非侵入收資料，6 種具體方式）、G（已通過計畫的三種情形）
+//     底下是「多個具體情形」，小幫手只知道「屬於 B/C」、不知道是哪一條，硬猜會勾錯，故這幾類交給
+//     使用者依實際情形自行勾選具體項目（UI 會提示）。保守預帶、不亂猜，是這個對應表的原則。
+
+// 資料用途 → 對應的「單格」IRB-003 分類（只列能一對一安全預帶的；其餘 undefined＝不自動勾）。
+// 對照 DATA_USE_RULES 中判成 expedited 的規則：medical_record→D、recording_or_image→E、behavior_or_trait→F。
+// noninvasive_measurement 屬 C 群（C1~C6 多選），無單格可對，刻意不列。
+const DATA_USE_TO_EXPEDITED: Partial<Record<ReviewDataUseType, ExpeditedCategory>> = {
+  medical_record: 'd',
+  recording_or_image: 'e',
+  behavior_or_trait: 'f',
+};
+
+// 檢體類型 → 對應的「單格」IRB-003 分類。
+// 對照 SPECIMEN_RULES 中判成 expedited 的規則：limited_blood_draw→A、legal_biobank_unlinkable→H。
+// new_noninvasive_specimen 屬 B 群（B1~B8 多選），無單格可對，刻意不列（交給使用者勾具體採集方式）。
+const SPECIMEN_TO_EXPEDITED: Partial<Record<ReviewSpecimenUseType, ExpeditedCategory>> = {
+  limited_blood_draw: 'a',
+  legal_biobank_unlinkable: 'h',
+};
+
+// 依審查小幫手已勾內容，建議 IRB-003 要勾哪幾個「研究類別」格（保守、只帶能安全對應的單格）。
+// 回傳值會被 Step4 簡審分支的「帶入建議分類」按鈕寫進 expedited_category，使用者再手動增減。
+export function suggestExpeditedCategories(screening: ReviewScreening): ExpeditedCategory[] {
+  const picks = new Set<ExpeditedCategory>();
+  (screening.data_use_types || []).forEach((t) => {
+    const c = DATA_USE_TO_EXPEDITED[t];
+    if (c) picks.add(c);
+  });
+  (screening.specimen_use_types || []).forEach((t) => {
+    const c = SPECIMEN_TO_EXPEDITED[t];
+    if (c) picks.add(c);
+  });
+  // 多中心研究已取得其他合法審查會同意 → 對應 IRB-003 的 I1「承接其他合法審查會通過之計畫」。
+  // （與 MODIFIER_RULES 的 has_other_irb_approval 同一個訊號，語意一致。）
+  if (screening.has_other_irb_approval) picks.add('i1');
+  return Array.from(picks);
 }

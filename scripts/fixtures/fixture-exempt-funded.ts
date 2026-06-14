@@ -176,7 +176,12 @@ export const fixtureExemptFunded: FormData = {
 
   // IRB 審查
   review_type: 'exempt',
+  is_multicenter: false,
+  multicenter_type: '',
+  multicenter_sites: [],
   exempt_category: ['public_info'],
+  expedited_category: [],   // 此 fixture 為免審，簡審研究類別留空（irb003_* 皆 □）
+  expedited_other_detail: '',
   exempt_reason: '本研究為次級資料研究，資料皆已去識別化，符合免審條件。',
   data_source: '本研究使用疾管署防疫資料庫，僅取得去識別化後之群體統計資料。',
   inclusion_criteria: '2018 至 2025 年通報之確定病例。',

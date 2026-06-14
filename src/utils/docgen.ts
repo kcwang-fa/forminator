@@ -15,11 +15,18 @@
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
 import JSZip from 'jszip';
+// 簽名圖嵌入：免費版 image module 把模板的 {%xxx_sig} 標籤換成 PNG 圖片；
+// fix-doc-pr-corruption 是 docxtemplater 官方修復模組，同一份文件嵌多張圖時
+// 避免 docPr id 重複造成 Word 開檔報「內容有問題」。
+import ImageModule from 'docxtemplater-image-module-free';
+import fixDocPrCorruption from 'docxtemplater/js/modules/fix-doc-pr-corruption.js';
+import { base64DataUrlToUint8Array, getPngSize, fitSignatureSize } from './signatureImage';
+import { requireSinglePi } from './personnelValidation';
 // file-saver 是 CJS 套件，無具名 ESM 匯出。用 default import + destructure，
 // 讓 Vite 和 Node 原生 ESM（snapshot 腳本用）都能解析。
 import fileSaver from 'file-saver';
 const { saveAs } = fileSaver;
-import type { FormData, Personnel } from '../types/form';
+import type { ExpeditedCategory, FormData, Personnel } from '../types/form';
 import { calcProjectYears, getRocDateParts, toRocDate } from './date';
 import { DOC_NAMES, type DocId } from '../data/defaults';
 import { buildBudgetRowsByYear, calcTotalYear, buildBudgetSummaryYears, isPersonnel, isBusiness, isCapital } from './budgetCalc';
@@ -27,6 +34,7 @@ import { EXEMPT_MAP } from './docgenMaps';
 import { prepareDatabaseData } from './docgen/database';
 import { preparePersonnelAppendix } from './docgen/personnelAppendix';
 import { prepareScheduleData } from './docgen/schedule';
+import { prepareIrb002_1Data } from './docgen/irb0021';
 
 // DOC-6（IRB-018 保密切結書）和 DOC-7（資料庫保密切結書）需要每位研究人員各一份
 const PER_PERSON_DOCS = new Set<DocId>(['DOC-6', 'DOC-7']);
@@ -145,9 +153,37 @@ function prepareIRBData(data: FormData) {
     // 研究類別可複選：把每個選到的類別轉成文字、以「；」串接
     exempt_category_text: data.exempt_category.map((c) => EXEMPT_MAP[c] || c).join('；'),
     exempt_reason: data.exempt_reason,
-    recruit_text: data.recruit_subjects ? `是。${data.recruit_method}` : '否',
+    // 招募方式文字改由 docgen/irb0021.ts 的 recruit_method_text 注入 DOC-12（原 recruit_text 無任何範本使用，已移除）。
     interact_text: data.interact_subjects ? `是。${data.interact_detail}` : '否',
     conflict_of_interest_text: '本研究計畫主持人及所有研究人員聲明，與本研究無利益衝突。',
+  };
+}
+
+// IRB-003 簡易審查案件申請表（DOC-13）24 個「研究類別」勾選格的 key 順序。
+// 順序＝表單閱讀順序（A → B1~B8 → C1~C6 → D → E → F → G1~G3 → H → I1~I2），
+// 與 ExpeditedCategory union、inject-doc13.cjs 注入的 {irb003_*} placeholder 一一對應。
+const EXPEDITED_CATEGORY_KEYS: ExpeditedCategory[] = [
+  'a',
+  'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8',
+  'c1', 'c2', 'c3', 'c4', 'c5', 'c6',
+  'd', 'e', 'f',
+  'g1', 'g2', 'g3',
+  'h',
+  'i1', 'i2',
+];
+
+// DOC-13（IRB-003）的勾選格：使用者選到的格子填 ■、其餘填 □，外加 I2 的自由說明文字。
+// 只有「簡審」會真的用到這份模板；免審/一般審生成時 expedited_category 多半是空陣列，
+// 整張表渲染成全 □（一張合法空白表），不會壞。docgen 不挑文件、一律備好這批 key（與其他 prepareXxx 同模式）。
+function prepareExpeditedData(data: FormData) {
+  const picked = new Set(data.expedited_category || []);
+  // 用 EXPEDITED_CATEGORY_KEYS 一次組出 24 個 {irb003_<key>} → ■/□，避免手寫 24 行重複碼。
+  const boxes = Object.fromEntries(
+    EXPEDITED_CATEGORY_KEYS.map((key) => [`irb003_${key}`, picked.has(key) ? '■' : '□']),
+  );
+  return {
+    ...boxes,
+    irb003_other_detail: data.expedited_other_detail || '',
   };
 }
 
@@ -223,6 +259,22 @@ function prepareMiscPlaceholders(data: FormData, pi: Personnel) {
   };
 }
 
+// ===== 簽名資料 =====
+//
+// 簽名一律用「條件 section + 圖片標籤」的組合：{#pi_has_sig}{%pi_sig}{/pi_has_sig}
+//   - 有簽名：section 成立 → {%pi_sig} 被換成簽名圖
+//   - 沒簽名：section 整段消失 → 簽章欄維持範本原樣（底線空白），列印後仍可手簽
+// why 不直接用 {%pi_sig} 裸標籤：免費版 image module 對空值的行為未定義，
+//     包在 section 裡可保證空值時圖片標籤根本不會被處理。
+// 主管核章／權責單位／審查會的欄位一律不嵌（走公文流程，必須留白）。
+function prepareSignatureData(pi: Personnel) {
+  return {
+    // 舊草稿沒有 signature_image 欄位（undefined），|| '' 防禦
+    pi_has_sig: Boolean(pi.signature_image),
+    pi_sig: pi.signature_image || '',
+  };
+}
+
 function prepareCoverData(data: FormData) {
   const coPis      = data.personnel.filter(p => p.role === 'co_pi');
   const researchers = data.personnel.filter(p => p.role === 'researcher');
@@ -244,8 +296,7 @@ function prepareCoverData(data: FormData) {
 // export 目的：讓 scripts/docgen-snapshot.ts 能在 Node 端產出 placeholder 快照，
 // 作為 Phase 2 docgen 重構時的迴歸護網。生產程式不需直接呼叫此匯出。
 export function prepareCommonData(data: FormData) {
-  const pi      = findByRole(data.personnel, 'pi') ?? data.personnel[0];
-  if (!pi) throw new Error('表單中至少需要一位計畫主持人（PI）');
+  const pi      = requireSinglePi(data.personnel);
   const contact = findByRole(data.personnel, 'contact') || pi;
 
   // 經費分年參數：
@@ -273,12 +324,15 @@ export function prepareCommonData(data: FormData) {
     ...prepareBasicData(data, pi, contact),
     ...prepareResearchData(data),
     ...prepareIRBData(data),
+    ...prepareExpeditedData(data),
+    ...prepareIrb002_1Data(data),
     ...prepareProjectTypeData(data),
     ...prepareDatabaseData(data, pi),
     ...prepareScheduleData(data),
     ...prepareMiscPlaceholders(data, pi),
     ...preparePersonnelAppendix(data),
     ...prepareCoverData(data),
+    ...prepareSignatureData(pi),
     // 陸、經費需求表（逐年一張表，整張表外包 {#budget_years}、明細內包 {#budget_rows}）
     budget_years: buildBudgetRowsByYear(budgetItems, data.needs_funding, years, rocYears),
     // 壹、綜合資料經費摘要表
@@ -320,10 +374,19 @@ async function loadTemplate(docId: string): Promise<PizZip> {
 
 async function generateDoc(docId: string, templateData: Record<string, unknown>): Promise<Blob> {
   const zip = await loadTemplate(docId);
+  // 簽名圖嵌入模組。每次生成都建新的 instance，避免跨文件共用內部圖片狀態。
+  //   getImage：data URL → 二進位 bytes
+  //   getSize：讀 PNG 檔頭原始寬高 → 等比縮到簽章欄放得下的尺寸
+  const imageModule = new ImageModule({
+    centered: false,
+    getImage: (tagValue: string) => base64DataUrlToUint8Array(tagValue),
+    getSize: (_img: Uint8Array, tagValue: string) => fitSignatureSize(getPngSize(tagValue)),
+  });
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
     delimiters: { start: '{', end: '}' },
+    modules: [imageModule, fixDocPrCorruption],
   });
   doc.render(templateData);
   return doc.getZip().generate({
@@ -350,6 +413,11 @@ async function generatePerPersonDoc(
       person_phone:    person.phone,
       person_email:    person.email,
       person_id_number: person.id_number,
+      // 逐人簽名（DOC-6 立同意書人、DOC-7 立書人）：每份文件帶「該人自己」的簽名。
+      // 沒簽的人 section 不成立 → 簽名欄留白可手簽。改這裡要同步改
+      // scripts/docgen-snapshot.ts 的 mergePerPersonData（手抄鏡像）。
+      person_has_sig:  Boolean(person.signature_image),
+      person_sig:      person.signature_image || '',
       // 角色 checkbox（覆寫 baseData 的預設值）
       role_pi:         person.role === 'pi' ? '■' : '□',
       role_co_pi:      person.role === 'co_pi' ? '■' : '□',

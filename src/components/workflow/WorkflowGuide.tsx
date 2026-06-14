@@ -1,7 +1,7 @@
 // ===== §5.4 申請流程導引（跑關順序）=====
 
 import { Steps, Card, Tag, Space, Typography } from 'antd';
-import { MailOutlined, PhoneOutlined, FileTextOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
+import { MailOutlined, PhoneOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { DOC_NAMES, type DocId } from '../../data/defaults';
 import { resolveActivePlan } from '../../data/planConfigs';
 import { useFormStore } from '../../hooks/useFormStore';
@@ -12,12 +12,27 @@ export default function WorkflowGuide() {
   const { watch } = useFormStore();
   const reviewType = watch('review_type');
   const outputCategories = watch('output_categories') ?? [];
+  const consentDesign = watch('expedited_consent_design');
   const active = resolveActivePlan(reviewType, outputCategories);
 
   // 跑關流程依勾選的成果類別過濾：整關文件都沒被選到就整關隱藏，保留的關卡內也只留會產出的文件。
   const activeDocSet = new Set<string>(active.docs);
   const workflowSteps = active.planConfig.workflowSteps
-    .map((step) => ({ ...step, documents: step.documents.filter((doc) => activeDocSet.has(doc)) }))
+    .map((step) => {
+      const documents = step.documents.filter((doc) => activeDocSet.has(doc));
+      const refDocuments = [...(step.refDocuments ?? [])];
+      const isIrbSubmissionStep = documents.includes('DOC-12');
+
+      if (
+        isIrbSubmissionStep
+        && consentDesign === 'provide'
+        && !refDocuments.some((ref) => ref.label === 'IRB-005 研究對象說明暨同意書')
+      ) {
+        refDocuments.push({ label: 'IRB-005 研究對象說明暨同意書' });
+      }
+
+      return { ...step, documents, refDocuments };
+    })
     .filter((step) => step.documents.length > 0);
 
   if (workflowSteps.length === 0) {
@@ -71,20 +86,6 @@ export default function WorkflowGuide() {
                   ))}
                 </Space>
 
-                {step.signatureNotes && step.signatureNotes.length > 0 && (
-                  <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 8, padding: '8px 12px', marginTop: 8 }}>
-                    <Space style={{ marginBottom: 4 }}>
-                      <EditOutlined style={{ color: '#d48806' }} />
-                      <Text strong style={{ color: '#d48806', fontSize: 13 }}>需親簽文件</Text>
-                    </Space>
-                    <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
-                      {step.signatureNotes.map((note) => (
-                        <li key={note} style={{ fontSize: 13, color: '#595959' }}>{note}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 {step.contact && (
                   <div style={{ background: '#f6f8fa', borderRadius: 8, padding: 12, marginTop: 8 }}>
                     <Text strong>聯絡人：{step.contact.unit} {step.contact.name}</Text>
@@ -98,6 +99,15 @@ export default function WorkflowGuide() {
                       <PhoneOutlined />
                       <Text>{step.contact.phone}</Text>
                     </Space>
+                  </div>
+                )}
+
+                {step.signatureNotes && step.signatureNotes.length > 0 && (
+                  <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 8, padding: 12, marginTop: 8 }}>
+                    <Text strong>簽章提醒</Text>
+                    <ul style={{ margin: '6px 0 0', paddingLeft: 20 }}>
+                      {step.signatureNotes.map((note) => <li key={note}>{note}</li>)}
+                    </ul>
                   </div>
                 )}
               </div>

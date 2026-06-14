@@ -1,8 +1,8 @@
 // ===== MVP 預設值：署內無經費資料庫回溯性研究 =====
 
-import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest, ReviewScreening } from '../types/form';
+import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest, ReviewScreening, MulticenterSite } from '../types/form';
 
-export const SDD_VERSION = '1.7.0';
+export const SDD_VERSION = '1.9.0';
 
 export const emptyEducation: Education = {
   degree: '',
@@ -55,6 +55,13 @@ export const emptyReviewScreening: ReviewScreening = {
   notes: '',
 };
 
+export const emptyMulticenterSite: MulticenterSite = {
+  country: '',
+  city: '',
+  location: '',
+  contact: '',
+};
+
 /** 空白人員模板 */
 export const emptyPersonnel: Personnel = {
   role: 'pi',
@@ -78,6 +85,7 @@ export const emptyPersonnel: Personnel = {
   work_history: [],
   projects: [],
   publications: '',
+  signature_image: '',
 };
 
 /** 預設經費項目（含 tooltip 說明） */
@@ -158,12 +166,59 @@ export const defaultFormData: FormData = {
   review_type_source: 'default',
   review_screening: { ...emptyReviewScreening },
   exempt_category: ['public_info'],  // 可複選，預設「使用已合法公開之資料」
+  expedited_category: [],   // 簡審 IRB-003 研究類別，預設空白，由 Step4 簡審分支按鈕帶入或手勾
+  expedited_other_detail: '',  // 簡審 IRB-003 I2「請詳細說明」自由文字
+  // IRB-002-1（DOC-12）後半段欄位；知情同意不預選，必須由使用者明確作答。
+  expedited_subject_relationship: 'researcher_subject',
+  expedited_subject_relationship_other_detail: '',
+  expedited_has_control_group: false,
+  expedited_control_group_type: '',
+  expedited_control_group_other_detail: '',
+  expedited_control_consent_form: null,
+  expedited_consent_design: null,
+  expedited_consent_proof_methods: [],
+  expedited_consent_proof_other_detail: '',
+  expedited_consent_sources: [],
+  expedited_consent_source_other_detail: '',
+  expedited_waive_signature_reason: '',
+  expedited_waive_consent_reason: '',
+  expedited_has_followup: false,
+  expedited_followup_period: '',
+  expedited_needs_dsmp: false,
+  is_multicenter: false,
+  multicenter_type: '',
+  multicenter_sites: [],
   exempt_reason: '本研究為次級資料研究，資料皆已去識別化。',
   data_source: '',  // 研究方法及工具描述，使用者自填（或用「帶入 Step 3 研究方法」按鈕帶入）
   inclusion_criteria: '',  // 研究對象納入條件，使用者據實填寫
   exclusion_criteria: '',  // 研究對象排除條件，使用者據實填寫
   recruit_subjects: false,
   recruit_method: '',
+  subject_count: '',  // 研究對象估計人數（簡審；自由文字）
+  subject_explainer: '',  // 何人會要求研究對象參與/向研究對象解釋；獨立於是否招募
+  subject_population_groups: [],  // 研究對象族群（簡審；空＝沿用審查小幫手自動判斷）
+  subject_patient_disease_name: '',
+  subject_cdc_staff_reason: '',
+  subject_population_other_detail: '',
+  subject_roster_methods: [],  // 研究對象名單取得方式（簡審才用、招募＝是時才填）
+  subject_roster_existing_db_name: '',
+  subject_roster_existing_project_name: '',
+  subject_roster_other_detail: '',
+  irb0021_has_specimen: null,
+  irb0021_has_new_specimen: null,
+  irb0021_has_existing_specimen: null,
+  irb0021_has_data: null,
+  irb0021_has_new_data: null,
+  irb0021_has_existing_data: null,
+  irb0021_data_deidentified: null,
+  // 研究類別「檢體採集／防疫用驗餘檢體」的種類底線格：空＝沿用審查小幫手自動草稿（見 irb0021.ts）。
+  irb0021_cat_specimen_detail: '',
+  irb0021_cat_residual_detail: '',
+  specimen_new_detail: '',
+  specimen_existing_detail: '',
+  data_new_detail: '',
+  data_existing_detail: '',
+  data_deidentification_detail: '',
   interact_subjects: false,
   interact_detail: '',
   privacy_during: '',
@@ -183,6 +238,7 @@ export const defaultFormData: FormData = {
   analysis_location: ['office', 'personal_pc'],
   pi_same_as_applicant: true,
   cross_link_data_center: false,
+  cross_link_db_name: '',  // 連結之資料庫名稱（DOC-8 / DOC-12 共用；cross_link_data_center=true 才有意義）
 
   apply_date: '',
   apply_year_start: '',
@@ -198,21 +254,42 @@ export const defaultFormData: FormData = {
  * DOC-2 = 署內研究計畫書（完整：封面 + 壹~捌主體 + 附表一/二/三）← inject-doc2.cjs
  * DOC-4 = IRB-004 研究計畫書                                       ← inject-doc4.cjs
  * 兩者不同，勿混淆。
+ *
+ * ── 新手筆記：為什麼這張表是「唯一權威來源」？ ──
+ * 下面 `DocId` 型別是「從這張表的 key 自動長出來的」（keyof typeof DOC_NAMES）。
+ * 意思是：你只要在這裡加一行（例如 'DOC-12'），整個專案凡是用到 DocId 的地方
+ *（planConfigs 的 docs 陣列、docgen 的文件清單、ZIP 預選…）就都「自動」認得它，
+ * 而且如果你哪裡打錯字（寫成 'DOC-21'），TypeScript 會在編譯時直接報錯給你看。
+ * → 這就是「型別安全鷹架」：把「改 A 忘了改 B」交給編譯器幫你抓，而不是靠記憶。
  */
-// DOC_NAMES 是文件 ID → 中文名稱的對應表，也是 DocId 型別的唯一來源。
-// 新增文件時：在這裡加一行，TypeScript 會自動更新 DocId，planConfigs 可直接使用。
 export const DOC_NAMES = {
   'DOC-1': '研究計畫簽呈（含公文系統操作說明）',
   'DOC-2': '署內研究計畫書',           // 完整文件：封面 + 壹~捌 + 附表一/二/三
   'DOC-3': 'IRB-002 計畫送件核對表',
   'DOC-4': 'IRB-004 研究計畫書',       // IRB 審查用，非署內計畫書
-  'DOC-5': 'IRB-012 免審申請表',
+  'DOC-5': 'IRB-012 免審申請表',       // 免審加填（exempt only）
   'DOC-6': 'IRB-018 保密切結書（研究人員）',
   'DOC-7': '資料庫保密切結書（署內員工使用）',
   'DOC-8': '資料庫使用申請單',
   'DOC-9': '資料庫申請簽呈（含公文系統操作說明）',
   'DOC-10': '個人資料利用申請表',
   'DOC-11': '應用系統維護單',
+  // ── 簡審 / 一般審用（依 IRB-001 流程圖：簡審加填 IRB-002-1 + IRB-003；一般審加填 IRB-002-1）──
+  // ⚠️ 目前只「鋪好編號位子」：public/templates/ 還沒有 DOC-12/13.docx，
+  //    要等 scripts/inject-doc12.cjs / inject-doc13.cjs 寫好、產出模板後才能真的生成文件。
+  //    在那之前 planConfigs.expedited 維持 ready:false，UI 不會讓使用者真的下載。
+  'DOC-12': 'IRB-002-1 人體研究計畫申請表',  // 簡審 + 一般審共用
+  'DOC-13': 'IRB-003 簡易審查案件申請表',    // 簡審專用
 } as const;
 
+// DocId = DOC_NAMES 的所有 key 組成的 union 型別（'DOC-1' | 'DOC-2' | … | 'DOC-13'）。
+// 不用手寫，會跟著上面那張表自動長大。
 export type DocId = keyof typeof DOC_NAMES;
+
+// ── 還沒有 .docx 模板、暫時不能「生成」的文件 ──
+// 用途：把「public/templates/ 還沒有對應 .docx」的 DOC 排除在可生成清單外
+//（見 planConfigs.ts 的 resolveActivePlan），避免使用者選了卻 fetch 404。
+// 新增計畫類型時，若某份文件的 inject 腳本 / docgen 還沒做好，先把它的 DocId 放進這個陣列；
+// 等模板產出、docgen 接好後再移除，文件就會自動出現在可生成清單裡。
+// 目前 DOC-1~13 全部備妥（DOC-12/13 已於簡審 Phase 1+2 接完、Phase 3 開放），故為空陣列。
+export const DOCS_WITHOUT_TEMPLATE: DocId[] = [];

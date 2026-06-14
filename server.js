@@ -4,6 +4,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { networkInterfaces } from 'os';
 import { callLlmJson, GEMINI_MODEL, GROQ_MODEL } from './api/_lib/llm.js';
 import {
   EXEMPT_IRB_REWRITE_SCHEMA,
@@ -11,12 +12,38 @@ import {
   buildExemptIrbRewritePrompt,
   validateExemptIrbRewriteRequest,
 } from './api/_lib/exempt-irb-rewrite.js';
+import { validateSession, validateImage, TTL_SECONDS } from './api/_lib/signStore.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+function isPrivateIpv4(address) {
+  if (address.startsWith('10.') || address.startsWith('192.168.') || address.startsWith('169.254.')) {
+    return true;
+  }
+
+  const [first, second] = address.split('.').map(Number);
+  return first === 172 && second >= 16 && second <= 31;
+}
+
+function findLanIpv4() {
+  const candidates = Object.entries(networkInterfaces())
+    .flatMap(([name, addresses]) => (addresses || []).map((address) => ({ name, ...address })))
+    .filter((address) =>
+      address.family === 'IPv4' &&
+      !address.internal &&
+      isPrivateIpv4(address.address),
+    );
+
+  // 常見的實體網卡優先，避免 VPN／虛擬網卡搶到 QR code 網址。
+  const preferred = candidates.find(({ name }) => /^(en0|eth0|wlan0|wi-fi)$/i.test(name));
+  return preferred?.address || candidates[0]?.address || '';
+}
+
+// body 上限調到 256kb：簽名圖（PNG base64，最大 100KB）會超過 express 預設的 100kb，
+// 不調的話手機簽名上傳會 413
+app.use(express.json({ limit: '256kb' }));
 
 // 靜態檔案（React build）
 app.use(express.static(join(__dirname, 'dist')));
@@ -237,6 +264,47 @@ app.post('/api/llm/rewrite-exempt-irb', async (req, res) => {
       model: req.body?.provider === 'gemini' ? GEMINI_MODEL : GROQ_MODEL,
     });
   }
+});
+
+// ===== 簽名中繼（本地開發用，記憶體版）=====
+// 與 Vercel 版（api/sign/*.js + Upstash Redis）行為對齊：
+// TTL 10 分鐘、取完即刪、相同的驗證規則（共用 signStore.js 的 validate）。
+// ⚠️ 記憶體版重啟即清空、多機部署不共享——只適合本地開發；
+//    正式環境（Vercel）走 Upstash，Railway 若要用需自行接 Redis。
+const signSessions = new Map(); // session id → { image, expiresAt }
+
+// 桌機若用 localhost 開啟，QR 不能照抄 localhost（手機會連到手機自己）。
+// 前端取這個位址並保留目前 Vite port，組成同一區網內可連線的簽名網址。
+app.get('/api/sign/network-info', (_req, res) => {
+  const host = findLanIpv4();
+  if (!host) {
+    return res.status(503).json({ error: '找不到可供手機連線的區網 IP' });
+  }
+  res.json({ host });
+});
+
+app.post('/api/sign/submit', (req, res) => {
+  const { session, image } = req.body || {};
+  const sessionError = validateSession(session);
+  if (sessionError) return res.status(400).json({ error: sessionError });
+  const imageError = validateImage(image);
+  if (imageError) return res.status(400).json({ error: imageError });
+  signSessions.set(session, { image, expiresAt: Date.now() + TTL_SECONDS * 1000 });
+  res.json({ ok: true });
+});
+
+app.get('/api/sign/poll', (req, res) => {
+  const session = req.query.session;
+  const sessionError = validateSession(session);
+  if (sessionError) return res.status(400).json({ error: sessionError });
+  const entry = signSessions.get(session);
+  // 過期的視同不存在（lazy 清除：取的時候才檢查，不用背景計時器）
+  if (!entry || entry.expiresAt < Date.now()) {
+    signSessions.delete(session);
+    return res.json({ status: 'pending' });
+  }
+  signSessions.delete(session);  // 取完即刪，與 Upstash GETDEL 行為一致
+  res.json({ status: 'done', image: entry.image });
 });
 
 // SPA fallback

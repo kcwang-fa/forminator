@@ -1,5 +1,5 @@
 import { defaultFormData, emptyDatabaseRequest, emptyReviewScreening } from '../data/defaults';
-import type { BudgetItem, DatabaseFieldPurpose, DatabaseRequest, ExemptCategory, FormData, GanttYear, OutcomeTypeDetail, ReviewScreening } from '../types/form';
+import type { BudgetItem, DatabaseFieldPurpose, DatabaseRequest, ExemptCategory, FormData, GanttYear, MulticenterSite, OutcomeTypeDetail, ReviewScreening } from '../types/form';
 import { calcProjectYears } from './date';
 import { getYearAmounts, sumYearAmounts } from './budgetCalc';
 import { monthsPerYear } from './gantt';
@@ -131,6 +131,16 @@ function normalizeReviewScreening(screening: Partial<ReviewScreening> | undefine
   };
 }
 
+function normalizeMulticenterSites(sites: FormData['multicenter_sites'] | undefined): MulticenterSite[] {
+  if (!Array.isArray(sites)) return [];
+  return sites.map((site) => ({
+    country: site?.country || '',
+    city: site?.city || '',
+    location: site?.location || '',
+    contact: site?.contact || '',
+  }));
+}
+
 function normalizePrivacyText(
   value: string | undefined,
   legacyDefault: string,
@@ -230,6 +240,78 @@ export function normalizeFormData(data: MaybeLegacyFormData | null | undefined):
     review_type_source: next.review_type_source || defaultFormData.review_type_source,
     review_screening: normalizeReviewScreening(next.review_screening),
     exempt_category: normalizeExemptCategory(next.exempt_category),
+    expedited_subject_relationship_other_detail: next.expedited_subject_relationship_other_detail || '',
+    expedited_has_control_group: Boolean(next.expedited_has_control_group),
+    expedited_control_group_type:
+      next.expedited_control_group_type === 'case_control'
+      || next.expedited_control_group_type === 'placebo_experimental'
+      || next.expedited_control_group_type === 'other'
+        ? next.expedited_control_group_type
+        : '',
+    expedited_control_group_other_detail: next.expedited_control_group_other_detail || '',
+    expedited_control_consent_form:
+      typeof next.expedited_control_consent_form === 'boolean'
+        ? next.expedited_control_consent_form
+        : null,
+    expedited_consent_design:
+      next.expedited_consent_design === 'provide'
+      || next.expedited_consent_design === 'waive_signature'
+      || next.expedited_consent_design === 'waive_full'
+        ? next.expedited_consent_design
+        : null,
+    expedited_consent_proof_methods: Array.isArray(next.expedited_consent_proof_methods)
+      ? next.expedited_consent_proof_methods.filter(
+          (method) => method === 'signed_datetime'
+            || method === 'witness_signature'
+            || method === 'team_record'
+            || method === 'other',
+        )
+      : [],
+    expedited_consent_proof_other_detail: next.expedited_consent_proof_other_detail || '',
+    expedited_consent_sources: Array.isArray(next.expedited_consent_sources)
+      ? next.expedited_consent_sources.filter(
+          (source) => source === 'subject'
+            || source === 'parent'
+            || source === 'guardian'
+            || source === 'authorized_person'
+            || source === 'legal_representative'
+            || source === 'other',
+        )
+      : [],
+    expedited_consent_source_other_detail: next.expedited_consent_source_other_detail || '',
+    expedited_waive_signature_reason: next.expedited_waive_signature_reason || '',
+    expedited_waive_consent_reason: next.expedited_waive_consent_reason || '',
+    expedited_followup_period: next.expedited_followup_period || '',
+    subject_patient_disease_name: next.subject_patient_disease_name || '',
+    subject_cdc_staff_reason: next.subject_cdc_staff_reason || '',
+    subject_population_other_detail: next.subject_population_other_detail || '',
+    subject_roster_existing_db_name: next.subject_roster_existing_db_name || '',
+    subject_roster_existing_project_name: next.subject_roster_existing_project_name || '',
+    subject_roster_other_detail: next.subject_roster_other_detail || '',
+    irb0021_has_specimen:
+      typeof next.irb0021_has_specimen === 'boolean' ? next.irb0021_has_specimen : null,
+    irb0021_has_new_specimen:
+      typeof next.irb0021_has_new_specimen === 'boolean' ? next.irb0021_has_new_specimen : null,
+    irb0021_has_existing_specimen:
+      typeof next.irb0021_has_existing_specimen === 'boolean' ? next.irb0021_has_existing_specimen : null,
+    irb0021_has_data:
+      typeof next.irb0021_has_data === 'boolean' ? next.irb0021_has_data : null,
+    irb0021_has_new_data:
+      typeof next.irb0021_has_new_data === 'boolean' ? next.irb0021_has_new_data : null,
+    irb0021_has_existing_data:
+      typeof next.irb0021_has_existing_data === 'boolean' ? next.irb0021_has_existing_data : null,
+    irb0021_data_deidentified:
+      typeof next.irb0021_data_deidentified === 'boolean' ? next.irb0021_data_deidentified : null,
+    specimen_new_detail: next.specimen_new_detail || '',
+    specimen_existing_detail: next.specimen_existing_detail || '',
+    data_new_detail: next.data_new_detail || '',
+    data_existing_detail: next.data_existing_detail || '',
+    data_deidentification_detail: next.data_deidentification_detail || '',
+    is_multicenter: Boolean(next.is_multicenter),
+    multicenter_type: next.multicenter_type === 'domestic' || next.multicenter_type === 'international'
+      ? next.multicenter_type
+      : '',
+    multicenter_sites: normalizeMulticenterSites(next.multicenter_sites),
     budget_items: normalizeBudgetItems(next.budget_items, yearsCount),
     privacy_during: normalizePrivacyText(next.privacy_during, LEGACY_PRIVACY_DEFAULTS.privacy_during),
     privacy_after: normalizePrivacyText(next.privacy_after, LEGACY_PRIVACY_DEFAULTS.privacy_after),

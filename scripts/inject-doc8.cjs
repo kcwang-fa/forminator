@@ -44,6 +44,41 @@ function insertInNextCell(xml, labelText, placeholder) {
   return replaceText(xml, labelText, labelText + placeholder);
 }
 
+// ===== 簽名圖注入 helper =====
+// 簽章欄注入「條件 section + 圖片標籤」三件組：{#xx_has_sig}{%xx_sig}{/xx_has_sig}
+//   - 有簽名：docgen 的 image module 把 {%xx_sig} 換成簽名 PNG 圖
+//   - 沒簽名：section 整段消失，簽章欄維持範本原樣（底線/空白），列印後仍可手簽
+// ⚠️ 三個標籤必須拆成三個「獨立 run」：docxtemplater 展開 section 時，若 {%圖片} 與
+//    section 標籤擠在同一個 <w:t>，圖片標籤會丟失 <w:t> 上下文而報
+//    「Raw tag not in paragraph」（2026-06-11 實測）。
+// ⚠️ 錨點找不到一律 throw，不可 console.warn 帶過——DOC-7 的立書人姓名欄曾因
+//    CJK 相容字靜默匹配失敗，模板缺 placeholder 很久都沒人發現。
+function sigRuns(prefix) {
+  return `<w:r><w:t>{#${prefix}_has_sig}</w:t></w:r>` +
+         `<w:r><w:t>{%${prefix}_sig}</w:t></w:r>` +
+         `<w:r><w:t>{/${prefix}_has_sig}</w:t></w:r>`;
+}
+// 在「錨點文字所在 run」的 </w:r> 之後插入簽名三件組。
+// searchFrom：錨點從這個位置開始找（預設從頭），用於「先錨定區域、再找區域內的 run」。
+function injectSigAfterRun(xml, anchorText, prefix, searchFrom = 0) {
+  const anchorIdx = xml.indexOf(anchorText, searchFrom);
+  if (anchorIdx === -1) throw new Error(`簽名欄錨點「${anchorText}」不存在（範本可能改版）`);
+  const runEnd = xml.indexOf('</w:r>', anchorIdx);
+  if (runEnd === -1) throw new Error(`簽名欄錨點「${anchorText}」後找不到 run 結尾`);
+  const insertAt = runEnd + '</w:r>'.length;
+  let out = xml.slice(0, insertAt) + sigRuns(prefix) + xml.slice(insertAt);
+  // 簽章欄段落若鎖死行高（lineRule="exact"），Word 會把高於行高的簽名圖「裁掉」。
+  // 改成 atLeast：沒簽名時外觀不變，有簽名時行高自動撐開。
+  const paraStart = out.lastIndexOf('<w:p ', anchorIdx);
+  if (paraStart !== -1) {
+    const head = out.slice(paraStart, anchorIdx);
+    if (head.includes('w:lineRule="exact"')) {
+      out = out.slice(0, paraStart) + head.replace('w:lineRule="exact"', 'w:lineRule="atLeast"') + out.slice(anchorIdx);
+    }
+  }
+  return out;
+}
+
 // 替換第 N 個出現的字串
 function replaceNth(xml, search, replacement, n) {
   const esc = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -274,6 +309,22 @@ processDatabaseSection(0, '');
 processDatabaseSection(1, '_2');
 processDatabaseSection(2, '_3');
 processDbPersonnelRoster();
+
+// ===== 申請者簽名欄：嵌入簽名圖（申請者=PI，docgen 的 pi_sig）=====
+// 結構：「申請者簽名」run →「：」run →「底線＋單位主管簽名」共用 run
+// （申請者的簽名底線與主管 label 黏在同一個 run！）。
+// 圖要插在「：」run 之後、那條共用 run 之前；共用 run 完全不動，主管欄維持留白手簽。
+const applicantSigIdx = xml.indexOf('申請者簽名');
+if (applicantSigIdx === -1) throw new Error('DOC-8 找不到「申請者簽名」欄（範本可能改版）');
+xml = injectSigAfterRun(xml, '：</w:t>', 'pi', applicantSigIdx);
+
+// 健檢：「單位主管簽名」（走核章流程）之後不得出現任何注入標籤
+const mgrSigIdx = xml.indexOf('單位主管簽名');
+if (mgrSigIdx === -1) throw new Error('DOC-8 找不到「單位主管簽名」欄（範本可能改版）');
+if (xml.slice(mgrSigIdx, mgrSigIdx + 300).includes('{')) {
+  throw new Error('DOC-8 單位主管簽名欄被誤注入標籤，必須留白');
+}
+console.log('  ✓ 申請者簽名欄簽名注入（單位主管欄保持留白）');
 
 console.log('  ✓ 資料庫使用申請單 欄位注入');
 saveDoc(zip, xml, OUT);

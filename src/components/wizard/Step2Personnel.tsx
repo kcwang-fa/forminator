@@ -1,6 +1,6 @@
 // ===== 第 2 頁：研究團隊 =====
 
-import { Button, Card, Form, Input, Select, Space, Popconfirm, Collapse, Divider, InputNumber, Tooltip, message } from 'antd';
+import { Alert, Button, Card, Form, Input, Select, Space, Popconfirm, Collapse, Divider, InputNumber, Tooltip, message } from 'antd';
 import { PlusOutlined, DeleteOutlined, ExportOutlined, ImportOutlined, CopyOutlined } from '@ant-design/icons';
 import { Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
@@ -11,6 +11,7 @@ import { EducationFields } from './personnel/EducationFields';
 import { WorkHistoryFields } from './personnel/WorkHistoryFields';
 import { ProjectFields } from './personnel/ProjectFields';
 import { PublicationFields } from './personnel/PublicationFields';
+import { validatePersonnel } from '../../utils/personnelValidation';
 
 const ROLE_OPTIONS: { value: PersonnelRole; label: string }[] = [
   { value: 'pi',         label: '計畫主持人' },
@@ -37,6 +38,8 @@ function PersonnelCardTitle({ index }: { index: number }) {
 export default function Step2Personnel() {
   const { control, getValues, setValue } = useFormStore();
   const { fields, append, remove } = useFieldArray({ control, name: 'personnel' });
+  const personnel = useWatch({ control, name: 'personnel' }) ?? [];
+  const { piCandidates, duplicateNames } = validatePersonnel(personnel);
   const { handleExportProfile, triggerImport, RoleSelectModal } = usePersonnelProfile();
 
   return (
@@ -51,6 +54,25 @@ export default function Step2Personnel() {
           <Button icon={<ImportOutlined />} onClick={triggerImport}>匯入人員 Profile</Button>
         </Tooltip>
       </div>
+
+      {piCandidates.length !== 1 && (
+        <Alert
+          type="error"
+          showIcon
+          title={piCandidates.length === 0 ? '尚未設定計畫主持人' : `目前有 ${piCandidates.length} 位計畫主持人`}
+          description="同一計畫只能有一位計畫主持人；多位主持人會產生重複簽名卡與逐人文件，請將其他人改為協同主持人或研究人員。"
+          style={{ marginBottom: 12 }}
+        />
+      )}
+      {duplicateNames.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          title={`偵測到同名人員：${duplicateNames.join('、')}`}
+          description="請確認是否為同一人被重複建立。系統不會只靠姓名自動合併，以免把真正同名的不同人誤刪。"
+          style={{ marginBottom: 12 }}
+        />
+      )}
 
       {fields.map((field, index) => (
         <Card
@@ -98,7 +120,21 @@ export default function Step2Personnel() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <Controller name={`personnel.${index}.role`} control={control}
               render={({ field: f }) => (
-                <Form.Item label="角色" required><Select {...f} options={ROLE_OPTIONS} /></Form.Item>
+                <Form.Item label="角色" required>
+                  <Select
+                    {...f}
+                    options={ROLE_OPTIONS}
+                    onChange={(role: PersonnelRole) => {
+                      const hasOtherPi = getValues('personnel')
+                        .some((person, personIndex) => personIndex !== index && person.role === 'pi');
+                      if (role === 'pi' && hasOtherPi) {
+                        message.warning('目前已有計畫主持人；同一計畫只能有一位');
+                        return;
+                      }
+                      f.onChange(role);
+                    }}
+                  />
+                </Form.Item>
               )}
             />
             <Controller name={`personnel.${index}.name_zh`} control={control} rules={{ required: '請輸入姓名' }}

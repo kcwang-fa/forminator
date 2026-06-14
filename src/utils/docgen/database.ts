@@ -115,7 +115,8 @@ export function prepareDatabaseData(data: FormData, pi: Personnel) {
     pi_same: data.pi_same_as_applicant ? '■' : '□',
     cross_link_no: data.cross_link_data_center ? '□' : '■',
     cross_link_yes: data.cross_link_data_center ? '■' : '□',
-    cross_link_db_name: '',
+    // 連結之資料庫名稱：只有「是否與其他資料庫連結＝是」時才帶名稱，否則留空白（DOC-8 / DOC-12 共用此 key）。
+    cross_link_db_name: data.cross_link_data_center ? data.cross_link_db_name : '',
 
     // DOC-8 第三區、DOC-9、DOC-10、DOC-11 共用
     apply_system_text:  applySystemText,

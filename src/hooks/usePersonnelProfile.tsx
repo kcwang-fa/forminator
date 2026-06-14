@@ -54,6 +54,10 @@ export function usePersonnelProfile() {
   const confirmImport = useCallback(() => {
     if (!pendingProfile) return;
     const current = getValues('personnel');
+    if (selectedRole === 'pi' && current.some((person) => person.role === 'pi')) {
+      message.error('目前已有計畫主持人；同一計畫只能有一位，請改選協同主持人或研究人員');
+      return;
+    }
     const newPerson: Personnel = {
       ...emptyPersonnel,
       ...pendingProfile,

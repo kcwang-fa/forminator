@@ -267,9 +267,14 @@ function OptionGrid<T extends string>({
   );
 }
 
-// 資料用途的子分組面板：三組都綁同一個 data_use_types 欄位。
-// 因為 OptionGrid 收到的是「完整的 value 陣列」，每組只負責 toggle 自己那幾個 value，
-// 所以三組各自獨立勾選不會互相蓋掉。
+// 資料用途的子分組面板：畫面上分「既有資料 / 評估觀察 / 新收資料」三組，但它們其實
+// 共用同一個欄位 data_use_types（一個字串陣列）。
+//
+// 新手最容易誤會的點：三組綁同一欄位，勾 A 組會不會把 B 組的勾洗掉？答案是不會。
+// 關鍵在 OptionGrid 的 onChange：它每次都拿「目前完整的陣列」去加/減自己這一格的 value，
+// 不認識也不碰其他組的 value。例如 A 組勾了 'medical_record'，B 組再勾 'education_evaluation'，
+// 陣列只會從 ['medical_record'] 變成 ['medical_record','education_evaluation']，互不干擾。
+// → 分三組純粹是為了畫面好掃描；資料層永遠是同一個陣列。
 function DataUseGroup({
   options,
 }: {
@@ -625,17 +630,38 @@ export default function ReviewTypeScreening() {
           />
         )}
 
-        {decision.reasons.length > 0 && (
+        {(decision.reasons.length > 0 || decision.warnings.length > 0) && (
           <Alert
             type={decision.confidence === 'needs_review' ? 'warning' : 'info'}
             showIcon
-            title="判斷理由"
+            title="判斷說明"
             description={(
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {decision.reasons.map((reason) => (
-                  <li key={reason}>{reason}</li>
-                ))}
-              </ul>
+              <div style={{ display: 'grid', gap: 12 }}>
+                {decision.reasons.length > 0 && (
+                  <div>
+                    <Text strong>判斷理由</Text>
+                    <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
+                      {decision.reasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {decision.warnings.length > 0 && (
+                  <div>
+                    <Space size={6}>
+                      <WarningOutlined style={{ color: '#D48806' }} />
+                      <Text strong style={{ color: '#AD6800' }}>注意事項</Text>
+                    </Space>
+                    <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
+                      {decision.warnings.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             )}
           />
         )}
@@ -643,21 +669,6 @@ export default function ReviewTypeScreening() {
         {/* 「命中規則」（法規依據）已從畫面移除：對填表的研究者太生硬，主要看「判斷理由」即可。
             classifier 內部仍保留 matched_rules（型別與 snapshot 不動），日後若要做「查看法規依據」
             的展開區，資料現成可用。 */}
-
-        {decision.warnings.length > 0 && (
-          <Alert
-            type="warning"
-            showIcon
-            title="注意事項"
-            description={(
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {decision.warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-            )}
-          />
-        )}
 
         <div>
           <Button

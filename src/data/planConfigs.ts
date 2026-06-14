@@ -10,6 +10,7 @@
 
 import type { ReviewType, WorkflowStep, OutputCategory } from '../types/form';
 import type { DocId } from './defaults';
+import { DOCS_WITHOUT_TEMPLATE } from './defaults';
 
 // 每種計畫類型的靜態配置
 export interface PlanConfig {
@@ -35,6 +36,7 @@ const exemptWorkflowSteps: WorkflowStep[] = [
     signatureNotes: [
       '署內研究計畫書封面：計畫主持人簽名',
       '附表一：填表人簽章 + 計畫主持人簽章（每位研究人員各一份）',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
     ],
   },
   {
@@ -44,8 +46,9 @@ const exemptWorkflowSteps: WorkflowStep[] = [
     documents: ['DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
     refDocuments: [{ label: '研究計畫簽呈（已奉准）' }],
     signatureNotes: [
-      'IRB-012 免審申請表：申請人簽章 + 單位主管簽章',
+      'IRB-012 免審申請表：申請人簽章 + 單位主管簽章（主管簽章請列印後核章）',
       'IRB-018 保密切結書：每位研究人員各自親簽',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
     ],
     contact: {
       name: '劉兪筠',
@@ -62,8 +65,130 @@ const exemptWorkflowSteps: WorkflowStep[] = [
     refDocuments: [{ label: 'IRB 審查許可書' }],
     signatureNotes: [
       'DOC-7 資料庫保密切結書：每位研究人員各自親簽',
-      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名',
-      'DOC-10 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章',
+      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名（主管簽名請列印後核章）',
+      'DOC-10 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章（皆列印後核章）',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
+    ],
+  },
+  {
+    step: 4,
+    title: '送資訊室去識別化',
+    description: '資料庫申請奉核後，填妥應用系統維護單送資訊室，委請進行資料庫去識別化處理',
+    documents: ['DOC-11'],
+    signatureNotes: [
+      'DOC-11 應用系統維護單：申請單位核章 + 業務／系統權責單位審查',
+    ],
+  },
+];
+
+// ─── 簡易審查（簡審）跑關流程骨架 ──────────────────────────────────────────────
+// ⚠️ 目前是「鋪位子」：結構複用免審四關，但第 2 關（申請 IRB 審查）的文件清單換成
+//    簡審那包（依 IRB-001 流程圖：必備 DOC-2/3/4/6 ＋ 簡審加填 DOC-12/13，不含免審 DOC-5）。
+//    簽章說明與聯絡窗口先沿用免審值，待確認後再調整（標 TODO）。
+const expeditedWorkflowSteps: WorkflowStep[] = [
+  {
+    step: 1,
+    title: '研究計畫上簽',
+    description: '將簽呈連同署內研究計畫書送單位主管、相關單位及企劃組，一層核定',
+    documents: ['DOC-1', 'DOC-2'],
+    signatureNotes: [
+      '署內研究計畫書封面：計畫主持人簽名',
+      '附表一：填表人簽章 + 計畫主持人簽章（每位研究人員各一份）',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
+    ],
+  },
+  {
+    step: 2,
+    title: '申請 IRB 審查（簡易審查）',
+    // 簡審與免審最大差異就在這關：送的是 IRB-002-1（DOC-12）＋ IRB-003（DOC-13），而非 IRB-012。
+    description: '紙本送企劃組，同時寄送 e-mail；簡易審查由委員實質審查（非逕予同意）',
+    documents: ['DOC-2', 'DOC-3', 'DOC-4', 'DOC-6', 'DOC-12', 'DOC-13'],
+    refDocuments: [{ label: '研究計畫簽呈（已奉准）' }],
+    signatureNotes: [
+      'IRB-003 簡易審查案件申請表：主持人簽章 + 單位主管簽章（主管簽章請列印後核章）', // TODO 確認簡審各表單實際簽章需求
+      'IRB-018 保密切結書：每位研究人員各自親簽',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
+    ],
+    // TODO 確認簡審的 IRB 收件窗口是否與免審相同；先沿用免審聯絡資訊
+    contact: {
+      name: '劉兪筠',
+      unit: '企劃組',
+      email: 'yyliu7160@cdc.gov.tw',
+      phone: '(02) 2395-9825 #3022',
+    },
+  },
+  {
+    step: 3,
+    title: '資料庫申請上簽',
+    description: 'IRB 通過後，將資料庫申請簽呈（DOC-9）連同使用申請單、保密切結書、個人資料利用申請表送單位主管、資料權責單位及資訊室、企劃組，一層核定',
+    documents: ['DOC-9', 'DOC-7', 'DOC-8', 'DOC-10'],
+    refDocuments: [{ label: 'IRB 審查許可書' }],
+    signatureNotes: [
+      'DOC-7 資料庫保密切結書：每位研究人員各自親簽',
+      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名（主管簽名請列印後核章）',
+      'DOC-10 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章（皆列印後核章）',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
+    ],
+  },
+  {
+    step: 4,
+    title: '送資訊室去識別化',
+    description: '資料庫申請奉核後，填妥應用系統維護單送資訊室，委請進行資料庫去識別化處理',
+    documents: ['DOC-11'],
+    signatureNotes: [
+      'DOC-11 應用系統維護單：申請單位核章 + 業務／系統權責單位審查',
+    ],
+  },
+];
+
+// ─── 一般審查跑關流程 ──────────────────────────────────────────────────────
+// 一般審與簡審使用相同的 IRB-002 / IRB-002-1 / IRB-004 / IRB-018 文件骨架，
+// 但不填 IRB-003，且案件會由 2 位主審委員初審後提 IRB 會議討論。
+const fullWorkflowSteps: WorkflowStep[] = [
+  {
+    step: 1,
+    title: '研究計畫上簽',
+    description: '將簽呈連同署內研究計畫書送單位主管、相關單位及企劃組，一層核定',
+    documents: ['DOC-1', 'DOC-2'],
+    signatureNotes: [
+      '署內研究計畫書封面：計畫主持人簽名',
+      '附表一：填表人簽章 + 計畫主持人簽章（每位研究人員各一份）',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
+    ],
+  },
+  {
+    step: 2,
+    title: '申請 IRB 審查（一般審查）',
+    description: '紙本送企劃組並寄送電子檔；資料齊備後由 2 位主審委員初審，主持人依意見修正或回覆，再提 IRB 會議討論。審查結果可能為通過、修正後通過、修正後再審或不通過；通過後須依決議頻率辦理期中追蹤，計畫完成後辦理結案審查。',
+    documents: ['DOC-2', 'DOC-3', 'DOC-4', 'DOC-6', 'DOC-12'],
+    refDocuments: [
+      { label: '研究計畫簽呈（已奉准）' },
+      { label: '視需要檢附 IRB-014、問卷或病歷紀錄格式' },
+      { label: '研究團隊倫理教育訓練證明' },
+    ],
+    signatureNotes: [
+      'IRB-002-1 人體研究計畫申請表：主持人簽章 + 單位主管簽章（主管簽章請列印後核章）',
+      'IRB-018 保密切結書：接觸個人資訊或存取資料的研究成員各自親簽',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
+    ],
+    contact: {
+      name: '劉兪筠',
+      unit: '企劃組',
+      email: 'yyliu7160@cdc.gov.tw',
+      phone: '(02) 2395-9825 #3022',
+    },
+  },
+  {
+    step: 3,
+    title: '資料庫申請上簽',
+    description: 'IRB 通過後，將資料庫申請簽呈（DOC-9）連同使用申請單、保密切結書、個人資料利用申請表送單位主管、資料權責單位及資訊室、企劃組，一層核定',
+    documents: ['DOC-9', 'DOC-7', 'DOC-8', 'DOC-10'],
+    refDocuments: [{ label: 'IRB 審查許可書' }],
+    signatureNotes: [
+      'DOC-7 資料庫保密切結書：每位研究人員各自親簽',
+      'DOC-8 資料庫使用申請單：申請者簽名 + 單位主管簽名（主管簽名請列印後核章）',
+      'DOC-10 個人資料利用申請表：申請單位主管簽名 + 業務權責單位核章（皆列印後核章）',
+      '在下載頁簽過名的人，文件會自動帶入簽名；沒簽的留白，列印後手簽即可',
     ],
   },
   {
@@ -88,23 +213,31 @@ export const PLAN_CONFIGS: Record<ReviewType, PlanConfig> = {
     workflowSteps: exemptWorkflowSteps,
     ready: true,
   },
+  // 簡易審查（簡審）：文件依 IRB-001 流程圖釘死。
+  // docs = 必備 DOC-2/3/4/6 ＋ 簡審加填 DOC-12/13 ＋ 與審查類型正交的 DOC-1（簽呈）、DOC-7~11（資料庫）。
+  //「正交」= 資料庫那包是否產出，看使用者勾不勾「資料庫申請」成果類別，跟免/簡/一般審無關，
+  //   所以三種審查類型的 docs 都帶著它，最後由 resolveActivePlan 跟成果類別取交集決定。
   expedited: {
     id: 'expedited',
     label: '簡易審查',
-    description: '簡易審查計畫（模板準備中）',
-    docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-6'],
-    wizardStepKeys: ['basic', 'personnel', 'research', 'irb', 'budget'],
-    workflowSteps: [], // 待模板備妥後補充
-    ready: false,
+    description: '署內資料庫回溯性研究（簡易審查）',
+    docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-6', 'DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11', 'DOC-12', 'DOC-13'],
+    wizardStepKeys: ['basic', 'personnel', 'research', 'irb', 'budget', 'database'],
+    workflowSteps: expeditedWorkflowSteps,
+    // ✅ 已開放（簡審 Phase 3）：模板（DOC-12/13.docx）+ docgen（prepareExpeditedData / prepareIrb002_1Data）
+    //    + Step4 簡審 UI 都接好，DOC-12/13 也已移出 DOCS_WITHOUT_TEMPLATE。
+    // ⚠️ 跑關流程第 2 關的簽章說明 / IRB 收件窗口仍沿用免審值（見 expeditedWorkflowSteps 的 TODO，待確認後補）。
+    ready: true,
   },
+  // 一般審查：依流程圖只加填 IRB-002-1（DOC-12），不含簡審專屬的 IRB-003（DOC-13）。
   full: {
     id: 'full',
     label: '一般審查',
-    description: '一般審查計畫（模板準備中）',
-    docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-6'],
-    wizardStepKeys: ['basic', 'personnel', 'research', 'irb', 'budget'],
-    workflowSteps: [], // 待模板備妥後補充
-    ready: false,
+    description: '一般審查計畫',
+    docs: ['DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-6', 'DOC-7', 'DOC-8', 'DOC-9', 'DOC-10', 'DOC-11', 'DOC-12'],
+    wizardStepKeys: ['basic', 'personnel', 'research', 'irb', 'budget', 'database'],
+    workflowSteps: fullWorkflowSteps,
+    ready: true,
   },
 };
 
@@ -138,7 +271,11 @@ export const OUTPUT_CATEGORY_CONFIGS: Record<OutputCategory, OutputCategoryConfi
   irb: {
     label: 'IRB 審查',
     description: 'IRB 送審相關文件（審查類型決定實際包含哪幾份）',
-    docs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
+    // 這裡列「IRB 類別可能涵蓋的所有文件」（各審查類型的聯集）：
+    //   免審加填 DOC-5、簡審加填 DOC-12+DOC-13、一般審加填 DOC-12。
+    // 實際生成哪幾份，會再與 review_type 的 planConfig.docs 取交集（見 resolveActivePlan）——
+    // 例如選免審時，DOC-12/13 不在免審的 planConfig.docs 裡，交集後自動排除，不會誤產。
+    docs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6', 'DOC-12', 'DOC-13'],
     steps: ['basic', 'personnel', 'research', 'irb'],
   },
   database: {
@@ -155,7 +292,18 @@ export interface ResolvedPlan {
   docs: DocId[];               // 篩選後實際產出的文件
 }
 
-// 在 planConfig（由 review_type 決定的「全集」）之上，依勾選的成果類別做交集篩選。
+// ── 新手筆記：這個函式在做「交集（取兩邊都有的）」──
+// 有兩個獨立的軸：
+//   1. review_type（免/簡/一般審）→ 決定「這個審查類型最多會用到哪些文件」= planConfig.docs（全集）
+//   2. output_categories（研究計畫/IRB/資料庫，可複選）→ 決定「這次想產出哪幾類成果」
+// 最終要顯示的步驟與文件 = 兩邊「都有」的那些（交集），再扣掉「模板還沒做好的文件」（DOCS_WITHOUT_TEMPLATE，
+// 目前為空）。例如：選了「簡審」+ 只勾「IRB」→ planConfig.docs（簡審那包）∩ IRB 類別 = DOC-3/4/6/12/13
+//（DOC-5 不在簡審 planConfig.docs，交集後排除）→ 簡審 Phase 3 開放後 DOC-12/13 已可生成，全部產出。
+// 這就是為什麼選免審時不會冒出簡審的 DOC-12/13：免審的 planConfig.docs 根本沒有它們，交集後就沒了。
+//
+// 注意：回傳的 `docs` 是「現在真的能生成的文件」（扣掉 DOCS_WITHOUT_TEMPLATE 裡沒模板的），但
+// `planConfig.docs`（全集）仍保留完整規劃，需要看「這個審查類型規劃上有哪些文件」時讀 planConfig.docs。
+//
 // 維持 planConfig 既有順序；basic 一律保留（使用者隨時能回第一步重選）。
 // 未勾任何類別時，誠實地回傳「只有基本資訊、零文件」，與 Step1 的「請至少選擇一項」警告一致——
 // 不偷偷退回全選，否則畫面顯示全部取消、背後卻仍當全選跑，會自相矛盾。
@@ -171,6 +319,7 @@ export function resolveActivePlan(reviewType: ReviewType, categories: OutputCate
   return {
     planConfig,
     wizardStepKeys: planConfig.wizardStepKeys.filter((s) => stepSet.has(s)),
-    docs: planConfig.docs.filter((d) => docSet.has(d)),
+    // 交集（兩邊都有）後，再排除「模板還沒做好」的文件，避免生成時抓不到 .docx 而 404。
+    docs: planConfig.docs.filter((d) => docSet.has(d) && !DOCS_WITHOUT_TEMPLATE.includes(d)),
   };
 }

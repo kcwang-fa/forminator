@@ -36,7 +36,8 @@ export const STEP_CONFIGS: Record<WizardStepKey, StepConfig> = {
   irb: {
     title: 'IRB 審查',
     hint: '確認審查類型、資料來源與保護措施，這些內容會直接進入 IRB 文件。',
-    affectedDocs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6'],
+    // 各審查類型的聯集；App 會再與目前 review_type 的實際文件取交集。
+    affectedDocs: ['DOC-3', 'DOC-4', 'DOC-5', 'DOC-6', 'DOC-12', 'DOC-13'],
   },
   budget: {
     title: '經費概算',

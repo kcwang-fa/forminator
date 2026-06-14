@@ -1,6 +1,6 @@
 import type { ExemptIrbDraftText, FormData, ReviewDataIdentifiability, ReviewScreening } from '../types/form';
 
-// ===== §4 免審 IRB 文案輔助 =====
+// ===== §4 IRB 文案輔助 =====
 //
 // 設計（拆除「免審文案小幫手」後）：
 //   Step 4 不再有那塊重量級素材表單（exempt_irb_profile 已整批移除）。隱私保護三段改由
@@ -8,6 +8,9 @@ import type { ExemptIrbDraftText, FormData, ReviewDataIdentifiability, ReviewScr
 //   ＋ 罐頭預設句生成（見 Step4IRB/index.tsx 的「帶入隱私保護草稿」按鈕）。
 //   免審理由、研究方法各有自己的「帶入」按鈕；AI 潤飾仍可用（ExemptRewritePanel），
 //   潤飾對象是主畫面五個文字欄位（免審理由 / 研究方法 / 隱私三段）。
+//
+// 隱私草稿不以審查類型猜測資料狀態。免審、簡審、一般審都先依可識別性、是否接觸／招募、
+// 素材類型等事實生成；審查類型只影響 UI 與送件流程，不應讓草稿憑空宣稱「已去識別化」。
 
 function ensureSentence(text: string) {
   const trimmed = text.trim();
@@ -19,15 +22,9 @@ function compactLines(lines: string[]) {
   return lines.map(line => ensureSentence(line)).filter(Boolean).join('');
 }
 
-// 審查小幫手中，只有「資料可識別性 = 可識別或可回連」才認定研究團隊會接觸到可識別個資；
-// 其餘（去個資、匿名編碼、公開、未確認）都視為不接觸可識別個資。
-function researcherAccessesPersonalData(identifiability: ReviewDataIdentifiability | ''): boolean {
-  return identifiability === 'identifiable_or_linkable';
-}
-
 // 素材情境：把勾選的資料／檢體類型歸成一個主要情境（資料庫 vs 病歷 vs 檢體 vs 公開資料…）。
-// 免審常見的素材各有不同講法，先分類再套對應描述，是讓草稿「會隨素材不同而不同」的關鍵。
-// 隱私三段（PRIVACY_DURING_LEAD）與研究方法及工具（DATA_SOURCE_LEAD）兩處共用此分類，故命名為「素材」而非「隱私」。
+// 素材本身只決定「用的是什麼」，不得用來反推資料一定已去識別化；可識別性另讀
+// review_screening.data_identifiability。兩處草稿共用此分類，避免研究方法和隱私段互相矛盾。
 type MaterialScenario = 'specimen' | 'medical_record' | 'database' | 'business_data' | 'public' | 'new_data' | 'generic';
 
 // 從勾選的資料／檢體類型推主要情境。多選時取「最具體者優先」：檢體 > 病歷 > 資料庫 > 業務 > 公開 > 新收 > 通用。
@@ -48,51 +45,114 @@ function inferMaterialScenario(screening: ReviewScreening): MaterialScenario {
   return 'generic';
 }
 
-// 各情境「研究中」隱私保護的開頭描述（資料如何去識別化／不接觸個人）。
-const PRIVACY_DURING_LEAD: Record<MaterialScenario, string> = {
-  database: '本研究使用之資料由資料提供單位去識別化後提供，研究團隊取得後無法辨識特定個人',
-  medical_record: '本研究向醫療院所申請之病歷資料已去識別化，研究團隊不直接接觸個案',
-  business_data: '本研究使用既有業務資料，未新增介入或額外蒐集，並以去識別化方式處理',
-  specimen: '本研究使用之檢體或菌株無法回溯辨識特定個人，並依生物安全及實驗室管理規範保存與操作',
-  public: '本研究使用已合法公開或不記名之資訊，無從辨識特定個人，過程不蒐集可識別個資',
-  new_data: '本研究以最低風險方式蒐集資料，並以匿名或編碼處理，使研究執行時無法辨識特定個人',
-  generic: '研究團隊不接觸可直接識別個人之資料',
+const MATERIAL_PRIVACY_LEAD: Record<MaterialScenario, string> = {
+  database: '本研究使用核准取得之既有資料庫資料',
+  medical_record: '本研究使用核准取得之病歷資料',
+  business_data: '本研究使用既有業務資料，未因研究額外增加未經核准之資料蒐集',
+  specimen: '本研究使用核准取得之檢體或菌株及其相關資料，並依生物安全及實驗室管理規範保存與操作',
+  public: '本研究使用依法公開且符合公開目的之資訊',
+  new_data: '本研究依核定程序蒐集研究資料',
+  generic: '本研究使用經核准之研究資料或材料',
 };
 
-// 從「審查類型小幫手」已填內容生成 IRB-012 隱私保護三段草稿：
-//   ① 依「素材類型」決定開頭去識別化講法（PRIVACY_DURING_LEAD + 檢體的特殊銷毀講法）；
-//   ② 用「是否接觸個案 / 是否接觸可識別個資」修飾存取描述與撤回段落。
-// 儲存位置等仍用通用預設句（拆掉文案小幫手後不再有結構化輸入欄），使用者帶入後可再手動改具體值。
+const IDENTIFIABILITY_PRIVACY_LEAD: Record<ReviewDataIdentifiability, string> = {
+  provider_deidentified_unidentifiable:
+    '資料由提供單位完成去識別化後提供，研究團隊取得後無法辨識特定個人',
+  coded_researcher_unidentifiable:
+    '研究資料採匿名編碼，研究團隊執行研究時不持有編碼對照資訊，無法直接辨識特定個人；如需回連，應由有權限之單位依核准程序辦理',
+  identifiable_or_linkable:
+    '研究資料仍可能包含可識別或可回連資訊，僅蒐集研究目的所需之最小必要資料，並以權限控管、加密儲存及存取紀錄限制使用',
+  public_or_legally_open:
+    '資料為依法公開且符合公開目的之資訊，研究過程不另行蒐集非公開之可識別個人資料',
+  unknown:
+    '資料可識別性與回連方式尚待確認；正式送件前將依實際資料內容補充去識別化、編碼、存取權限及回連管理措施',
+};
+
+export interface PrivacyDraftAssessment {
+  identifiabilityConfirmed: boolean;
+  cautions: string[];
+}
+
+export function assessPrivacyDraftInputs(
+  data: Pick<FormData, 'review_screening' | 'recruit_subjects'>,
+): PrivacyDraftAssessment {
+  const identifiability = data.review_screening.data_identifiability;
+  const identifiabilityConfirmed = Boolean(identifiability && identifiability !== 'unknown');
+  const cautions: string[] = [];
+
+  if (!identifiabilityConfirmed) {
+    cautions.push('資料可識別性尚未確認，草稿將使用中性文字；正式送件前請回 Step 1 補齊資料可識別性。');
+  }
+  if (identifiability === 'coded_researcher_unidentifiable') {
+    cautions.push('匿名編碼不等於完全去連結；請確認編碼對照資訊由誰保管，以及研究團隊能否申請回連。');
+  }
+  if (identifiability === 'identifiable_or_linkable') {
+    cautions.push('本案包含可識別或可回連資料，請確認最小必要欄位、存取人員、權限、保存期限及回連程序。');
+  }
+  if (data.review_screening.has_direct_subject_contact || data.recruit_subjects) {
+    cautions.push('本案涉及接觸或招募研究對象，請確認告知、同意、退出及退出後資料處理方式。');
+  }
+
+  return { identifiabilityConfirmed, cautions };
+}
+
+function identifiabilityLead(identifiability: ReviewDataIdentifiability | ''): string {
+  return IDENTIFIABILITY_PRIVACY_LEAD[identifiability || 'unknown'];
+}
+
+function buildWithdrawalText(data: FormData): string {
+  const screening = data.review_screening;
+  const identifiability = screening.data_identifiability;
+  const hasContactOrRecruitment = screening.has_direct_subject_contact || data.recruit_subjects;
+
+  if (!identifiability || identifiability === 'unknown') {
+    return '資料可識別性及是否可回連尚待確認；中途退出與資料抽離機制應於正式送件前依實際流程補充。';
+  }
+  if (hasContactOrRecruitment || identifiability === 'identifiable_or_linkable') {
+    return '如研究對象提出撤回或停止使用之請求，研究團隊將依核准程序處理尚可辨識及尚未納入整體分析之資料；已完成不可回連處理或已納入整體分析而無法個別抽離者，將依核准內容及相關法規辦理。';
+  }
+  if (identifiability === 'coded_researcher_unidentifiable') {
+    return '如研究對象依法提出撤回或停止使用之請求，將由有權保管編碼對照資訊之單位依核准程序確認及辦理；資料完成不可回連處理後，將無法依個別研究對象抽離。';
+  }
+  if (identifiability === 'public_or_legally_open') {
+    return '本研究使用依法公開之資料，且不直接接觸或招募研究對象，不涉及研究對象中途退出。';
+  }
+  return '研究團隊取得之資料已無法辨識或回連特定個人，且不直接接觸或招募研究對象，故無法依個別研究對象抽離資料。';
+}
+
+// 從「審查類型小幫手」已填內容生成隱私保護三段草稿。可識別性優先於素材類型：
+// 素材只描述來源，可識別性才決定能否寫「已去識別化」、是否需要回連與退出機制。
 export function buildPrivacyDraftFromScreening(
   data: FormData,
 ): Pick<ExemptIrbDraftText, 'privacy_during' | 'privacy_after' | 'privacy_withdrawal'> {
   const screening = data.review_screening;
   const scenario = inferMaterialScenario(screening);
-  const hasContact = screening.has_direct_subject_contact;
-  const accessesPersonal = researcherAccessesPersonalData(screening.data_identifiability);
-  const needsWithdrawal = hasContact || accessesPersonal;
+  const identifiability = screening.data_identifiability;
+  const hasContactOrRecruitment = screening.has_direct_subject_contact || data.recruit_subjects;
+  const identifiable = identifiability === 'identifiable_or_linkable';
+  const coded = identifiability === 'coded_researcher_unidentifiable';
 
   return {
     privacy_during: compactLines([
-      PRIVACY_DURING_LEAD[scenario],
+      MATERIAL_PRIVACY_LEAD[scenario],
+      identifiabilityLead(identifiability),
       '研究期間資料儲存於符合本署資安規範之核准分析環境，僅限經授權之研究人員基於研究目的存取',
-      // 只有會接觸可識別個資時才補最小必要原則句；不接觸的情境寫了反而冗贅。
-      accessesPersonal ? '若需接觸可識別資料，將依最小必要原則、權限控管及保密義務辦理' : '',
-      // 有直接接觸研究對象時，補上告知與權益保護。
-      hasContact ? '如涉及接觸研究對象，將事先告知並採取研究對象權益保護措施' : '',
+      screening.is_minimal_risk === true && scenario === 'new_data'
+        ? '研究程序限於經核准之最低風險方式'
+        : '',
+      hasContactOrRecruitment ? '如涉及接觸或招募研究對象，將依核准內容進行告知、同意及權益保護' : '',
       '研究成果呈現時不揭露可識別個案之資訊。',
     ]),
     privacy_after: compactLines([
       '研究成果僅以群體統計、整體分析或無法辨識特定個人之方式呈現。',
+      identifiable ? '可識別資訊與分析資料將依核准之權限及保存方式管理，非經授權不得存取或回連' : '',
+      coded ? '編碼對照資訊由有權限之單位與研究分析資料分開管理' : '',
       // 檢體情境多一段檢體處置/銷毀；其餘資料情境用通用保存銷毀句。
       scenario === 'specimen'
         ? '檢體或菌株依生物安全及實驗室管理規範處置或銷毀，相關分析資料於計畫結束後依核定保存期限保存，屆滿後依機關資料銷毀程序辦理'
         : '研究資料於計畫結束後依核定保存期限保存，屆滿後依機關資料銷毀程序辦理',
     ]),
-    // 有接觸個案或會接觸可識別個資 → 提供撤回機制；否則屬不可回連次級資料，無中途退出情形。
-    privacy_withdrawal: needsWithdrawal
-      ? '如研究對象依法提出撤回或停止使用之請求，研究團隊將依核准程序及相關法規辦理。'
-      : '本研究使用無法辨識特定個人之次級資料，且不直接接觸研究對象，故無中途退出之情形。',
+    privacy_withdrawal: buildWithdrawalText(data),
   };
 }
 
@@ -103,8 +163,8 @@ export function buildPrivacyDraftFromScreening(
 //   老實逼使用者補上——這正是舊版「複製 methodology」完全漏掉的部分。
 // ⚠️ 填空只能用 ASCII 底線，不可用全形空格 U+3000（U+3000 進 template 字串會踩雷，見 project_step4_irb_redo）。
 const DATA_SOURCE_LEAD: Record<MaterialScenario, string> = {
-  database: '本研究使用疾管署______防疫資料庫之去識別化資料，資料範圍涵蓋______年至______年，約______筆。',
-  medical_record: '本研究使用______提供之去識別化病歷資料，資料範圍涵蓋______年至______年，約______筆。',
+  database: '本研究使用疾管署______防疫資料庫之資料，資料範圍涵蓋______年至______年，約______筆。',
+  medical_record: '本研究使用______提供之病歷資料，資料範圍涵蓋______年至______年，約______筆。',
   business_data: '本研究使用______既有業務資料，資料範圍涵蓋______年至______年，約______筆，未另行介入或蒐集。',
   specimen: '本研究使用______（如防疫業務剩餘檢體／菌株），來源為______，數量約______，蒐集範圍為______。',
   public: '本研究使用已合法公開之______資訊，來源為______，範圍涵蓋______。',
@@ -115,7 +175,10 @@ const DATA_SOURCE_LEAD: Record<MaterialScenario, string> = {
 // 依審查小幫手已勾的素材類型，生成「研究方法及工具描述」草稿（單一字串，這格是單一 TextArea）。
 // 帶入後使用者要把句中的 ______ 換成實際的數量、年份與蒐集範圍。
 export function buildDataSourceDraftFromScreening(data: FormData): string {
-  return DATA_SOURCE_LEAD[inferMaterialScenario(data.review_screening)];
+  const screening = data.review_screening;
+  const source = DATA_SOURCE_LEAD[inferMaterialScenario(screening)];
+  const handling = identifiabilityLead(screening.data_identifiability);
+  return compactLines([source, handling]);
 }
 
 // AI 潤飾的 guardrails：把「潤飾不可違背的事實」帶給後端當 context（後端只把它放進 prompt，不要求固定 key）。
