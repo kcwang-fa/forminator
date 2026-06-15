@@ -5,7 +5,7 @@
 // 電腦端輪詢取回。這一頁完全獨立於 wizard（main.tsx 依路徑分流渲染），
 // 不載入表單，任何人拿到連結只能「送出一張簽名圖」，看不到計畫內容。
 //
-// session id 只存在 URL 裡、10 分鐘過期、取完即刪——詳見 api/_lib/signStore.js 的安全設計。
+// session id 只存在 URL 裡、5 分鐘過期、取完即刪——詳見 api/_lib/signStore.js 的安全設計。
 
 import { useState } from 'react';
 import { ConfigProvider, Button, Typography, Alert, Space, App as AntApp } from 'antd';
@@ -99,7 +99,7 @@ function SignPageContent() {
       </Space>
 
       <Text type="secondary" style={{ display: 'block', marginTop: 16, fontSize: 12 }}>
-        簽名只會傳給產生這個 QR code 的那台電腦，10 分鐘內沒送出連結就會失效。
+        簽名只會傳給產生這個 QR code 的那台電腦，簽好後請在 5 分鐘內回到電腦收取。
       </Text>
     </div>
   );

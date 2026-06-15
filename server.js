@@ -268,7 +268,7 @@ app.post('/api/llm/rewrite-exempt-irb', async (req, res) => {
 
 // ===== 簽名中繼（本地開發用，記憶體版）=====
 // 與 Vercel 版（api/sign/*.js + Upstash Redis）行為對齊：
-// TTL 10 分鐘、取完即刪、相同的驗證規則（共用 signStore.js 的 validate）。
+// TTL 5 分鐘、取完即刪、相同的驗證規則（共用 signStore.js 的 validate）。
 // ⚠️ 記憶體版重啟即清空、多機部署不共享——只適合本地開發；
 //    正式環境（Vercel）走 Upstash，Railway 若要用需自行接 Redis。
 const signSessions = new Map(); // session id → { image, expiresAt }

@@ -1,12 +1,12 @@
 // ===== 簽名中繼暫存（Upstash Redis REST）=====
 //
 // 手機簽名 QR 流程的後端核心：
-//   手機 POST /api/sign/submit → 簽名圖存進 Redis（10 分鐘自動過期）
+//   手機 POST /api/sign/submit → 簽名圖存進 Redis（5 分鐘自動過期）
 //   電腦 GET  /api/sign/poll   → 取出簽名圖（GETDEL：取完即刪，讀一次就消失）
 //
 // 安全設計（每一條都是刻意的，改之前先想清楚）：
 //   1. session id 由電腦端 crypto.randomUUID() 產生（122 bits 亂度），無法列舉猜測
-//   2. TTL 600 秒：就算沒人來取，簽名最多留 10 分鐘
+//   2. TTL 300 秒：就算沒人來取，簽名最多留 5 分鐘
 //   3. GETDEL 取完即刪：簽名不會留在伺服器上被重複讀取
 //   4. 大小上限 100KB：簽名板輸出通常 5~20KB，超過就是異常請求
 //   5. 只接受 data:image/png;base64, 前綴：擋掉任意內容塞進 Redis
@@ -20,7 +20,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const PNG_PREFIX = 'data:image/png;base64,';
 
 export const MAX_IMAGE_CHARS = 100_000;  // base64 字元數上限（約 75KB 原始圖）
-export const TTL_SECONDS = 600;          // 簽名在中繼站的存活時間（10 分鐘）
+export const TTL_SECONDS = 300;          // 簽名在中繼站的存活時間（5 分鐘）
 
 /** session id 必須是 UUID 格式，不是就回錯誤訊息（null = 合法） */
 export function validateSession(session) {
@@ -63,7 +63,7 @@ async function redisCommand(command) {
   return { configured: true, result: data.result };
 }
 
-/** 存簽名：SET sign:<session> <image> EX 600 */
+/** 存簽名：SET sign:<session> <image> EX 300 */
 export async function saveSignature(session, image) {
   return redisCommand(['SET', `sign:${session}`, image, 'EX', String(TTL_SECONDS)]);
 }

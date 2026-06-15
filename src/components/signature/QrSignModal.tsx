@@ -10,7 +10,7 @@
 // 控制開關。這樣 session 在 useState 初始化器產生一次就好（每次開啟 = 重新掛載 = 新
 // session，用過即丟），不需要在 effect 裡 setState（react-hooks 新規則也不允許）。
 // 卸載時 useEffect cleanup 自動停輪詢；舊 QR code 掃了只會寫進沒人在聽的 session
-//（10 分鐘後自動過期）。
+//（5 分鐘後自動過期）。
 
 import { useEffect, useState } from 'react';
 import { Modal, Typography, Alert, Spin, Space } from 'antd';
@@ -141,7 +141,7 @@ export default function QrSignModal({ signerName, onReceived, onCancel }: Props)
         <Text type="secondary" style={{ fontSize: 12, wordBreak: 'break-all' }}>
           手機簽名網址：{signUrl}
           <br />
-          手機和電腦要在同一個 Wi-Fi；QR 連結 10 分鐘內有效。
+          手機和電腦要在同一個 Wi-Fi；手機簽好後 5 分鐘內會自動收進來。
         </Text>
       </Space>
     </Modal>
