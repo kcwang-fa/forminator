@@ -177,10 +177,14 @@ const EXPEDITED_CATEGORY_KEYS: ExpeditedCategory[] = [
 // 整張表渲染成全 □（一張合法空白表），不會壞。docgen 不挑文件、一律備好這批 key（與其他 prepareXxx 同模式）。
 function prepareExpeditedData(data: FormData) {
   const picked = new Set(data.expedited_category || []);
-  // 用 EXPEDITED_CATEGORY_KEYS 一次組出 24 個 {irb003_<key>} → ■/□，避免手寫 24 行重複碼。
-  const boxes = Object.fromEntries(
-    EXPEDITED_CATEGORY_KEYS.map((key) => [`irb003_${key}`, picked.has(key) ? '■' : '□']),
-  );
+  // 逐一把每個研究類別 key 組成 { irb003_<key>: '■' 或 '□' } 並收進 boxes 物件。
+  // 例如 key='a'  → boxes['irb003_a']  = '■'（使用者有勾）或 '□'（沒勾）
+  //      key='b1' → boxes['irb003_b1'] = '□'（沒勾）
+  // 最後 ...boxes 展開進 return 物件，24 個 placeholder 就都備妥了。
+  const boxes: Record<string, string> = {};
+  for (const key of EXPEDITED_CATEGORY_KEYS) {
+    boxes[`irb003_${key}`] = picked.has(key) ? '■' : '□';
+  }
   return {
     ...boxes,
     irb003_other_detail: data.expedited_other_detail || '',
@@ -309,12 +313,19 @@ export function prepareCommonData(data: FormData) {
   // （= 經費表「3 張都 115 年」的災情）。多年期才採用使用者填/推算的年數。
   const years = isMultiYear ? Math.max(1, Number(data.project_years) || 1) : 1;
   const baseRoc = Number(getRocDateParts(data.full_execution_start || data.execution_start).y);
-  const rocYears = Array.from({ length: years }, (_, k) =>
-    isMultiYear
-      // baseRoc 須為有效民國年（> 0）才逐年遞增；全程/本年度起始日都沒填時 baseRoc 會是 0 或 NaN，
-      // 此時年度留空（讓使用者手填），避免經費表標題出現「0/1/2 年度」這種亂數。
-      ? (Number.isFinite(baseRoc) && baseRoc > 0 ? String(baseRoc + k) : '')
-      : (data.project_year || ''));
+  // 逐年計算要顯示的民國年度（一年期只有一個，多年期每年各自算）。
+  // k=0 是第一年，k=1 是第二年，以此類推。
+  const rocYears: string[] = [];
+  for (let k = 0; k < years; k++) {
+    if (isMultiYear) {
+      // 多年期：baseRoc 須為有效民國年（> 0）才逐年遞增。
+      // 起始日沒填時 baseRoc 是 0 或 NaN，年度留空，避免出現「0/1/2 年度」這種亂數。
+      rocYears.push(Number.isFinite(baseRoc) && baseRoc > 0 ? String(baseRoc + k) : '');
+    } else {
+      // 一年期：直接用使用者填的計畫年度
+      rocYears.push(data.project_year || '');
+    }
+  }
   const budgetItems = data.budget_items || [];
   const grandTotal = data.needs_funding
     ? Array.from({ length: years }, (_, k) => calcTotalYear(budgetItems, k, years)).reduce((a, b) => a + b, 0)

@@ -53,6 +53,10 @@ const SENSITIVE_GROUPS: ReviewVulnerableLike[] = [
   'mental_illness',
   'other_vulnerable',
 ];
+// ReviewScreening['vulnerable_populations'] 取出 ReviewScreening 介面裡 vulnerable_populations 欄位的型別
+// 加上 [number] 表示「取出陣列元素的型別」（陣列的索引都是 number）。
+// 整句白話：「vulnerable_populations 這個陣列裡面每一個元素是什麼型別？」= ReviewVulnerablePopulation
+// 這樣寫的好處：ReviewVulnerablePopulation 改了，這裡不需要手動同步，TypeScript 自動跟著更新。
 type ReviewVulnerableLike = ReviewScreening['vulnerable_populations'][number];
 
 function unique(items: string[]): string[] {

@@ -5,8 +5,8 @@ import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typogra
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined, CompressOutlined, ExpandOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
 
-import { FormContext, useCreateFormStore } from './hooks/useFormStore';
-import { useLLMSettings } from './hooks/useLLMSettings';
+import { FormContext, useCreateFormStore, type FormStore } from './hooks/useFormStore';
+import { useLLMSettings, type LLMSettings } from './hooks/useLLMSettings';
 import { useFocusMode } from './hooks/useFocusMode';
 import { useWizardNavigation } from './hooks/useWizardNavigation';
 import { useDocumentGeneration } from './hooks/useDocumentGeneration';
@@ -46,6 +46,22 @@ const STEP_COMPONENTS: Record<WizardStepKey, React.ComponentType> = {
   database:  Step6Database,
 };
 
+// ===== 為什麼要分成 AppContent + AppInner 兩層？=====
+//
+// React 的運作方式：「Hook 在 function 頂部執行，Context.Provider 要等 return 的 JSX 才生效」。
+// AppContent 在 return 裡設了 <FormContext.Provider value={form}>，
+// 這個 Provider 只對它的「子元件」有效，對 AppContent 自己本身沒有效果。
+//
+// AppInner 裡呼叫的 hook（例如 useDocumentGeneration）內部會呼叫 useFormStore()，
+// 而 useFormStore() 需要 FormContext 已經存在才能讀到值。
+//
+// 如果把 AppInner 的所有程式碼直接搬進 AppContent，會發生這個問題：
+//   → useDocumentGeneration() 在頂部執行 → 裡面的 useFormStore() 執行
+//   → 此時 FormContext.Provider 還沒有 return 出去 → context 是 null → 程式 crash！
+//
+// 所以必須分兩層：
+//   AppContent：負責「建立 form 並提供 Context」
+//   AppInner  ：在 Provider 子元件底下，才能安全地「使用 Context 裡的 form」
 function AppContent() {
   const form = useCreateFormStore();
   const { settings: llmSettings, setSettings: setLLMSettings } = useLLMSettings();
@@ -63,12 +79,16 @@ function AppContent() {
   );
 }
 
-function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
-  form: ReturnType<typeof useCreateFormStore>;
-  llmSettings: ReturnType<typeof useLLMSettings>['settings'];
-  setLLMSettings: ReturnType<typeof useLLMSettings>['setSettings'];
-  contentRef: React.RefObject<HTMLDivElement | null>;
-}) {
+// AppInner 接收的 props，用明確的 interface 定義比 ReturnType<typeof...> 好讀。
+// 各型別都從對應的 hook 檔案 export，改了型別定義那邊、這裡 TypeScript 會提醒你。
+interface AppInnerProps {
+  form: FormStore;                              // 整個 wizard 共用的表單實例（來自 useFormStore.ts）
+  llmSettings: LLMSettings;                    // LLM provider/model 設定（來自 useLLMSettings.ts）
+  setLLMSettings: (next: LLMSettings) => void; // 更新 LLM 設定
+  contentRef: React.RefObject<HTMLDivElement | null>; // 捲動用的 DOM ref
+}
+
+function AppInner({ form, llmSettings, setLLMSettings, contentRef }: AppInnerProps) {
   // 步驟與文件 = review_type 全集 ∩ 勾選的成果類別
   // （本專案開啟 React Compiler，會自動 memo，不需手寫 useMemo）
   const reviewType = form.watch('review_type');
@@ -122,6 +142,11 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: {
   // 群組 checkbox 是單純的 toggle：只管「這一群」自己，不動其他群已選的文件。
   // 全勾 → 取消這群；沒全勾（含半勾）→ 補齊這群。
   const toggleDocGroup = useCallback((docs: DocId[]) => {
+    // setSelectedDocs 這裡傳的是「函式」而不是「新的值」，稱為 functional update。
+    // 為什麼這樣寫？因為 toggleDocGroup 用 useCallback 快取，deps 裡只有 setSelectedDocs，
+    // 不包含 selectedDocs。若直接寫 [...selectedDocs, ...docs]，拿到的是「建立時的舊值」（stale closure），
+    // 在快速連點的情況下可能會漏掉上一次的更新。
+    // 傳函式（prev => ...）讓 React 保證 prev 永遠是最新值，才能安全疊加。
     setSelectedDocs((prev) => {
       const hasAllGroupDocs = docs.every((doc) => prev.includes(doc));
 
