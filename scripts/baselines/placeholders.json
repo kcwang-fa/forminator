@@ -335,6 +335,7 @@
             "task_name": "成果發表"
           }
         ],
+        "has_year_label": false,
         "year_label": ""
       }
     ],
@@ -1072,6 +1073,7 @@
                 "task_name": "成果發表"
               }
             ],
+            "has_year_label": false,
             "year_label": ""
           }
         ],
@@ -1818,6 +1820,7 @@
                 "task_name": "成果發表"
               }
             ],
+            "has_year_label": false,
             "year_label": ""
           }
         ],
@@ -2564,6 +2567,7 @@
                 "task_name": "成果發表"
               }
             ],
+            "has_year_label": false,
             "year_label": ""
           }
         ],
@@ -3310,6 +3314,7 @@
                 "task_name": "成果發表"
               }
             ],
+            "has_year_label": false,
             "year_label": ""
           }
         ],

@@ -495,16 +495,28 @@ if (xml.includes('為一年期計畫，故不適用。')) {
   console.warn('⚠️  找不到「為一年期計畫，故不適用。」，三、執行成果概要未注入');
 }
 
-// 七、預定進度 — 甘特圖巢狀 loop（分年）
-// 多年期計畫每年各一張 12 個月甘特表：外層 {#gantt_years} 讓「表頭列 + 資料列」逐年重複，
-// 內層 {#gantt_rows} 在每年內逐個工作項目展開。年度標籤 {year_label} 放在表頭角落欄
-//（單年期時 year_label 為空字串，視覺等同原本單表）。
-// 資料來源：src/utils/docgen/schedule.ts 的 gantt_years（每筆含 year_label + gantt_rows）。
+// 七、預定進度 — 甘特圖分年 loop
+// 多年期計畫每年各一張 12 個月甘特表：外層 {#gantt_years} 用「段落 loop」包住整張表格
+//（起點段落在表格前、終點段落在表格後），docxtemplater 會把中間的整張表逐年複製一份。
+//   why 用段落 loop 而不是把 {#gantt_years} 塞進表頭角落欄：角落欄是官方表單的斜線標題格
+//   （tcBorders 的 <w:tl2br> 對角線，右上「月　次」／左下「工作項目」），塞年度標籤進去
+//   會多一行文字把斜線版面撐歪。年度標籤改成表格「上方」獨立段落，角落欄就維持原樣。
+//   同樣手法在本檔尾端的 {#personnel_appendix}（包住附表一/二/三）已驗證可行。
+// 年度標題段落用 {#has_year_label} 區段包起來：一年期時 has_year_label=false，整個段落
+// （含前後 tag 段落，因 docgen 開了 paragraphLoop:true）會完全消失，版面與單年期原樣相同。
+// 內層 {#gantt_rows} 仍是 table row loop，在每年內逐個工作項目展開。
+// 資料來源：src/utils/docgen/schedule.ts 的 gantt_years（每筆含 year_label / has_year_label / gantt_rows）。
 {
-  const ganttAnchor = '月\u3000次';
+  const ganttAnchor = '月　次';
   const ganttIdx = xml.indexOf(ganttAnchor);
   if (ganttIdx !== -1) {
-    const ganttTblStart = xml.lastIndexOf('<w:tbl', ganttIdx);
+    // ⚠️ 不可寫成 lastIndexOf('<w:tbl')：<w:tblPr> / <w:tblGrid> 也以 <w:tbl 開頭，
+    // 會把「表格起點」誤判成表格內部，導致外層 loop 的段落被插進 <w:tbl> 裡面、
+    // 複製整張表時掉了 <w:tbl><w:tblPr>（產出的 docx 會壞掉）。這裡只認真正的表格開頭。
+    const ganttTblStart = Math.max(
+      xml.lastIndexOf('<w:tbl>', ganttIdx),
+      xml.lastIndexOf('<w:tbl ', ganttIdx),
+    );
     const ganttTblEnd = xml.indexOf('</w:tbl>', ganttIdx) + 8;
     if (ganttTblStart !== -1 && ganttTblEnd > 8) {
       let ganttTable = xml.substring(ganttTblStart, ganttTblEnd);
@@ -515,30 +527,30 @@ if (xml.includes('為一年期計畫，故不適用。')) {
           '{#gantt_rows}{task_name}',
           '{m1}','{m2}','{m3}','{m4}','{m5}','{m6}',
           '{m7}','{m8}','{m9}','{m10}','{m11}','{m12}',
-          // 內層工作項目 loop 收尾後，緊接著收掉外層分年 loop
-          '{/gantt_rows}{/gantt_years}',
+          '{/gantt_rows}',
         ];
         let gcIdx = 0;
         dataRow = dataRow.replace(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/g,
           (match, before, after) => gcIdx < ganttPhs.length ? `${before}<w:r>${KAI_RPR}<w:t>${ganttPhs[gcIdx++]}</w:t></w:r>${after}` : match);
 
-        // 表頭列（ganttRowParts[0] 含 table 開頭 + 表頭 <w:tr>）：在角落欄第一個 </w:tcPr> 後
-        // 插入 {#gantt_years}{year_label} 段落 — 作為外層分年 loop 起點 + 年度標籤。
-        // {#gantt_years} 在表頭列、{/gantt_years} 在資料列 → docxtemplater 會把這兩列整組逐年重複。
-        let headerPart = ganttRowParts[0];
-        const yearOpenPara =
-          '<w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:eastAsia="DFKai-SB" w:hint="eastAsia"/><w:b/></w:rPr></w:pPr>' +
-          '<w:r><w:rPr><w:rFonts w:eastAsia="DFKai-SB" w:hint="eastAsia"/><w:b/></w:rPr><w:t>{#gantt_years}{year_label}</w:t></w:r></w:p>';
-        const firstTcPrEnd = headerPart.indexOf('</w:tcPr>');
-        if (firstTcPrEnd !== -1) {
-          headerPart = headerPart.slice(0, firstTcPrEnd + 9) + yearOpenPara + headerPart.slice(firstTcPrEnd + 9);
-        } else {
-          console.warn('⚠️  甘特表頭找不到 </w:tcPr>，跳過 gantt_years 起點注入');
-        }
+        // 表頭列（ganttRowParts[0]）維持原樣不動 —— 角落欄的斜線標題格保持官方表單長相。
+        const newTable = ganttRowParts[0] + '</w:tr>' + dataRow + ganttRowParts[ganttRowParts.length - 1];
 
-        const newTable = headerPart + '</w:tr>' + dataRow + ganttRowParts[ganttRowParts.length - 1];
-        xml = xml.substring(0, ganttTblStart) + newTable + xml.substring(ganttTblEnd);
-        console.log('  ✓ 甘特圖巢狀 loop 注入（分年）');
+        // 表格前：外層 loop 起點 + 年度標題（標楷體、置中、粗體）
+        // 三個 tag 獨佔段落（{#gantt_years} / {#has_year_label} / {/has_year_label}）在
+        // paragraphLoop:true 下會被 docxtemplater 移除，不會留空行。
+        const ganttLoopOpen =
+          '<w:p><w:r><w:t>{#gantt_years}</w:t></w:r></w:p>' +
+          '<w:p><w:r><w:t>{#has_year_label}</w:t></w:r></w:p>' +
+          '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>' +
+          '<w:r><w:rPr><w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB" w:hint="eastAsia"/><w:b/></w:rPr>' +
+          '<w:t>{year_label}</w:t></w:r></w:p>' +
+          '<w:p><w:r><w:t>{/has_year_label}</w:t></w:r></w:p>';
+        // 表格後：外層 loop 終點（獨佔段落，同樣會被移除）
+        const ganttLoopClose = '<w:p><w:r><w:t>{/gantt_years}</w:t></w:r></w:p>';
+
+        xml = xml.substring(0, ganttTblStart) + ganttLoopOpen + newTable + ganttLoopClose + xml.substring(ganttTblEnd);
+        console.log('  ✓ 甘特圖分年 loop 注入（年度標題移出表格、角落欄斜線維持原樣）');
       }
     }
   }

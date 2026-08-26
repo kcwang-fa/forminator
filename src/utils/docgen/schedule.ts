@@ -51,7 +51,8 @@ export function prepareScheduleData(data: FormData) {
 
   // 甘特圖分年：gantt_chart 已是「每年一組工作項目」的巢狀結構，這裡直接逐年輸出
   // （不再需要切片）。DOC-2 七、預定進度的 12 月甘特表依年數重複（巢狀 loop {#gantt_years}{#gantt_rows}）。
-  // 多年期才標年度；一年期 year_label 留空，讓 DOC-2 甘特表呈現與單年期相同（保護 snapshot）。
+  // 多年期才標年度；一年期 year_label 留空（has_year_label=false），DOC-2 不輸出年度標題段落，
+  // 甘特表呈現與單年期相同（保護 snapshot）。
   const baseRocYear = Number(getRocDateParts(fullExecutionStart).y);
   const yearLabelFor = (yearIndex: number): string => {
     if (!isMultiYear) return '';
@@ -66,7 +67,10 @@ export function prepareScheduleData(data: FormData) {
       for (let i = 0; i < 12; i++) row[`m${i + 1}`] = g.months[i] ? '■' : '';
       return row;
     });
-    return { year_label: yearLabelFor(yearIndex), gantt_rows };
+    const year_label = yearLabelFor(yearIndex);
+    // has_year_label：DOC-2 甘特表「上方年度標題段落」的開關（boolean，給 docxtemplater 當條件區段）。
+    // 一年期 year_label 是空字串 → false → 整個標題段落不輸出，版面與原本單年期完全相同。
+    return { year_label, has_year_label: year_label !== '', gantt_rows };
   });
 
   // DOC-4 純文字版時程：逐年逐列展開；多年期在每年前加年度標題。

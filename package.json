@@ -28,6 +28,7 @@
     "snapshot:write": "tsx scripts/docgen-snapshot.ts write",
     "snapshot:check": "tsx scripts/docgen-snapshot.ts check",
     "smoke:budget-docx": "node scripts/budget-docx-smoke.cjs",
+    "smoke:gantt-docx": "node scripts/gantt-docx-smoke.cjs",
     "smoke:multicenter-docx": "node scripts/multicenter-docx-smoke.cjs",
     "smoke:control-group-docx": "node --import tsx scripts/control-group-docx-smoke.ts",
     "smoke:full-review-docx": "node --import tsx scripts/full-review-docx-smoke.ts",
