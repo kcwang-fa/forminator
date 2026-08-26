@@ -31,6 +31,11 @@ export async function callGroqJson(apiKey, systemPrompt, userPrompt, _schema, op
       temperature: options.temperature ?? 0.3,
       max_tokens: options.maxTokens ?? 1024,
       response_format: { type: 'json_object' },
+      // qwen3.6-27b 是 reasoning model，reasoning_format 預設 'raw' 會把
+      // <think>...</think> 混進 content，跟 response_format: json_object
+      // 同時使用時 Groq 會在伺服器端做 JSON 驗證直接 400（json_validate_failed）。
+      // 設成 'hidden' 讓 content 只留最終輸出，繞過這個已知限制。
+      reasoning_format: 'hidden',
     }),
   });
 
