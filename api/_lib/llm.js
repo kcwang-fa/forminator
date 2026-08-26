@@ -36,6 +36,10 @@ export async function callGroqJson(apiKey, systemPrompt, userPrompt, _schema, op
       // 同時使用時 Groq 會在伺服器端做 JSON 驗證直接 400（json_validate_failed）。
       // 設成 'hidden' 讓 content 只留最終輸出，繞過這個已知限制。
       reasoning_format: 'hidden',
+      // 光設 reasoning_format 還不夠：預設 reasoning_effort 會火力全開深度思考，
+      // 把 max_tokens 額度耗在思考上，導致真正要輸出的 JSON 擠不出來
+      // （這裡的任務只是翻譯/摘要等結構化輸出，不需要深度推理）。
+      reasoning_effort: 'none',
     }),
   });
 
