@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-export const GROQ_MODEL = 'qwen/qwen3-32b';
+export const GROQ_MODEL = 'qwen/qwen3.6-27b';
 export const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
 function cleanGroqContent(content) {

@@ -77,7 +77,7 @@ AI 翻譯與摘要功能支援兩種 LLM 服務。使用者在網頁右上角「
 
 ```bash
 export GROQ_API_KEY=your_key_here      # 後端 fallback
-export GROQ_MODEL=qwen/qwen3-32b       # 可選，預設值
+export GROQ_MODEL=qwen/qwen3.6-27b     # 可選，預設值
 ```
 
 > qwen3 會輸出 `<think>...</think>` 思考標籤，後端會先清除再用 regex 提取 JSON。
