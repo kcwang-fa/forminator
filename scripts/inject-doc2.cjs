@@ -606,7 +606,11 @@ if (xml.includes('為一年期計畫，故不適用。')) {
     ['伍、人力配置',                   'sec_5',    '伍、人力配置'],
     ['陸、經費需求',                   'sec_6',    '陸、經費需求'],
     ['柒、需其他機關配合或協調事項',   'sec_7',    '柒、需其他機關配合或協調事項'],
-    ['捌、附表',                       'sec_8',    '捌、附表'],
+    // 「捌、附表」在本文沒有獨立標題段落（整份文件只有目錄那一處出現「捌、附表」），
+    // 若用「捌、附表」當 bodyAnchor，下面 Step 1 的 fallback 會把 bookmark 插回目錄自己那一行，
+    // PAGEREF 就會印出目錄的頁碼（頁數不對的原因）。
+    // 捌、附表的實際內容就是從附表一開始，所以錨到附表一標題段落（與 sec_app1 同一段）。
+    ['捌、附表',                       'sec_8',    '附表一：主持人、協同主持人、研究人員學經歷說明書'],
     // 附表一~三：份數欄位（null = 跳過，留給使用者手填）+ 頁碼欄位
     ['附表一 份數（跳過）',            null,       null],
     ['附表一 頁碼',                    'sec_app1', '附表一：主持人、協同主持人、研究人員學經歷說明書'],
@@ -623,7 +627,14 @@ if (xml.includes('為一年期計畫，故不適用。')) {
     if (!bodyAnchor) continue;
     const firstIdx = xml.indexOf(bodyAnchor);
     if (firstIdx === -1) continue;
+    // 多數章節標題會出現兩次（目錄一次、本文一次）→ 取第二次才是本文。
+    // 附表一~三只在本文出現一次，所以 fallback 用第一次是正確的；
+    // 但若「目錄有、本文沒有」的標題走到這個 fallback，bookmark 會被插進目錄，頁碼就會錯。
+    // 這裡無法從 index 分辨兩種情況，故印出 log 供人工核對。
     const secondIdx = xml.indexOf(bodyAnchor, firstIdx + bodyAnchor.length);
+    if (secondIdx === -1) {
+      console.log(`    · ${bmName}：本文只找到一處「${bodyAnchor}」，直接使用該處`);
+    }
     const targetIdx = secondIdx !== -1 ? secondIdx : firstIdx;
     const pStart = xml.lastIndexOf('<w:p ', Math.max(0, targetIdx - 500));
     if (pStart === -1 || pStart > targetIdx) continue;
