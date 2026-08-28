@@ -19,6 +19,25 @@ export const emptyWorkHistory: WorkHistory = {
   end_ym: '',
 };
 
+// ===== 附表二「計畫摘要」判定 =====
+//
+// 附表二收的是「計畫主持人／協同主持人／研究人員在既往計畫中擔任該角色、且該計畫有經費」
+// 的計畫摘要。UI（ProjectFields 決定摘要欄要不要出現）與 docgen（personnelAppendix 決定
+// 附表二要不要輸出）共用這一份判定，避免兩邊條件漂移，變成「畫面填得到、文件印不出來」。
+
+// 「擔任角色」下拉選單的選項。
+export const PROJECT_ROLE_OPTIONS = ['計畫主持人', '協同主持人', '研究人員'];
+
+// 判定用白名單 = 下拉選項 + 舊草稿的「主持人」寫法。
+// why：這欄改成下拉之前是自由文字，範例 placeholder 就是「主持人」，舊草稿大量是這個值；
+//      不相容的話舊草稿一開啟，摘要欄會消失、附表二也會少印一筆，而且沒有任何錯誤訊息。
+export const APPENDIX2_SUMMARY_ROLES = [...PROJECT_ROLE_OPTIONS, '主持人'];
+
+// role：該人在「那個既往計畫」中擔任的角色；budget：該計畫的經費（自由文字，空字串＝無經費）
+export function qualifiesForAppendix2(role: string, budget: string): boolean {
+  return APPENDIX2_SUMMARY_ROLES.includes((role || '').trim()) && !!(budget || '').trim();
+}
+
 export const emptyProject: Project = {
   status: 'completed',
   project_name: '',

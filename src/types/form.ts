@@ -201,12 +201,12 @@ export interface WorkHistory {
 export interface Project {
   status: 'completed' | 'ongoing' | 'pending';  // 已完成/執行中/申請中
   project_name: string;
-  role: string;          // 擔任角色（自由文字）
+  role: string;          // 擔任角色（下拉選項＋可自訂，見 PROJECT_ROLE_OPTIONS）
   funder: string;        // 補助機關
   budget: string;        // 經費
   start_ym: string;      // 起年月
   end_ym: string;        // 迄年月
-  summary: string;       // 摘要（附表二：role=主持人且有經費時填寫）
+  summary: string;       // 摘要（附表二：role 屬 APPENDIX2_SUMMARY_ROLES 且有經費時填寫）
 }
 
 export interface Publication {

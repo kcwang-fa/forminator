@@ -9,6 +9,7 @@
 // 不要為了 DRY 強行合併。
 
 import type { FormData } from '../../types/form';
+import { qualifiesForAppendix2 } from '../../data/defaults';
 
 const ROLE_LABEL: Record<string, string> = {
   pi: '主持人', co_pi: '協同主持人', researcher: '研究人員',
@@ -37,8 +38,11 @@ export function preparePersonnelAppendix(data: FormData) {
   const members = data.personnel.filter(p => ['pi', 'co_pi', 'researcher'].includes(p.role));
 
   return {
-    personnel_appendix: members.map(p => {
-      const piProjects = (p.projects || []).filter(proj => proj.role === '主持人' && !!proj.budget);
+    personnel_appendix: members.map((p, idx) => {
+      // 附表二：計畫主持人／協同主持人／研究人員擔任該角色、且有經費的既往計畫。
+      // 判定與 UI 的摘要欄顯示條件共用 qualifiesForAppendix2，兩邊不能各寫一份。
+      // 範本的附表二只有一個摘要區塊，符合條件有多筆時仍只印第一筆（沿用改版前行為）。
+      const appendix2Projects = (p.projects || []).filter(proj => qualifiesForAppendix2(proj.role, proj.budget));
       const completed  = (p.projects || []).filter(pr => pr.status === 'completed');
       const ongoing    = (p.projects || []).filter(pr => pr.status === 'ongoing');
       const pending    = (p.projects || []).filter(pr => pr.status === 'pending');
@@ -65,20 +69,25 @@ export function preparePersonnelAppendix(data: FormData) {
         pa_no_ongoing:   ongoing.length === 0,
         pa_pending:      pending.map(toProj),
         pa_no_pending:   pending.length === 0,
-        pa_has_pi_proj:     piProjects.length > 0,
-        pa_no_pi_proj:      piProjects.length === 0,
-        pa_pi_proj_name:    piProjects[0]?.project_name || '',
+        pa_has_pi_proj:     appendix2Projects.length > 0,
+        pa_no_pi_proj:      appendix2Projects.length === 0,
+        pa_pi_proj_name:    appendix2Projects[0]?.project_name || '',
         pa_pi_proj_pi:      p.name_zh,
-        pa_pi_proj_funder:  piProjects[0]?.funder || '',
-        pa_pi_proj_period:  piProjects[0] ? `${piProjects[0].start_ym}～${piProjects[0].end_ym}` : '',
-        pa_pi_proj_budget:  piProjects[0]?.budget || '',
-        pa_pi_proj_summary: piProjects[0]?.summary || '',
+        pa_pi_proj_funder:  appendix2Projects[0]?.funder || '',
+        pa_pi_proj_period:  appendix2Projects[0] ? `${appendix2Projects[0].start_ym}～${appendix2Projects[0].end_ym}` : '',
+        pa_pi_proj_budget:  appendix2Projects[0]?.budget || '',
+        pa_pi_proj_summary: appendix2Projects[0]?.summary || '',
         pa_publications_text: (p.publications || '').trim() || NO_PUBLICATIONS_TEXT,
         // 附表一「填表人簽章」＝該人自己的簽名。沒簽則 section 不成立、欄位留白可手簽。
         // 旁邊的「計畫主持人簽章」用頂層的 pi_sig（loop 內查不到的 key，docxtemplater
         // 會自動往外層 scope 找——這是 docxtemplater 的原生行為，不用在這裡重複塞）。
         pa_has_sig: Boolean(p.signature_image),
         pa_sig:     p.signature_image || '',
+        // 附表三結尾的條件分頁旗標（對應 inject-doc2.cjs 的 {#pa_not_last}）。
+        // why：附表一/二在範本末尾自帶分頁符，附表三沒有；全員附表三連續輸出時
+        //      若不補分頁，兩個人的著作清單會擠在同一頁。
+        //      最後一位設 false，避免文件尾多出一張空白頁。
+        pa_not_last: idx < members.length - 1,
       };
     }),
     personnel_appendix_count: members.length,

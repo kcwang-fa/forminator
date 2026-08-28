@@ -1,15 +1,20 @@
-import { Button, Card, Form, Input } from 'antd';
+import { AutoComplete, Button, Card, Form, Input } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Controller, useFieldArray } from 'react-hook-form';
 import { Select } from 'antd';
 import { useFormStore } from '../../../hooks/useFormStore';
-import { emptyProject } from '../../../data/defaults';
+import { emptyProject, PROJECT_ROLE_OPTIONS, qualifiesForAppendix2 } from '../../../data/defaults';
 
 const PROJECT_STATUS_OPTIONS = [
   { value: 'completed', label: '近三年已完成' },
   { value: 'ongoing',   label: '執行中' },
   { value: 'pending',   label: '申請中' },
 ];
+
+// 「擔任角色」下拉選項。
+// 用 AutoComplete 而不是 Select：選項給的是常見的三種角色，但這欄的值會原樣印進附表一的
+// 計畫清單，遇到「專任助理」這種選項外的角色時使用者要能自己打，也才不會弄壞舊草稿的自由文字。
+const ROLE_AUTOCOMPLETE_OPTIONS = PROJECT_ROLE_OPTIONS.map(r => ({ value: r }));
 
 export function ProjectFields({ personIndex }: { personIndex: number }) {
   const { control, watch } = useFormStore();
@@ -20,7 +25,8 @@ export function ProjectFields({ personIndex }: { personIndex: number }) {
       {fields.map((field, i) => {
         const budget = watch(`personnel.${personIndex}.projects.${i}.budget`);
         const role   = watch(`personnel.${personIndex}.projects.${i}.role`);
-        const showSummary = role === '主持人' && !!budget;
+        // 計畫主持人／協同主持人／研究人員（含舊草稿的「主持人」）且該計畫有經費 → 要填附表二摘要
+        const showSummary = qualifiesForAppendix2(role, budget);
 
         return (
           <Card
@@ -44,7 +50,12 @@ export function ProjectFields({ personIndex }: { personIndex: number }) {
                 control={control}
                 render={({ field: f }) => (
                   <Form.Item label="擔任角色" style={{ marginBottom: 8 }}>
-                    <Input {...f} placeholder="例：主持人" />
+                    <AutoComplete
+                      {...f}
+                      options={ROLE_AUTOCOMPLETE_OPTIONS}
+                      placeholder="請選擇或輸入"
+                      allowClear
+                    />
                   </Form.Item>
                 )}
               />
@@ -101,7 +112,11 @@ export function ProjectFields({ personIndex }: { personIndex: number }) {
                 name={`personnel.${personIndex}.projects.${i}.summary`}
                 control={control}
                 render={({ field: f }) => (
-                  <Form.Item label="計畫摘要" tooltip="附表二：主持人且有經費時必填" style={{ marginBottom: 0 }}>
+                  <Form.Item
+                    label="計畫摘要"
+                    tooltip="擔任計畫主持人、協同主持人或研究人員，且該計畫有經費時要填；會列進附表二"
+                    style={{ marginBottom: 0 }}
+                  >
                     <Input.TextArea {...f} rows={2} />
                   </Form.Item>
                 )}

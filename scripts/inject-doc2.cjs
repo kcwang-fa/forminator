@@ -1065,18 +1065,70 @@ if (piSigCount !== 2 || paSigCount !== 1) {
 console.log('  ✓ 簽名圖注入（封面主持人 + 附表一填表人/主持人）');
 
 // ─────────────────────────────────────────────
-// 五、personnel_appendix loop 包住全部附表
+// 五、personnel_appendix loop — 附表一/二/三各包一輪
 // ─────────────────────────────────────────────
+// 需求：附表一要把「每個研究人員」都列完，才接附表二；附表二列完才接附表三。
+// why：原本是「一個 loop 包住附表一~三」，輸出順序會變成
+//      甲的附表一二三 → 乙的附表一二三（每人一組）。
+//      改成三個各自獨立的 loop 之後，同一份 personnel_appendix 陣列被走訪三次，
+//      輸出順序就是 全員附表一 → 全員附表二 → 全員附表三。
+// how：docxtemplater 允許同一個 key 出現在多個 loop，資料端（preparePersonnelAppendix）
+//      完全不用改，也不需要複製陣列。
+{
+  const LOOP_OPEN  = '<w:p><w:r><w:t>{#personnel_appendix}</w:t></w:r></w:p>';
+  const LOOP_CLOSE = '<w:p><w:r><w:t>{/personnel_appendix}</w:t></w:r></w:p>';
 
-// 找附表一標題所在段落，在前面插入 {#personnel_appendix}
-const app1TitlePos = xml.indexOf('附表一：主持人');
-const app1ParaStart = xml.lastIndexOf('<w:p ', app1TitlePos);
-const loopStartPara = '<w:p><w:r><w:t>{#personnel_appendix}</w:t></w:r></w:p>';
-xml = xml.slice(0, app1ParaStart) + loopStartPara + xml.slice(app1ParaStart);
+  // 附表三結尾的條件分頁。
+  // why：範本的附表一、附表二在末尾各自帶了分頁符，附表三沒有（原本後面直接接
+  //      「下一個人的附表一」）。改成全員附表三連續輸出後，不補分頁會讓兩個人的
+  //      附表三擠在同一頁，違反範本「每人填寫一份」。
+  // how：用 pa_not_last（由 preparePersonnelAppendix 提供）條件包住分頁段落，
+  //      最後一位不補，否則文件尾會多出一張空白頁。
+  const PAGE_BREAK_IF_NOT_LAST =
+    '<w:p><w:r><w:t>{#pa_not_last}</w:t></w:r></w:p>' +
+    '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' +
+    '<w:p><w:r><w:t>{/pa_not_last}</w:t></w:r></w:p>';
 
-// 在 </w:body> 前插入 {/personnel_appendix}
-const loopEndPara = '<w:p><w:r><w:t>{/personnel_appendix}</w:t></w:r></w:p>';
-xml = xml.replace('</w:body>', loopEndPara + '</w:body>');
-console.log('  ✓ personnel_appendix loop 包裝完成');
+  // 從 pos 往前找最近的段落起始 tag。
+  // why：範本裡 <w:p> 與 <w:p ...>（帶 rsid/paraId 屬性）兩種寫法都有，
+  //      只比對 '<w:p ' 會跳過無屬性的段落、找到更前面那一段，loop 邊界就會偏掉。
+  const paraStartBefore = (pos) => {
+    for (let i = pos; i >= 0; i--) {
+      if (xml.startsWith('<w:p>', i) || xml.startsWith('<w:p ', i)) return i;
+    }
+    throw new Error(`找不到段落起始（pos=${pos}）`);
+  };
+
+  // 三個附表標題在本文各只出現一次（目錄頁不含「附表N：」字樣，已 dump 驗證）。
+  // 出現多次代表範本改版或前面的注入意外插了同名文字，此時 loop 邊界不可信 → 直接中止。
+  const titleParaPos = ['附表一：主持人', '附表二：', '附表三：'].map(title => {
+    const pos = xml.indexOf(title);
+    if (pos === -1) throw new Error(`找不到標題「${title}」`);
+    if (xml.indexOf(title, pos + title.length) !== -1) {
+      throw new Error(`標題「${title}」出現多次，無法決定 loop 邊界`);
+    }
+    return paraStartBefore(pos);
+  });
+
+  // 每個插入點放什麼：前一輪的收尾 + 這一輪的開頭；最後一輪在 </w:body> 前收尾。
+  const insertions = [
+    [titleParaPos[0], LOOP_OPEN],                 // 附表一 開始
+    [titleParaPos[1], LOOP_CLOSE + LOOP_OPEN],    // 附表一 結束 → 附表二 開始
+    [titleParaPos[2], LOOP_CLOSE + LOOP_OPEN],    // 附表二 結束 → 附表三 開始
+    [xml.indexOf('</w:body>'), PAGE_BREAK_IF_NOT_LAST + LOOP_CLOSE],  // 附表三 結束（每份之間補分頁）
+  ];
+  // 由後往前插入：先動後面的位置，前面算好的 index 才不會被推移。
+  for (const [pos, frag] of [...insertions].reverse()) {
+    xml = xml.slice(0, pos) + frag + xml.slice(pos);
+  }
+
+  // 健檢：三組 loop 標籤都要成對，缺一組渲染就會整份壞掉
+  const openCount  = xml.split('{#personnel_appendix}').length - 1;
+  const closeCount = xml.split('{/personnel_appendix}').length - 1;
+  if (openCount !== 3 || closeCount !== 3) {
+    throw new Error(`personnel_appendix loop 標籤數量錯誤：開 ${openCount}、收 ${closeCount}（應各 3）`);
+  }
+  console.log('  ✓ personnel_appendix loop 包裝完成（附表一/二/三 各一輪）');
+}
 
 saveDoc(zip, xml, OUT);
