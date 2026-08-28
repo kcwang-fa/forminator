@@ -533,8 +533,20 @@ if (xml.includes('為一年期計畫，故不適用。')) {
         dataRow = dataRow.replace(/(<w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/g,
           (match, before, after) => gcIdx < ganttPhs.length ? `${before}<w:r>${KAI_RPR}<w:t>${ganttPhs[gcIdx++]}</w:t></w:r>${after}` : match);
 
-        // 表頭列（ganttRowParts[0]）維持原樣不動 —— 角落欄的斜線標題格保持官方表單長相。
-        const newTable = ganttRowParts[0] + '</w:tr>' + dataRow + ganttRowParts[ganttRowParts.length - 1];
+        // 表頭列（ganttRowParts[0]）：角落欄的斜線標題格維持原樣（官方表單長相），
+        // 只把月份欄的「第1月～第12月」改成「1月～12月」。
+        //   why：甘特表的 12 欄已改成「該曆年的 1~12 月」（見 src/utils/docgen/schedule.ts），
+        //   計畫期間外的月份留白、跨曆年輸出兩張表。欄位既然是曆年月份，
+        //   再寫「第N月」會被誤讀成「計畫的第 N 個月」，所以把「第」拿掉。
+        //   ⚠️ 這裡只改 <w:t> 裡的「文字」、不動 run／cell 結構：模板把「第」「1」「月」
+        //   拆成三個 run，若寫 regex 去比對整個 <w:r>...</w:r> 再刪除，
+        //   裡面的 [\s\S]*? 會回溯跨越好幾個 cell，把角落欄一起吃掉（實測「月　次」會消失）。
+        //   留下的空 <w:t></w:t> 對 Word 無害。
+        const headerRow = ganttRowParts[0].replace(
+          /(<w:t(?: [^>]*)?>)第(<\/w:t>)/g,
+          '$1$2',
+        );
+        const newTable = headerRow + '</w:tr>' + dataRow + ganttRowParts[ganttRowParts.length - 1];
 
         // 表格前：外層 loop 起點 + 年度標題（標楷體、置中、粗體）
         // 三個 tag 獨佔段落（{#gantt_years} / {#has_year_label} / {/has_year_label}）在

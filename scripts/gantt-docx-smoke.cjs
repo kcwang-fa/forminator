@@ -90,6 +90,33 @@ function cornerCellText(tableXml) {
   });
 }
 
+// ===== 情境 1.5：表頭是「曆年月份」而非「第 N 個月」=====
+// 甘特表的 12 欄代表「該曆年的 1~12 月」（見 src/utils/docgen/schedule.ts），
+// 所以表頭必須是「1月～12月」。這裡同時守住兩件事：
+// 1. 「第」沒被漏拿掉（會讓人誤讀成計畫的第 N 個月）。
+// 2. 拿掉「第」的那段 XML 改寫沒有順手吃掉別的 cell —— 曾經用 regex 比對整個
+//    <w:r>...</w:r> 去刪，內部的 [\s\S]*? 回溯跨了好幾格，把角落欄的「月　次」一起刪掉。
+{
+  const xml = renderWith({ gantt_years: [ganttYear('')] });
+  const table = findGanttTables(xml)[0];
+  const headerRow = table.xml.split('</w:tr>')[0];
+  const headerCells = headerRow
+    .split('</w:tc>')
+    .slice(0, -1)
+    .map((cell) => [...cell.matchAll(/<w:t(?: [^>]*)?>([^<]*)<\/w:t>/g)].map((m) => m[1]).join(''));
+
+  // 角落欄 + 12 個月 + 備註 = 14 格
+  assert.equal(headerCells.length, 14, `甘特表表頭應有 14 格，實際 ${headerCells.length} 格`);
+  for (let month = 1; month <= 12; month++) {
+    assert.equal(
+      headerCells[month],
+      `${month}月`,
+      `表頭第 ${month} 個月份欄應為「${month}月」，實際「${headerCells[month]}」`,
+    );
+  }
+  assert.ok(!headerRow.includes('>第<'), '表頭仍殘留「第」字（第N月會被誤讀成計畫的第 N 個月）');
+}
+
 // ===== 情境 2：一年期（不標年度）=====
 {
   const xml = renderWith({ gantt_years: [ganttYear('')] });

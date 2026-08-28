@@ -6,7 +6,7 @@ import { RobotOutlined, PlusOutlined, DeleteOutlined, ProfileOutlined } from '@a
 import { Controller } from 'react-hook-form';
 import { useFormStore } from '../../hooks/useFormStore';
 import { generateAbstract } from '../../api/llm';
-import { getGanttMonthLabels, generateDefaultGanttRows, ganttYearStartDate } from '../../utils/gantt';
+import { generateDefaultGanttRows, ganttCalendarViews, ganttYearLabel, resolveGanttStart, type GanttCalendarView } from '../../utils/gantt';
 import { buildYearlySkeleton, type YearlySection } from '../../utils/yearlySkeleton';
 import type { GanttItem, GanttYear } from '../../types/form';
 
@@ -24,27 +24,31 @@ export default function Step3Research() {
   const fullExecutionStart = watch('full_execution_start');
 
   const canGenerate = purpose && background && methodology && expectedOutcome;
-  const ganttStart = projectType === 'new_1yr'
-    ? executionStart
-    : fullExecutionStart || executionStart;
-  // 是否多年期：多年期才在頁籤標年度（第N年/民國年度）；一年期只有單一年度、不顯示頁籤。
+  // 甘特的多年期判斷用 project_type（與 docgen 一致）；下面版面用的 isMultiYear 是「甘特有幾年」，
+  // 兩者在正常資料下等價，分開命名是為了讓「餵給曆年換算的旗標」跟「版面切換」不互相牽動。
+  const ganttIsMultiYear = projectType !== 'new_1yr';
+  const ganttStart = resolveGanttStart(ganttIsMultiYear, executionStart, fullExecutionStart);
+  // 是否多年期：多年期才顯示分年骨架按鈕、把研究論述拆成分頁。
   const isMultiYear = ganttChart.length > 1;
 
-  // 從執行起始日推得計畫起始的民國年；無法解析時回 null（頁籤只顯示「第N年」）。
+  // 從執行起始日推得計畫起始的民國年；無法解析時回 null（分年骨架用）。
   const ganttRocBase = (() => {
     const date = new Date(ganttStart);
     return Number.isNaN(date.getTime()) ? null : date.getFullYear() - 1911;
   })();
 
-  // 第 yearIndex 年的月份標籤起始日期（民國年/月）：
-  // 多年期按年度（曆年）對齊——第 0 年從計畫起始月，第 1 年起一律從該年度 1 月開始。
-  const yearStartDate = (yearIndex: number): string =>
-    ganttYearStartDate(ganttStart, yearIndex, isMultiYear);
+  // 甘特「曆年檢視」：一個曆年一個頁籤、固定 12 欄（1~12 月），與 Word 輸出完全對齊。
+  // 一年期從年中起算會橫跨兩個曆年 → 兩個頁籤指向同一個 ganttYearIndex，
+  // 所以工作項目清單是同一份，只是勾選格落在不同年（跟 Word 的兩張表一致）。
+  const ganttViews = ganttCalendarViews(ganttChart, ganttStart, ganttIsMultiYear);
 
-  // 頁籤標題：多年期顯示「第N年（114 年度）」，無法推年度時退回「第N年」。
-  const yearTabLabel = (yearIndex: number): string => {
-    const ordinal = `第${yearIndex + 1}年`;
-    return ganttRocBase == null ? ordinal : `${ordinal}（${ganttRocBase + yearIndex} 年度）`;
+  // 頁籤標題與 Word 甘特表上方的年度標題共用同一個 ganttYearLabel()。
+
+  // 同一份工作項目清單被哪些年度頁籤共用（跨曆年的一年期會是兩個年度）。
+  // 只有一個頁籤用到就回空字串（不需要特別提醒）。
+  const sharedYearsLabel = (view: GanttCalendarView): string => {
+    const shared = ganttViews.filter(v => v.ganttYearIndex === view.ganttYearIndex);
+    return shared.length > 1 ? shared.map(v => `${v.rocYear} 年度`).join('、') : '';
   };
 
   // 只改某一年的甘特資料，其餘年度維持不變（寫回整個 gantt_chart）。
@@ -156,10 +160,9 @@ export default function Step3Research() {
     }
   };
 
-  // 建立某一年的甘特表格欄位（工作項目欄 + 該年各月份欄 + 刪除欄）
-  const buildYearColumns = (yearIndex: number, year: GanttYear) => {
-    const monthCount = year.rows[0]?.months.length || 0;
-    const monthLabels = getGanttMonthLabels(yearStartDate(yearIndex), monthCount);
+  // 建立某個「曆年頁籤」的表格欄位（工作項目欄 + 固定 12 個月份欄 + 刪除欄）
+  const buildViewColumns = (view: GanttCalendarView) => {
+    const yearIndex = view.ganttYearIndex;
     return [
       {
         title: '工作項目',
@@ -168,29 +171,53 @@ export default function Step3Research() {
         width: 200,
         fixed: 'left' as const,
         // record.key 是「該年內」的列索引，用它寫回避免同名/空白列互相干擾
-        render: (_: unknown, record: { task_name: string; key: number }) => (
-          <Input
-            value={record.task_name}
-            placeholder="請輸入工作項目"
-            onChange={(e) => handleTaskNameChange(yearIndex, record.key, e.target.value)}
-            size="small"
-          />
-        ),
+        render: (_: unknown, record: { task_name: string; months: boolean[]; key: number }) => {
+          // 這個項目在「本年度」有沒有排程：沒有、但其他年度有 → Word 的本年度表不會列它。
+          // （完全沒排程的項目屬於「還沒填」，不提示，Word 也照樣列出來。）
+          const scheduledThisYear = view.monthSlots.some(slot => slot >= 0 && record.months[slot]);
+          const scheduledAnyYear = record.months.some(Boolean);
+          const idleThisYear = !scheduledThisYear && scheduledAnyYear;
+          return (
+            <div>
+              <Input
+                value={record.task_name}
+                placeholder="請輸入工作項目"
+                onChange={(e) => handleTaskNameChange(yearIndex, record.key, e.target.value)}
+                size="small"
+              />
+              {idleThisYear && (
+                <div style={{ color: '#bfbfbf', fontSize: 11, marginTop: 2 }}>
+                  本年度未排程，Word 不會列出
+                </div>
+              )}
+            </div>
+          );
+        },
       },
-      ...Array.from({ length: monthCount }, (_, i) => ({
-        title: monthLabels[i] || `第${i + 1}月`,
-        key: `m${i}`,
-        width: 56,
-        render: (_: unknown, record: { months: boolean[]; key: number }) => (
-          <div style={{
-            width: 24, height: 24, borderRadius: 4,
-            background: record.months[i] ? '#1677ff' : '#f0f0f0',
-            cursor: 'pointer',
-          }}
-          onClick={() => handleToggleMonth(yearIndex, record.key, i)}
-          />
-        ),
-      })),
+      // 固定 12 欄 = 該曆年的 1~12 月（與官方甘特表、Word 輸出同一個欄位語意）。
+      // monthSlots[i] = -1 代表這個月不在計畫執行期間 → 灰底、不可點選。
+      ...Array.from({ length: 12 }, (_, i) => {
+        const slot = view.monthSlots[i];
+        const inPeriod = slot >= 0;
+        return {
+          title: `${i + 1}月`,
+          key: `m${i}`,
+          width: 56,
+          render: (_: unknown, record: { months: boolean[]; key: number }) => (
+            <div
+              title={inPeriod ? undefined : '不在計畫執行期間'}
+              style={{
+                width: 24, height: 24, borderRadius: 4,
+                background: inPeriod && record.months[slot] ? '#1677ff' : '#f0f0f0',
+                border: inPeriod ? 'none' : '1px dashed #d9d9d9',
+                opacity: inPeriod ? 1 : 0.45,
+                cursor: inPeriod ? 'pointer' : 'not-allowed',
+              }}
+              onClick={inPeriod ? () => handleToggleMonth(yearIndex, record.key, slot) : undefined}
+            />
+          ),
+        };
+      }),
       {
         title: '',
         key: 'action',
@@ -199,6 +226,11 @@ export default function Step3Research() {
         render: (_: unknown, record: { key: number }) => (
           <Popconfirm
             title="刪除此工作項目？"
+            // 一年期跨曆年時，兩個年度頁籤是同一份工作項目清單（同一個 ganttYearIndex），
+            // 刪除會兩年一起消失 —— 這裡先講明白，避免以為只刪掉本年度的。
+            description={sharedYearsLabel(view)
+              ? `此項目會同時從 ${sharedYearsLabel(view)} 移除。若只是本年度不做，取消該年的勾選即可。`
+              : undefined}
             okText="刪除"
             cancelText="取消"
             onConfirm={() => handleDeleteGanttRow(yearIndex, record.key)}
@@ -210,8 +242,12 @@ export default function Step3Research() {
     ];
   };
 
-  // 某一年的甘特面板：工作項目操作列 + 表格（每年各自獨立，工作項目可不同）
-  const renderYearPanel = (yearIndex: number, year: GanttYear) => (
+  // 某個曆年頁籤的甘特面板：工作項目操作列 + 表格。
+  // 工作項目屬於「計畫年度」（view.ganttYearIndex），所以一年期跨曆年的兩個頁籤共用同一份清單。
+  const renderViewPanel = (view: GanttCalendarView) => {
+    const yearIndex = view.ganttYearIndex;
+    const year = ganttChart[yearIndex];
+    return (
     <div style={{ overflowX: 'auto' }}>
       {/* 工作項目操作：自行新增、或一鍵帶入「資料分析」7 項範本（只作用在這一年）*/}
       <Space style={{ marginBottom: 8 }}>
@@ -230,14 +266,15 @@ export default function Step3Research() {
       </Space>
       <Table
         dataSource={year.rows.map((g: GanttItem, i: number) => ({ ...g, key: i }))}
-        columns={buildYearColumns(yearIndex, year)}
+        columns={buildViewColumns(view)}
         pagination={false}
         size="small"
         bordered
         scroll={{ x: 'max-content' }}
       />
     </div>
-  );
+    );
+  };
 
   // ===== 把畫面拆成幾個區塊變數，多年期 / 一年期「共用同一份 JSX」=====
   // 為什麼這樣寫：多年期內容很長（多了執行成果概要、又有分年甘特），單頁往下捲很久，
@@ -435,25 +472,29 @@ export default function Step3Research() {
     </>
   );
 
-  // --- 預定進度表區塊（分年甘特圖，內部本來就已自帶分年 tabs）---
+  // --- 預定進度表區塊（甘特圖，一個曆年一個頁籤）---
+  // 頁籤 = 曆年，每張表固定 1~12 月，與 Word 輸出的甘特表一模一樣。
+  // 計畫期間外的月份是灰色不可點；跨曆年（含從年中起算的一年期）自然分成兩個頁籤。
   const scheduleSection = (
     <Form.Item label="預定進度表">
-      {ganttChart.length > 0 ? (
+      {ganttViews.length > 0 ? (
         <div>
-          {isMultiYear ? (
+          {ganttViews.length > 1 ? (
             <Tabs
               type="card"
-              items={ganttChart.map((year: GanttYear, yearIndex: number) => ({
-                key: String(yearIndex),
-                label: yearTabLabel(yearIndex),
-                children: renderYearPanel(yearIndex, year),
+              items={ganttViews.map((view: GanttCalendarView, index: number) => ({
+                key: String(index),
+                label: ganttYearLabel(view, index, ganttIsMultiYear),
+                children: renderViewPanel(view),
               }))}
             />
           ) : (
-            renderYearPanel(0, ganttChart[0])
+            renderViewPanel(ganttViews[0])
           )}
           <p style={{ color: '#999', fontSize: 12, marginTop: 8 }}>
-            工作項目可自行輸入、新增或刪除；點擊格子可切換該月啟用/停用。月份欄由執行起迄日自動生成。
+            工作項目可自行輸入、新增或刪除；點擊格子可切換該月啟用/停用。
+            每個頁籤是一個年度、固定 1~12 月，灰色格子表示不在計畫執行期間，Word 也是這樣呈現。
+            Word 的每張年度表只會列出「該年度有排程」的工作項目，所以某項目本年度整列空白時不必刪除，直接留著即可。
             {isMultiYear && '多年期計畫請逐年填寫，各年的工作項目可以不同。'}
           </p>
         </div>

@@ -86,6 +86,110 @@ export function ganttYearStartDate(start: string, yearIndex: number, isMultiYear
   return `${d.getFullYear() + yearIndex}-01-01`;
 }
 
+/**
+ * 甘特資料的起算日：一年期從「本年度執行起始日」算、多年期從「全程起始日」算。
+ * UI（Step3 / useAutoGantt）與 docgen（docgen/schedule.ts）都要用這個，
+ * 否則兩邊起算月不一致，攤平出來的月份會整批平移。
+ */
+export function resolveGanttStart(
+  isMultiYear: boolean,
+  executionStart: string,
+  fullExecutionStart: string,
+): string {
+  return isMultiYear ? (fullExecutionStart || executionStart) : executionStart;
+}
+
+/** 同 resolveGanttStart，取結束日。 */
+export function resolveGanttEnd(
+  isMultiYear: boolean,
+  executionEnd: string,
+  fullExecutionEnd: string,
+): string {
+  return isMultiYear ? (fullExecutionEnd || executionEnd) : executionEnd;
+}
+
+/**
+ * 一個「曆年」的甘特檢視：把 gantt_chart（以計畫年度切分、months 是相對月序）
+ * 對應到「該曆年的 1~12 月」12 個固定欄位。
+ */
+export interface GanttCalendarView {
+  rocYear: number;          // 民國年
+  rocYearKnown: boolean;    // 起始日可解析 → rocYear 才可信（不可信時 UI/docgen 不標年度）
+  ganttYearIndex: number;   // 對應 gantt_chart 的哪一個計畫年度（編輯時寫回這一格）
+  monthSlots: number[];     // 12 格：值 = 該計畫年度 months 的 index；-1 = 不在計畫期間內
+}
+
+/**
+ * 把「以計畫年度切分」的甘特資料攤平到「曆年」座標，一個曆年一個檢視。
+ *
+ * why：官方甘特表（與網頁 UI）的 12 欄是「曆年的 1~12 月」，而 gantt_chart 存的是
+ * 相對月序（該計畫年度的第 1、2… 個月），起算月由 ganttYearStartDate() 決定。
+ * 兩者之間的換算只寫在這裡，Step3 的頁籤與 docgen/schedule.ts 的 Word 表格共用，
+ * 避免兩邊各算一次而走鐘。
+ *
+ * 一年期從年中起算時（例：115/10~116/9），單一計畫年度會橫跨兩個曆年 → 產生兩個檢視，
+ * 兩個檢視指向「同一個 ganttYearIndex」，所以工作項目清單是同一份（只是勾選格落在不同年）。
+ */
+export function ganttCalendarViews(
+  ganttChart: GanttYear[],
+  ganttStart: string,
+  isMultiYear: boolean,
+): GanttCalendarView[] {
+  const views: GanttCalendarView[] = [];
+
+  ganttChart.forEach((ganttYear, ganttYearIndex) => {
+    // 這個計畫年度的第一個月是西元幾年幾月
+    const startDate = new Date(ganttYearStartDate(ganttStart, ganttYearIndex, isMultiYear));
+    const rocYearKnown = !Number.isNaN(startDate.getTime());
+    // 日期壞掉時的退路：當成「民國年 = 年序、從 1 月起算」，至少不會整張甘特表消失
+    const baseRocYear = rocYearKnown ? startDate.getFullYear() - 1911 : ganttYearIndex;
+    const baseMonth = rocYearKnown ? startDate.getMonth() : 0; // 0~11
+
+    // 同一年度各列的 months 長度理論上一致（resizeGanttYears 保證），取最大值防呆
+    const monthCount = ganttYear.rows.reduce((max, row) => Math.max(max, row.months.length), 0);
+    if (monthCount === 0) return;
+
+    // 這個計畫年度橫跨幾個曆年（起算月 + 月數 - 1 落在第幾個曆年）
+    const spanYears = Math.floor((baseMonth + monthCount - 1) / 12) + 1;
+    for (let span = 0; span < spanYears; span++) {
+      const monthSlots = Array.from({ length: 12 }, (_, month) => {
+        const slot = span * 12 + month - baseMonth; // 該曆年 month 月 = 相對第幾個月
+        return slot >= 0 && slot < monthCount ? slot : -1;
+      });
+      views.push({ rocYear: baseRocYear + span, rocYearKnown, ganttYearIndex, monthSlots });
+    }
+  });
+
+  // 依曆年排序（Array.prototype.sort 是穩定排序，同年時維持原年度順序）
+  return views.sort((a, b) => a.rocYear - b.rocYear);
+}
+
+// 第 N 年的中文序數；超出對照表時退回「第N年」。
+// （沿用 DOC-2 原本的寫法：Word 甘特表的年度標題一直是「第一年」而非「第1年」，
+//   統一後 Step3 頁籤也跟著用國字。）
+const YEAR_ORDINALS = ['第一年', '第二年', '第三年', '第四年', '第五年', '第六年'];
+function yearOrdinal(yearIndex: number): string {
+  return YEAR_ORDINALS[yearIndex] || `第${yearIndex + 1}年`;
+}
+
+/**
+ * 曆年檢視的「年度名稱」：多年期「第2年（116 年度）」、一年期「115 年度」、
+ * 年度不可信時退回「第N年」。Step3 的頁籤標題與 DOC-2 甘特表上方的年度標題共用，
+ * 兩邊文字才不會各寫一份而走鐘。
+ * 注意：這裡只負責「名稱長什麼樣」，「要不要顯示」由呼叫端決定
+ * （Word 只有一張表時不標；UI 的頁籤一定要有名字）。
+ */
+export function ganttYearLabel(
+  view: GanttCalendarView,
+  viewIndex: number,
+  isMultiYear: boolean,
+): string {
+  if (!view.rocYearKnown) return yearOrdinal(viewIndex);
+  return isMultiYear
+    ? `${yearOrdinal(view.ganttYearIndex)}（${view.rocYear} 年度）`
+    : `${view.rocYear} 年度`;
+}
+
 // 把一列工作項目的 months 調整成指定月數：保留已勾選的格子，不足補 false、過長則裁切。
 function resizeRowMonths(row: GanttItem, monthCount: number): GanttItem {
   return {
@@ -138,28 +242,6 @@ export function resizeGanttYears(prev: GanttYear[], blocks: number[]): GanttYear
       return { rows: [blankRow(monthCount)] };
     }
     return { rows: prevRows.map(row => resizeRowMonths(row, monthCount)) };
-  });
-}
-
-/**
- * 產生某一年的月份欄標籤（民國年/月）。
- * 分年 UI 每個年度頁籤都從「該年的起始月」往後算 monthCount 個月。
- * start 為該年第一個月的西元日期字串；無法解析時退回「第N月」。
- */
-export function getGanttMonthLabels(start: string, monthCount: number): string[] {
-  if (!start || monthCount <= 0) {
-    return Array.from({ length: Math.max(0, monthCount) }, (_, index) => `第${index + 1}月`);
-  }
-
-  const startDate = new Date(start);
-  if (Number.isNaN(startDate.getTime())) {
-    return Array.from({ length: monthCount }, (_, index) => `第${index + 1}月`);
-  }
-
-  return Array.from({ length: monthCount }, (_, index) => {
-    const date = new Date(startDate);
-    date.setMonth(startDate.getMonth() + index);
-    return `${date.getFullYear() - 1911}/${date.getMonth() + 1}`;
   });
 }
 
