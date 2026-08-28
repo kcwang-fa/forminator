@@ -374,7 +374,10 @@ export function prepareCommonData(data: FormData) {
 // ===== 載入模板 =====
 
 async function loadTemplate(docId: string): Promise<PizZip> {
-  const url = `/templates/${docId}.docx`;
+  // 網址帶 build id：新版部署後網址就變了，瀏覽器與 CDN 一定會重抓，
+  // 不會拿到快取住的舊模板（Cloudflare 會把靜態檔快取覆寫成 4 小時，
+  // 光靠 server.js 的 no-cache 標頭不保險）。__BUILD_ID__ 由 vite.config.ts 注入。
+  const url = `/templates/${docId}.docx?v=${__BUILD_ID__}`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`無法載入模板 ${docId}: ${response.statusText}`);
   const buffer = await response.arrayBuffer();

@@ -3,7 +3,7 @@
 
 import express from 'express';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, sep } from 'path';
 import { networkInterfaces } from 'os';
 import { callLlmJson, GEMINI_MODEL, GROQ_MODEL } from './api/_lib/llm.js';
 import {
@@ -46,7 +46,23 @@ function findLanIpv4() {
 app.use(express.json({ limit: '256kb' }));
 
 // 靜態檔案（React build）
-app.use(express.static(join(__dirname, 'dist')));
+//
+// public/templates/*.docx 特別指定 no-cache。
+// why：Cloudflare 會把靜態檔的 Browser Cache TTL 覆寫成 4 小時（origin 這邊 express.static
+//      預設是 max-age=0），部署後使用者的瀏覽器在 4 小時內完全不回頭問伺服器，於是拿舊模板
+//      產出結構過時的文件，而且重新整理救不了——重整只重新驗證 index.html，
+//      docgen 是用 fetch() 抓模板，走的是 disk cache。（2026-08-28 實際踩到）
+// how：no-cache ≠ 不快取，而是「每次都要帶 ETag 回來驗證」；沒變就回 304，
+//      流量幾乎不變，但模板一換就立刻生效。
+//      前端另外會在網址帶 build id（見 docgen.ts loadTemplate），雙保險：
+//      CF 若又覆寫了這個標頭，換掉的網址仍然一定會重抓。
+app.use(express.static(join(__dirname, 'dist'), {
+  setHeaders(res, filePath) {
+    if (filePath.includes(`${sep}templates${sep}`)) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 
 function providerLabel(provider) {
   return provider === 'gemini' ? 'Gemini' : 'Groq';

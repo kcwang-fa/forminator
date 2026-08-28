@@ -21,3 +21,6 @@ declare module 'docxtemplater/js/modules/fix-doc-pr-corruption.js' {
   const fixDocPrCorruption: object;
   export default fixDocPrCorruption;
 }
+
+// vite.config.ts 的 define 注入的 build 識別字串（見 docgen.ts loadTemplate 的模板網址）。
+declare const __BUILD_ID__: string;

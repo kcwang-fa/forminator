@@ -104,8 +104,16 @@ function localSignatureApi(): Plugin {
   }
 }
 
+// 每次 build（dev server 每次啟動）都換一組值，供 docgen 在模板網址上帶 ?v=，
+// 讓使用者的瀏覽器在新版部署後一定會重抓模板，而不是吃 CDN／disk cache 裡的舊檔。
+// 用 36 進位的毫秒時戳，夠短又保證單調遞增。
+const BUILD_ID = Date.now().toString(36)
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
   plugins: [localSignatureApi(), react()],
   server: {
     host: true,
