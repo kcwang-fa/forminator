@@ -3,7 +3,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Controller, useFieldArray } from 'react-hook-form';
 import { Select } from 'antd';
 import { useFormStore } from '../../../hooks/useFormStore';
-import { emptyProject, PROJECT_ROLE_OPTIONS, qualifiesForAppendix2 } from '../../../data/defaults';
+import { emptyProject, isSelfProjectPi, PROJECT_ROLE_OPTIONS, qualifiesForAppendix2 } from '../../../data/defaults';
 
 const PROJECT_STATUS_OPTIONS = [
   { value: 'completed', label: '近三年已完成' },
@@ -108,19 +108,40 @@ export function ProjectFields({ personIndex }: { personIndex: number }) {
               />
             </div>
             {showSummary && (
-              <Controller
-                name={`personnel.${personIndex}.projects.${i}.summary`}
-                control={control}
-                render={({ field: f }) => (
-                  <Form.Item
-                    label="計畫摘要"
-                    tooltip="擔任計畫主持人、協同主持人或研究人員，且該計畫有經費時要填；會列進附表二"
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input.TextArea {...f} rows={2} />
-                  </Form.Item>
-                )}
-              />
+              <>
+                {/* 這個計畫的主持人是誰。本人就是主持人時不用填，附表二會自動帶本人姓名；
+                    本人只是協同主持人／研究人員時一定要填，否則附表二那一欄會留白。 */}
+                <Controller
+                  name={`personnel.${personIndex}.projects.${i}.pi_name`}
+                  control={control}
+                  render={({ field: f }) => (
+                    <Form.Item
+                      label="這個計畫的計畫主持人"
+                      tooltip="會列進附表二。你自己就是這個計畫的主持人時可以留空"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Input
+                        {...f}
+                        value={f.value ?? ''}
+                        placeholder={isSelfProjectPi(role) ? '留空＝本人' : '例：王大明'}
+                      />
+                    </Form.Item>
+                  )}
+                />
+                <Controller
+                  name={`personnel.${personIndex}.projects.${i}.summary`}
+                  control={control}
+                  render={({ field: f }) => (
+                    <Form.Item
+                      label="計畫摘要"
+                      tooltip="擔任計畫主持人、協同主持人或研究人員，且該計畫有經費時要填；會列進附表二"
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input.TextArea {...f} value={f.value ?? ''} rows={2} />
+                    </Form.Item>
+                  )}
+                />
+              </>
             )}
           </Card>
         );

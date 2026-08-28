@@ -202,6 +202,7 @@ export interface Project {
   status: 'completed' | 'ongoing' | 'pending';  // 已完成/執行中/申請中
   project_name: string;
   role: string;          // 擔任角色（下拉選項＋可自訂，見 PROJECT_ROLE_OPTIONS）
+  pi_name?: string;      // 該計畫的計畫主持人姓名（附表二用；此人自己就是主持人時可留空）
   funder: string;        // 補助機關
   budget: string;        // 經費
   start_ym: string;      // 起年月

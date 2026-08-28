@@ -28,10 +28,20 @@ export const emptyWorkHistory: WorkHistory = {
 // 「擔任角色」下拉選單的選項。
 export const PROJECT_ROLE_OPTIONS = ['計畫主持人', '協同主持人', '研究人員'];
 
-// 判定用白名單 = 下拉選項 + 舊草稿的「主持人」寫法。
+// 判定用白名單 = 下拉選項 + 舊草稿常見的同義寫法。
 // why：這欄改成下拉之前是自由文字，範例 placeholder 就是「主持人」，舊草稿大量是這個值；
-//      不相容的話舊草稿一開啟，摘要欄會消失、附表二也會少印一筆，而且沒有任何錯誤訊息。
-export const APPENDIX2_SUMMARY_ROLES = [...PROJECT_ROLE_OPTIONS, '主持人'];
+//      「共同主持人」則是「協同主持人」的口語同義詞（專案自己的 fixture 就是這樣寫的）。
+//      不收這些變體的話，舊草稿一開啟，摘要欄會消失、附表二也會整筆少印，而且沒有任何
+//      錯誤訊息——漏印比多印嚴重，所以寧可放寬。
+export const APPENDIX2_SUMMARY_ROLES = [...PROJECT_ROLE_OPTIONS, '主持人', '共同主持人'];
+
+// 該人在這個既往計畫中「本人就是計畫主持人」的角色寫法（含舊草稿的「主持人」）。
+// 附表二的「計畫主持人：」欄沒填時，只有這種情況才能安全地帶入本人姓名。
+export const SELF_AS_PI_ROLES = ['計畫主持人', '主持人'];
+
+export function isSelfProjectPi(role: string): boolean {
+  return SELF_AS_PI_ROLES.includes((role || '').trim());
+}
 
 // role：該人在「那個既往計畫」中擔任的角色；budget：該計畫的經費（自由文字，空字串＝無經費）
 export function qualifiesForAppendix2(role: string, budget: string): boolean {
@@ -42,6 +52,7 @@ export const emptyProject: Project = {
   status: 'completed',
   project_name: '',
   role: '',
+  pi_name: '',
   funder: '',
   budget: '',
   start_ym: '',

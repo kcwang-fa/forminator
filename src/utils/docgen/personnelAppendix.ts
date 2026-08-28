@@ -9,7 +9,7 @@
 // 不要為了 DRY 強行合併。
 
 import type { FormData } from '../../types/form';
-import { qualifiesForAppendix2 } from '../../data/defaults';
+import { isSelfProjectPi, qualifiesForAppendix2 } from '../../data/defaults';
 
 const ROLE_LABEL: Record<string, string> = {
   pi: '主持人', co_pi: '協同主持人', researcher: '研究人員',
@@ -69,14 +69,23 @@ export function preparePersonnelAppendix(data: FormData) {
         pa_no_ongoing:   ongoing.length === 0,
         pa_pending:      pending.map(toProj),
         pa_no_pending:   pending.length === 0,
-        pa_has_pi_proj:     appendix2Projects.length > 0,
-        pa_no_pi_proj:      appendix2Projects.length === 0,
-        pa_pi_proj_name:    appendix2Projects[0]?.project_name || '',
-        pa_pi_proj_pi:      p.name_zh,
-        pa_pi_proj_funder:  appendix2Projects[0]?.funder || '',
-        pa_pi_proj_period:  appendix2Projects[0] ? `${appendix2Projects[0].start_ym}～${appendix2Projects[0].end_ym}` : '',
-        pa_pi_proj_budget:  appendix2Projects[0]?.budget || '',
-        pa_pi_proj_summary: appendix2Projects[0]?.summary || '',
+        // {#pa_has_pi_proj} 在模板裡包住附表二那一組欄位（計畫名稱／主持人／補助單位／
+        // 期程／經費／摘要）。餵 array 時 docxtemplater 會把它當 loop，逐筆重複整組欄位；
+        // 餵 boolean 才是單純的顯示／隱藏。改餵 array 之後，同一人有多個符合條件的計畫
+        // 就會全部列出，而模板 XML 一行都不用改。空陣列＝不輸出，等同原本的 false。
+        pa_has_pi_proj: appendix2Projects.map(proj => ({
+          pa_pi_proj_name:   proj.project_name,
+          // 「計畫主持人：」欄位。
+          // why：這裡填的是「那個計畫的主持人」，不是填表的這個人。本人就是主持人時
+          //      使用者可以留空，由這裡帶本人姓名；本人只是協同主持人／研究人員又沒填，
+          //      就留白讓他們手寫——絕不能一律帶本人姓名，那會在附表二印出不實的主持人。
+          pa_pi_proj_pi:     (proj.pi_name || '').trim() || (isSelfProjectPi(proj.role) ? p.name_zh : ''),
+          pa_pi_proj_funder: proj.funder,
+          pa_pi_proj_period: `${proj.start_ym}～${proj.end_ym}`,
+          pa_pi_proj_budget: proj.budget,
+          pa_pi_proj_summary: proj.summary,
+        })),
+        pa_no_pi_proj: appendix2Projects.length === 0,
         pa_publications_text: (p.publications || '').trim() || NO_PUBLICATIONS_TEXT,
         // 附表一「填表人簽章」＝該人自己的簽名。沒簽則 section 不成立、欄位留白可手簽。
         // 旁邊的「計畫主持人簽章」用頂層的 pi_sig（loop 內查不到的 key，docxtemplater
