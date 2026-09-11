@@ -307,6 +307,16 @@ export interface MulticenterSite {
   city: string;
   location: string;
   contact: string;
+  // 以下 5 欄供 DOC-12 基本資料區「署外其他中心計畫主持人」表使用（2026-09-11 新增）。
+  // 同一筆中心同時餵兩張表：後半段四欄表用 country/city/location/contact，
+  // 基本資料區主持人表用下列欄位，避免使用者把同一個中心填兩次。
+  pi_name: string;    // 該中心計畫主持人姓名
+  pi_title: string;   // 職稱
+  pi_unit: string;    // 服務單位
+  pi_phone: string;   // 聯絡電話
+  // 是否為總主持人。表單說明要求「總主持人請於服務單位處備註 *」，
+  // 勾選後由 docgen 自動在服務單位後面加上「*」，使用者不必自己打星號。
+  is_lead_pi: boolean;
 }
 
 // ===== 主表單資料結構 =====

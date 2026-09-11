@@ -138,6 +138,12 @@ function normalizeMulticenterSites(sites: FormData['multicenter_sites'] | undefi
     city: site?.city || '',
     location: site?.location || '',
     contact: site?.contact || '',
+    // 舊草稿（2026-09-11 之前）沒有這 5 欄，一律補空值／false，避免匯入後 undefined 進到表單與 docgen。
+    pi_name: site?.pi_name || '',
+    pi_title: site?.pi_title || '',
+    pi_unit: site?.pi_unit || '',
+    pi_phone: site?.pi_phone || '',
+    is_lead_pi: Boolean(site?.is_lead_pi),
   }));
 }
 

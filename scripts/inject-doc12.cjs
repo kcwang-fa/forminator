@@ -425,6 +425,14 @@ xml = xml.replace(
   /(計畫主持人[\s\S]*?姓名<\/w:t><\/w:r><\/w:p><\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>)([\s\S]*?)(<\/w:p>)/,
   `$1<w:r>${KAI_RPR}<w:t>{pi_name_zh}</w:t></w:r>$3`);
 
+// 計畫主持人 英文姓名
+// 「英文」「姓名」同樣是兩個獨立 run；從「計畫主持人」往後找第一個「英文」run
+//（計畫名稱那列的「英文」在主持人列之前，已被前面的 insertInNextCell 處理掉，不會被誤中），
+// 再往後接到「姓名」label 格結尾，把它後面那一格填入 placeholder。
+xml = xml.replace(
+  /(計畫主持人[\s\S]*?<w:t>英文<\/w:t><\/w:r>[\s\S]*?姓名<\/w:t><\/w:r><\/w:p><\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>)([\s\S]*?)(<\/w:p>)/,
+  `$1<w:r>${KAI_RPR}<w:t>{pi_name_en}</w:t></w:r>$3`);
+
 // 協同主持人 姓名（多位協同主持人由 docgen 用「、」合併成單一字串）
 xml = xml.replace(
   /(協同主持人[\s\S]*?姓名<\/w:t><\/w:r><\/w:p><\/w:tc><w:tc><w:tcPr>[\s\S]*?<\/w:tcPr><w:p[^>]*>)([\s\S]*?)(<\/w:p>)/,
@@ -437,7 +445,7 @@ xml = xml.replace(
 
 // 計畫主持人 其餘欄：職稱 / 服務單位 / 聯絡電話 / 電子信箱
 // （都用「計畫主持人」當區段錨點往後抓第一個對應 label。主持人區「電子信箱」是 split run「電子」+「信箱」，
-//  故 labelEnd 傳 '信箱'。「英文姓名」不注入＝沒有對應 docgen key，留空白給使用者填。）
+//  故 labelEnd 傳 '信箱'。「英文姓名」已於上方單獨注入 {pi_name_en}。）
 xml = injectSectionCell(xml, '計畫主持人', '職稱',     '{pi_title}');
 xml = injectSectionCell(xml, '計畫主持人', '服務單位', '{pi_unit}');
 xml = injectSectionCell(xml, '計畫主持人', '聯絡電話', '{pi_phone}');
@@ -458,6 +466,105 @@ xml = injectPeriodBlanks(xml);
 // 研究計畫目的：用 {purpose_brief}（純研究主旨，不含分年目的；⚠️ 不要 DOC-2 的合併值 {purpose}）
 xml = insertInNextCell(xml, '研究計畫目的', '{purpose_brief}');
 xml = alignPlaceholderLeft(xml, '{purpose_brief}');
+
+// 基本資料區「多中心研究計畫，署外其他中心計畫主持人(…)：□是 □不適用」
+// 這兩個 □ 與文字同在一個 <w:t>（單一 run），可直接字串替換。
+// ⚠️ 「□是 □不適用」全文出現兩次（另一處是後半段的「多中心類別」，由 (B) 對位表處理），
+//    所以先錨定題目文字，只換它後面那一處，避免誤傷。
+// 註：題目後面那張「計畫主持人／服務單位／聯絡電話／姓名／職稱」表目前無對應 FormData 欄位
+//     （multicenter_sites 只有國別/城市/地點/聯絡人），仍留給使用者在 Word 手填。
+function injectOtherSitePiBoxes(xml) {
+  const anchor = '多中心研究計畫，署外其他中心計畫主持人';
+  const anchorIdx = xml.indexOf(anchor);
+  if (anchorIdx === -1) throw new Error('DOC-12 找不到「署外其他中心計畫主持人」題（範本可能改版）');
+  const OLD = '>□是 □不適用<';
+  const boxIdx = xml.indexOf(OLD, anchorIdx);
+  if (boxIdx === -1) throw new Error('DOC-12「署外其他中心計畫主持人」題找不到「□是 □不適用」勾選格');
+  const NEW = '>{irb0021_other_site_pi_yes}是 {irb0021_other_site_pi_na}不適用<';
+  return xml.slice(0, boxIdx) + NEW + xml.slice(boxIdx + OLD.length);
+}
+xml = injectOtherSitePiBoxes(xml);
+
+// 署外其他中心計畫主持人清單表 → 兩列一組的 docxtemplater loop {#other_site_pi_rows}
+//
+// 範本結構（「計畫主持人」是跨兩列的 vMerge label）：
+//   TR_A: [計畫主持人(vMerge restart)] [服務單位] [值] [聯絡電話] [值]
+//   TR_B: [vMerge 續]                 [姓名]     [值] [職稱]     [值]
+// 一位主持人 = 這兩列。把 {#other_site_pi_rows} 放在 TR_A 第一格、{/other_site_pi_rows} 放在 TR_B
+// 最後一格，docxtemplater 會把「兩列一起」依資料筆數重複（跨列 loop）。
+// 沒有資料時 docgen 仍送一筆空白列，維持範本原本的空白版型。
+function appendRunToFirstParagraph(cell, text) {
+  const pStart = cell.indexOf('<w:p');
+  const pEndStart = cell.indexOf('</w:p>', pStart);
+  if (pStart === -1 || pEndStart === -1) return cell;
+  return cell.slice(0, pEndStart)
+    + `<w:r>${KAI_RPR}<w:t xml:space="preserve">${text}</w:t></w:r>`
+    + cell.slice(pEndStart);
+}
+
+function injectOtherSitePiRows(xml) {
+  const anchorIdx = xml.indexOf('多中心研究計畫，署外其他中心計畫主持人');
+  if (anchorIdx === -1) throw new Error('DOC-12 找不到「署外其他中心計畫主持人」題（範本可能改版）');
+
+  // 題目文字本身也在一個 <w:tr> 裡，所以要取「題目列結束之後」的前兩列才是資料列。
+  const questionRowEnd = xml.indexOf('</w:tr>', anchorIdx);
+  if (questionRowEnd === -1) throw new Error('DOC-12 署外主持人題所在列找不到結尾');
+
+  const rows = [...xml.matchAll(/<w:tr\b[^>]*>[\s\S]*?<\/w:tr>/g)]
+    .filter((row) => row.index > questionRowEnd)
+    .slice(0, 2);
+  if (rows.length !== 2) throw new Error('DOC-12 署外主持人表找不到預期的兩列資料列');
+
+  const [rowA, rowB] = rows;
+  if (!(rowA[0].includes('計畫主持人') && rowA[0].includes('服務單位') && rowA[0].includes('聯絡電話'))) {
+    throw new Error('DOC-12 署外主持人表第一列不是「計畫主持人／服務單位／聯絡電話」（範本可能改版）');
+  }
+  if (!(rowB[0].includes('姓名') && rowB[0].includes('職稱'))) {
+    throw new Error('DOC-12 署外主持人表第二列不是「姓名／職稱」（範本可能改版）');
+  }
+
+  // 把整列的第 index 個 <w:tc> 換掉（由後往前改，避免前面的位移影響後面的 index）。
+  function patchRow(row, patches) {
+    const cells = [...row[0].matchAll(/<w:tc\b[^>]*>[\s\S]*?<\/w:tc>/g)];
+    if (cells.length !== 5) {
+      throw new Error(`DOC-12 署外主持人表預期 5 欄，實際 ${cells.length} 欄（範本可能改版）`);
+    }
+    let out = row[0];
+    for (const { index: cellIndex, fn } of [...patches].reverse()) {
+      const cell = cells[cellIndex];
+      out = out.slice(0, cell.index) + fn(cell[0]) + out.slice(cell.index + cell[0].length);
+    }
+    return out;
+  }
+
+  const newRowA = patchRow(rowA, [
+    // 第 0 格保留「計畫主持人」文字，只在段尾追加 loop 開始標籤
+    { index: 0, fn: (cell) => appendRunToFirstParagraph(cell, '{#other_site_pi_rows}') },
+    { index: 2, fn: (cell) => replaceFirstParagraphText(cell, '{osp_unit}') },
+    { index: 4, fn: (cell) => replaceFirstParagraphText(cell, '{osp_phone}') },
+  ]);
+  const newRowB = patchRow(rowB, [
+    { index: 2, fn: (cell) => replaceFirstParagraphText(cell, '{osp_name}') },
+    { index: 4, fn: (cell) => replaceFirstParagraphText(cell, '{osp_title}{/other_site_pi_rows}') },
+  ]);
+
+  const out = xml.slice(0, rowA.index)
+    + newRowA
+    + xml.slice(rowA.index + rowA[0].length, rowB.index)
+    + newRowB
+    + xml.slice(rowB.index + rowB[0].length);
+  console.log('  ✓ 署外其他中心計畫主持人表注入 {#other_site_pi_rows}');
+  return out;
+}
+xml = injectOtherSitePiRows(xml);
+
+// 基本資料區「IRB 相關訓練證明 □ 有（請檢附）」
+// 此格只有「有」一個選項、且與文字同在一個 <w:t>；全文僅一處，直接替換即可。
+{
+  const OLD = '>□ 有（請檢附）<';
+  if (!xml.includes(OLD)) throw new Error('DOC-12 找不到「IRB 相關訓練證明」的「□ 有（請檢附）」格（範本可能改版）');
+  xml = xml.replace(OLD, '>{irb0021_irb_training_cert} 有（請檢附）<');
+}
 
 console.log('  ✓ (A) 基本資料區欄位注入');
 
@@ -846,6 +953,8 @@ saveDoc(zip, xml, OUT);
 //    與研究對象關係 7 格、對照組主問/類別/專用同意書 7 格、檢體 6 格、資料 6 格、去識別化 2 格、
 //    資料庫連結 2 格、知情同意主問 3 格＋落實方式 4 格、同意書取得來源 6 格、
 //    追蹤 2 格、DSMP 2 格 = 共 80 格 → {irb0021_*}。
+//    另基本資料區 2 題（2026-09-11 補）：署外其他中心計畫主持人 {irb0021_other_site_pi_yes/_na}
+//    （依 is_multicenter，非多中心自動勾「不適用」）、IRB 相關訓練證明 {irb0021_irb_training_cert}（恆勾「有」）。
 //    隱私三段 → {privacy_during/after/withdrawal}（與 DOC-5 共用同一批欄位）。
 // ✅ 已接的自由文字格（見 (D)）：
 //    - 招募/研究對象：{recruit_method_text}、{subject_count}、{subject_explainer}。

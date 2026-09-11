@@ -406,6 +406,7 @@
     "irb0021_dsmp_yes": "□",
     "irb0021_followup_no": "■",
     "irb0021_followup_yes": "□",
+    "irb0021_irb_training_cert": "■",
     "irb0021_meets_exempt": "□",
     "irb0021_meets_expedited": "□",
     "irb0021_multicenter_domestic": "□",
@@ -414,6 +415,8 @@
     "irb0021_multicenter_yes": "□",
     "irb0021_not_meets_exempt": "■",
     "irb0021_not_meets_expedited": "■",
+    "irb0021_other_site_pi_na": "■",
+    "irb0021_other_site_pi_yes": "□",
     "irb0021_pop_adolescent": "□",
     "irb0021_pop_adult": "□",
     "irb0021_pop_cdc_staff": "□",
@@ -500,6 +503,14 @@
     ],
     "needs_funding_no": "□",
     "needs_funding_yes": "■",
+    "other_site_pi_rows": [
+      {
+        "osp_name": "",
+        "osp_phone": "",
+        "osp_title": "",
+        "osp_unit": ""
+      }
+    ],
     "outcome_other": "□",
     "outcome_other_count": "___",
     "outcome_paper_publish": "■",
@@ -697,6 +708,7 @@
     "pi_email": "daming.wang@cdc.gov.tw",
     "pi_fax": "02-23959825",
     "pi_has_sig": false,
+    "pi_name_en": "Wang, Da-Ming",
     "pi_name_zh": "王大明",
     "pi_phone": "02-23959825 分機 1234",
     "pi_same": "■",
@@ -1167,6 +1179,7 @@
         "irb0021_dsmp_yes": "□",
         "irb0021_followup_no": "■",
         "irb0021_followup_yes": "□",
+        "irb0021_irb_training_cert": "■",
         "irb0021_meets_exempt": "□",
         "irb0021_meets_expedited": "□",
         "irb0021_multicenter_domestic": "□",
@@ -1175,6 +1188,8 @@
         "irb0021_multicenter_yes": "□",
         "irb0021_not_meets_exempt": "■",
         "irb0021_not_meets_expedited": "■",
+        "irb0021_other_site_pi_na": "■",
+        "irb0021_other_site_pi_yes": "□",
         "irb0021_pop_adolescent": "□",
         "irb0021_pop_adult": "□",
         "irb0021_pop_cdc_staff": "□",
@@ -1261,6 +1276,14 @@
         ],
         "needs_funding_no": "□",
         "needs_funding_yes": "■",
+        "other_site_pi_rows": [
+          {
+            "osp_name": "",
+            "osp_phone": "",
+            "osp_title": "",
+            "osp_unit": ""
+          }
+        ],
         "outcome_other": "□",
         "outcome_other_count": "___",
         "outcome_paper_publish": "■",
@@ -1466,6 +1489,7 @@
         "pi_email": "daming.wang@cdc.gov.tw",
         "pi_fax": "02-23959825",
         "pi_has_sig": false,
+        "pi_name_en": "Wang, Da-Ming",
         "pi_name_zh": "王大明",
         "pi_phone": "02-23959825 分機 1234",
         "pi_same": "■",
@@ -1937,6 +1961,7 @@
         "irb0021_dsmp_yes": "□",
         "irb0021_followup_no": "■",
         "irb0021_followup_yes": "□",
+        "irb0021_irb_training_cert": "■",
         "irb0021_meets_exempt": "□",
         "irb0021_meets_expedited": "□",
         "irb0021_multicenter_domestic": "□",
@@ -1945,6 +1970,8 @@
         "irb0021_multicenter_yes": "□",
         "irb0021_not_meets_exempt": "■",
         "irb0021_not_meets_expedited": "■",
+        "irb0021_other_site_pi_na": "■",
+        "irb0021_other_site_pi_yes": "□",
         "irb0021_pop_adolescent": "□",
         "irb0021_pop_adult": "□",
         "irb0021_pop_cdc_staff": "□",
@@ -2031,6 +2058,14 @@
         ],
         "needs_funding_no": "□",
         "needs_funding_yes": "■",
+        "other_site_pi_rows": [
+          {
+            "osp_name": "",
+            "osp_phone": "",
+            "osp_title": "",
+            "osp_unit": ""
+          }
+        ],
         "outcome_other": "□",
         "outcome_other_count": "___",
         "outcome_paper_publish": "■",
@@ -2236,6 +2271,7 @@
         "pi_email": "daming.wang@cdc.gov.tw",
         "pi_fax": "02-23959825",
         "pi_has_sig": false,
+        "pi_name_en": "Wang, Da-Ming",
         "pi_name_zh": "王大明",
         "pi_phone": "02-23959825 分機 1234",
         "pi_same": "■",
@@ -2707,6 +2743,7 @@
         "irb0021_dsmp_yes": "□",
         "irb0021_followup_no": "■",
         "irb0021_followup_yes": "□",
+        "irb0021_irb_training_cert": "■",
         "irb0021_meets_exempt": "□",
         "irb0021_meets_expedited": "□",
         "irb0021_multicenter_domestic": "□",
@@ -2715,6 +2752,8 @@
         "irb0021_multicenter_yes": "□",
         "irb0021_not_meets_exempt": "■",
         "irb0021_not_meets_expedited": "■",
+        "irb0021_other_site_pi_na": "■",
+        "irb0021_other_site_pi_yes": "□",
         "irb0021_pop_adolescent": "□",
         "irb0021_pop_adult": "□",
         "irb0021_pop_cdc_staff": "□",
@@ -2801,6 +2840,14 @@
         ],
         "needs_funding_no": "□",
         "needs_funding_yes": "■",
+        "other_site_pi_rows": [
+          {
+            "osp_name": "",
+            "osp_phone": "",
+            "osp_title": "",
+            "osp_unit": ""
+          }
+        ],
         "outcome_other": "□",
         "outcome_other_count": "___",
         "outcome_paper_publish": "■",
@@ -3006,6 +3053,7 @@
         "pi_email": "daming.wang@cdc.gov.tw",
         "pi_fax": "02-23959825",
         "pi_has_sig": false,
+        "pi_name_en": "Wang, Da-Ming",
         "pi_name_zh": "王大明",
         "pi_phone": "02-23959825 分機 1234",
         "pi_same": "■",
@@ -3477,6 +3525,7 @@
         "irb0021_dsmp_yes": "□",
         "irb0021_followup_no": "■",
         "irb0021_followup_yes": "□",
+        "irb0021_irb_training_cert": "■",
         "irb0021_meets_exempt": "□",
         "irb0021_meets_expedited": "□",
         "irb0021_multicenter_domestic": "□",
@@ -3485,6 +3534,8 @@
         "irb0021_multicenter_yes": "□",
         "irb0021_not_meets_exempt": "■",
         "irb0021_not_meets_expedited": "■",
+        "irb0021_other_site_pi_na": "■",
+        "irb0021_other_site_pi_yes": "□",
         "irb0021_pop_adolescent": "□",
         "irb0021_pop_adult": "□",
         "irb0021_pop_cdc_staff": "□",
@@ -3571,6 +3622,14 @@
         ],
         "needs_funding_no": "□",
         "needs_funding_yes": "■",
+        "other_site_pi_rows": [
+          {
+            "osp_name": "",
+            "osp_phone": "",
+            "osp_title": "",
+            "osp_unit": ""
+          }
+        ],
         "outcome_other": "□",
         "outcome_other_count": "___",
         "outcome_paper_publish": "■",
@@ -3776,6 +3835,7 @@
         "pi_email": "daming.wang@cdc.gov.tw",
         "pi_fax": "02-23959825",
         "pi_has_sig": false,
+        "pi_name_en": "Wang, Da-Ming",
         "pi_name_zh": "王大明",
         "pi_phone": "02-23959825 分機 1234",
         "pi_same": "■",

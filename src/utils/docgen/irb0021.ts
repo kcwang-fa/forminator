@@ -215,7 +215,27 @@ export function prepareIrb002_1Data(data: FormData) {
         { country: '', city: '', location: '', contact: '' },
       ];
 
+  // 基本資料區「署外其他中心計畫主持人」表：一位主持人 = 範本裡的兩列（服務單位/聯絡電話 + 姓名/職稱）。
+  // 資料沿用同一份 multicenter_sites（使用者只填一次中心資料，兩張表共用）。
+  // 「總主持人請於服務單位處備註 *」→ is_lead_pi 勾選時自動在服務單位後面補星號。
+  // 非多中心、或多中心但主持人欄全空時，仍輸出一筆空白列，維持範本原本的空白版型讓使用者手填。
+  const otherSitePiRows = isMulticenter && data.multicenter_sites?.length
+    ? data.multicenter_sites.map((site) => {
+        const unit = (site.pi_unit || '').trim();
+        return {
+          osp_name: site.pi_name || '',
+          osp_title: site.pi_title || '',
+          // 星號只在有填服務單位時才加，避免輸出孤零零一個「*」。
+          osp_unit: site.is_lead_pi && unit ? `${unit}*` : unit,
+          osp_phone: site.pi_phone || '',
+        };
+      })
+    : [{ osp_name: '', osp_title: '', osp_unit: '', osp_phone: '' }];
+
   return {
+    // 署外其他中心計畫主持人表（兩列一組的 loop，見上方 otherSitePiRows）
+    other_site_pi_rows: otherSitePiRows,
+
     // 研究類別（可複選）：只勾高信心格，其餘留 □
     irb0021_cat_questionnaire:  box(data.has_questionnaire),
     irb0021_cat_database:       box(hasAny(dataUse, DB_ANALYSIS_DATA)),
@@ -241,6 +261,18 @@ export function prepareIrb002_1Data(data: FormData) {
     irb0021_not_meets_expedited: box(!isExpedited),
     irb0021_meets_exempt:        box(false),
     irb0021_not_meets_exempt:    box(true),
+
+    // 基本資料區「多中心研究計畫，署外其他中心計畫主持人(請逐一列出…)：□是 □不適用」。
+    // 與後半段「多中心類別」同一個 is_multicenter 判斷：非多中心 → 自動勾「不適用」。
+    // ⚠️ 題目後面那張署外主持人清單表（姓名/職稱/服務單位/聯絡電話）目前無對應 FormData 欄位，
+    //    多中心時仍需使用者在 Word 手填。
+    irb0021_other_site_pi_yes: box(isMulticenter),
+    irb0021_other_site_pi_na:  box(!isMulticenter),
+
+    // 基本資料區「IRB 相關訓練證明 □ 有（請檢附）」。
+    // 表單只給「有」一個選項、且送件本來就必附訓練證明，故恆勾 ■。
+    // 日後若要改成依主持人實際訓練資料判斷（personnel 的 irb_training_cert / irb_training_hours），改這一行即可。
+    irb0021_irb_training_cert: box(true),
 
     // 多中心類別 + 官方四欄表格。單中心仍保留原表兩列空白資料列，供 Word 手填或維持版型。
     irb0021_multicenter_yes:      box(isMulticenter),

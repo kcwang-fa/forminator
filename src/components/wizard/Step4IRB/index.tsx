@@ -760,6 +760,58 @@ export default function Step4IRB() {
                           </Form.Item>
                         )}
                       />
+                      {/* 以下為該中心「計畫主持人」資料：申請表需逐一列出各中心主持人的
+                          姓名／職稱／服務單位／聯絡電話。皆為選填，沒填就在 Word 裡留白手寫。 */}
+                      <Controller
+                        name={`multicenter_sites.${index}.pi_name`}
+                        control={control}
+                        render={({ field }) => (
+                          <Form.Item label="該中心計畫主持人姓名">
+                            <Input {...field} placeholder="例：陳大文" />
+                          </Form.Item>
+                        )}
+                      />
+                      <Controller
+                        name={`multicenter_sites.${index}.pi_title`}
+                        control={control}
+                        render={({ field }) => (
+                          <Form.Item label="主持人職稱">
+                            <Input {...field} placeholder="例：主治醫師" />
+                          </Form.Item>
+                        )}
+                      />
+                      <Controller
+                        name={`multicenter_sites.${index}.pi_unit`}
+                        control={control}
+                        render={({ field }) => (
+                          <Form.Item label="主持人服務單位">
+                            <Input {...field} placeholder="例：高雄醫學大學附設醫院感染科" />
+                          </Form.Item>
+                        )}
+                      />
+                      <Controller
+                        name={`multicenter_sites.${index}.pi_phone`}
+                        control={control}
+                        render={({ field }) => (
+                          <Form.Item label="主持人聯絡電話">
+                            <Input {...field} placeholder="例：07-1234567 分機 123" />
+                          </Form.Item>
+                        )}
+                      />
+                      <Controller
+                        name={`multicenter_sites.${index}.is_lead_pi`}
+                        control={control}
+                        render={({ field }) => (
+                          <Form.Item style={{ gridColumn: '1 / -1' }}>
+                            <Checkbox
+                              checked={field.value}
+                              onChange={(event) => field.onChange(event.target.checked)}
+                            >
+                              此中心主持人為整個計畫的總主持人（申請表會自動在服務單位後面加註 *）
+                            </Checkbox>
+                          </Form.Item>
+                        )}
+                      />
                     </div>
                   </Card>
                 ))}

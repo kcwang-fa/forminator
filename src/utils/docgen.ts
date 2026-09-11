@@ -100,6 +100,9 @@ function prepareBasicData(data: FormData, pi: Personnel, contact: Personnel) {
 
     // PI
     pi_name_zh: pi.name_zh || '',
+    // 主持人英文姓名：IRB-002-1（DOC-12）主持人區有獨立「英文姓名」格，
+    // 來源是 Step2 人員資料的 name_en（主持人必填）。未填時給空字串，Word 留白由使用者補。
+    pi_name_en: pi.name_en || '',
     pi_title: pi.title || '',
     pi_unit: pi.unit || '',
     pi_phone: pi.phone || '',

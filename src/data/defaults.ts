@@ -2,7 +2,9 @@
 
 import type { FormData, Personnel, Education, WorkHistory, Project, BudgetItem, DatabaseRequest, ReviewScreening, MulticenterSite } from '../types/form';
 
-export const SDD_VERSION = '1.9.0';
+// 草稿檔格式版本。新增／移除 FormData 欄位時往上升，匯出的 JSON 會帶上它。
+// 1.10.0（2026-09-11）：MulticenterSite 新增署外中心主持人 5 欄（pi_name/pi_title/pi_unit/pi_phone/is_lead_pi）。
+export const SDD_VERSION = '1.10.0';
 
 export const emptyEducation: Education = {
   degree: '',
@@ -90,6 +92,12 @@ export const emptyMulticenterSite: MulticenterSite = {
   city: '',
   location: '',
   contact: '',
+  // DOC-12 基本資料區「署外其他中心計畫主持人」表欄位（選填，未填則該欄在 Word 留白）
+  pi_name: '',
+  pi_title: '',
+  pi_unit: '',
+  pi_phone: '',
+  is_lead_pi: false,
 };
 
 /** 空白人員模板 */
