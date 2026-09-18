@@ -360,6 +360,9 @@ export interface FormData {
   // 三、多年期計畫之執行成果概要：僅多年期計畫需填寫（新案概述主持人過去相關成果、
   // 延續案敘明初步成果並逐年檢視分年目標）。一年期計畫由 docgen 自動填入「不適用」字樣。
   summary_of_results: string;
+  // DOC-4 IRB-004 第七點「對研究對象可能之傷害及處理」：僅簡易審查／一般審查需填寫。
+  // 免審由 docgen 自動帶入範本原始罐頭字「(不適用)」，此欄位維持 string 不分流（比照 summary_of_results）。
+  harm_handling: string;
   methodology: string;
   expected_outcome: string;
   abstract_zh: string;

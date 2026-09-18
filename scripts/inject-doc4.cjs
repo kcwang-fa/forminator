@@ -48,6 +48,36 @@ function replaceText(xml, oldText, newText) {
   return xml.replace(new RegExp(escaped, 'g'), newText);
 }
 
+// 第七點「對研究對象可能之傷害及處理」專用：不能沿用 insertInNextCell，
+// 因為目標 cell 不是空段落，而是範本已寫死的「(不適用)」三個獨立 <w:r>（"(" "不適用" ")"）。
+// 這裡直接鎖定標籤 cell 結尾 + 內容 cell 開頭（tcPr、pPr 原樣保留），
+// 把整個「(不適用)」三個 run 換成單一 kaiRun 包住的 {harm_handling_text} placeholder，
+// 讓 docgen 依審查類型決定要注入使用者填的內容、還是維持原本的「(不適用)」。
+// why 用單獨函式：insertInNextCell 假設內容 cell 是空段落（只找 <w:pPr>...</w:pPr></w:p>），
+//   這裡的結構多了三個既有 run，直接套用會命中不了，硬改 insertInNextCell 反而讓它變難懂。
+function replaceHarmHandlingCell(xml) {
+  const label = '對研究對象可能之傷害及處理';
+  const pattern = new RegExp(
+    `(${label}<\\/w:t><\\/w:r><\\/w:p><\\/w:tc>` +
+    `<w:tc><w:tcPr>[\\s\\S]*?<\\/w:tcPr>` +
+    `<w:p[^>]*><w:pPr>[\\s\\S]*?<\\/w:pPr>)` +
+    // 三個既有 run："(" → "不適用" → ")"，各自可能帶 rPr（字型/顏色），一併吃掉、不保留。
+    `<w:r[^>]*>(?:<w:rPr>[\\s\\S]*?<\\/w:rPr>)?<w:t[^>]*>\\(<\\/w:t><\\/w:r>` +
+    `<w:r[^>]*>(?:<w:rPr>[\\s\\S]*?<\\/w:rPr>)?<w:t[^>]*>不適用<\\/w:t><\\/w:r>` +
+    `<w:r[^>]*>(?:<w:rPr>[\\s\\S]*?<\\/w:rPr>)?<w:t[^>]*>\\)<\\/w:t><\\/w:r>` +
+    `(<\\/w:p><\\/w:tc>)`
+  );
+  const result = xml.replace(pattern, `$1${kaiRun('{harm_handling_text}')}$2`);
+  // 健檢：注入腳本的鐵律——找不到就要 throw，不能默默跳過（範本結構萬一被改過，要立刻發現）。
+  if (result === xml) {
+    throw new Error(
+      'replaceHarmHandlingCell: 找不到「對研究對象可能之傷害及處理」對應的「(不適用)」cell，' +
+      '請確認 source-templates/IRB-004 研究計畫書.docx 的範本結構是否有變動'
+    );
+  }
+  return result;
+}
+
 // 在標籤所在 cell 的下一個相鄰 cell 中插入 placeholder
 function insertInNextCell(xml, labelText, placeholder) {
   const escaped = labelText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -124,6 +154,10 @@ xml = xml.replace(/□(其他：)/, '{funding_src_other}$1');
 xml = xml.replace(
   /(其他：<\/w:t><\/w:r><w:r[^>]*><w:rPr>[\s\S]*?<w:u w:val="single"\/>[\s\S]*?<\/w:rPr><w:t[^>]*>)\s+(<\/w:t>)/,
   `$1{funding_src_other_text}$2`);
+
+// 第七點「對研究對象可能之傷害及處理」：簡審/一般審填實際內容，免審維持「(不適用)」（docgen 決定）。
+xml = replaceHarmHandlingCell(xml);
+console.log('  ✓ 第七點傷害處理欄位注入');
 
 console.log('  ✓ IRB-004 欄位注入');
 

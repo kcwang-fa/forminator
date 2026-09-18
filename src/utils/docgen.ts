@@ -146,6 +146,9 @@ function prepareResearchData(data: FormData) {
 }
 
 function prepareIRBData(data: FormData) {
+  // DOC-4 IRB-004 第七點「對研究對象可能之傷害及處理」：
+  // 簡審／一般審才需要使用者實際填寫；免審維持範本原始罐頭字「(不適用)」（含括號，與模板視覺一致）。
+  const needsHarmHandling = data.review_type === 'expedited' || data.review_type === 'full';
   return {
     data_source: data.data_source,
     inclusion_criteria: data.inclusion_criteria,
@@ -153,6 +156,7 @@ function prepareIRBData(data: FormData) {
     privacy_during: data.privacy_during,
     privacy_after: data.privacy_after,
     privacy_withdrawal: data.privacy_withdrawal,
+    harm_handling_text: needsHarmHandling ? data.harm_handling : '(不適用)',
     // 研究類別可複選：把每個選到的類別轉成文字、以「；」串接
     exempt_category_text: data.exempt_category.map((c) => EXEMPT_MAP[c] || c).join('；'),
     exempt_reason: data.exempt_reason,

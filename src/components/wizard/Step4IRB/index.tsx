@@ -419,6 +419,25 @@ export default function Step4IRB() {
             </>
           )}
 
+          {/* IRB-004 第七點「對研究對象可能之傷害及處理」：簡審／一般審才需要使用者實際填寫，
+              免審維持範本原始「(不適用)」（由 docgen 依 review_type 自動決定，這裡不用另外分流）。*/}
+          <Controller
+            name="harm_handling"
+            control={control}
+            rules={{ required: '請填寫對研究對象可能之傷害及處理' }}
+            render={({ field, fieldState }) => (
+              <Form.Item
+                label="對研究對象可能之傷害及處理"
+                required
+                tooltip="對應 IRB-004 研究計畫書第七點，說明本研究對研究對象可能造成的傷害（含身心/隱私等風險）及因應處理方式；若研究對象確無風險，也請具體說明理由。"
+                validateStatus={fieldState.error ? 'error' : undefined}
+                help={fieldState.error?.message}
+              >
+                <Input.TextArea {...field} rows={3} placeholder="請說明本研究對研究對象可能造成的傷害及處理方式" />
+              </Form.Item>
+            )}
+          />
+
           {/* 共用欄位（研究方法／納入排除／招募／隱私三段）；簡審與一般審不顯示「免審預設選項」，
               但顯示 DOC-12 第 8 點（3）「研究對象名單取得方式」。*/}
           <IrbCommonFields showExemptDefaults={false} showRosterMethods section="main" />

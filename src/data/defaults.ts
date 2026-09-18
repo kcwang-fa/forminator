@@ -188,6 +188,7 @@ export const defaultFormData: FormData = {
   yearly_objectives: '',  // 分年計劃目的（僅多年期顯示，docgen 多年期時併入研究主旨）
   background: '',
   summary_of_results: '',  // 三、多年期計畫之執行成果概要（一年期由 docgen 填「不適用」）
+  harm_handling: '',  // 對研究對象可能之傷害及處理（免審由 docgen 自動填「(不適用)」）
   methodology: '',
   expected_outcome: '',
   abstract_zh: '',

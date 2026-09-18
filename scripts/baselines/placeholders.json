@@ -360,6 +360,7 @@
         "year_label": "115 年度"
       }
     ],
+    "harm_handling_text": "(不適用)",
     "inclusion_criteria": "2018 至 2025 年通報之確定病例。",
     "interact_text": "否",
     "irb0021_cat_business": "□",
@@ -1133,6 +1134,7 @@
             "year_label": "115 年度"
           }
         ],
+        "harm_handling_text": "(不適用)",
         "inclusion_criteria": "2018 至 2025 年通報之確定病例。",
         "interact_text": "否",
         "irb0021_cat_business": "□",
@@ -1915,6 +1917,7 @@
             "year_label": "115 年度"
           }
         ],
+        "harm_handling_text": "(不適用)",
         "inclusion_criteria": "2018 至 2025 年通報之確定病例。",
         "interact_text": "否",
         "irb0021_cat_business": "□",
@@ -2697,6 +2700,7 @@
             "year_label": "115 年度"
           }
         ],
+        "harm_handling_text": "(不適用)",
         "inclusion_criteria": "2018 至 2025 年通報之確定病例。",
         "interact_text": "否",
         "irb0021_cat_business": "□",
@@ -3479,6 +3483,7 @@
             "year_label": "115 年度"
           }
         ],
+        "harm_handling_text": "(不適用)",
         "inclusion_criteria": "2018 至 2025 年通報之確定病例。",
         "interact_text": "否",
         "irb0021_cat_business": "□",
