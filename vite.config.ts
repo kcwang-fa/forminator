@@ -115,6 +115,22 @@ export default defineConfig({
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
   plugins: [localSignatureApi(), react()],
+  build: {
+    // 把 react / antd 這兩組「幾乎不會隨我們的程式碼變動」的 vendor 拆成獨立 chunk。
+    // 首次載入總量不變，但之後每次部署只有 app chunk 的 hash 會變，
+    // 使用者瀏覽器可以繼續沿用快取裡的 vendor chunk（antd 約佔整包一半）。
+    // docgen（docxtemplater 等）與簽名面板則由 dynamic import 自然拆開，不在這裡列。
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/, priority: 20 },
+            { name: 'vendor-antd', test: /node_modules[\\/](antd|@ant-design|@rc-component|rc-[^\\/]+)[\\/]/, priority: 10 },
+          ],
+        },
+      },
+    },
+  },
   server: {
     host: true,
     proxy: {

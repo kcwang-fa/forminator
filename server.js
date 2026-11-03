@@ -56,10 +56,17 @@ app.use(express.json({ limit: '256kb' }));
 //      流量幾乎不變，但模板一換就立刻生效。
 //      前端另外會在網址帶 build id（見 docgen.ts loadTemplate），雙保險：
 //      CF 若又覆寫了這個標頭，換掉的網址仍然一定會重抓。
+// dist/assets/*.js|css 檔名帶內容 hash（Vite 預設），內容一變檔名就變，
+// 所以可以放心標成 immutable 一年：瀏覽器之後完全不回頭問，vendor chunk
+// （react / antd，見 vite.config.ts codeSplitting）跨部署沿用快取。
+// index.html 不在 assets/ 下，維持 express.static 預設 max-age=0（每次重新驗證）。
+// Vercel 對 /assets/ 本來就自動加這組標頭，這裡是讓 Railway / 自架也一致。
 app.use(express.static(join(__dirname, 'dist'), {
   setHeaders(res, filePath) {
     if (filePath.includes(`${sep}templates${sep}`)) {
       res.setHeader('Cache-Control', 'no-cache');
+    } else if (filePath.includes(`${sep}assets${sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
   },
 }));

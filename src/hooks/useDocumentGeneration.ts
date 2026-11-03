@@ -1,9 +1,8 @@
 // ===== 文件生成 Hook =====
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { message } from 'antd';
 import { useFormStore } from './useFormStore';
-import { generateAllDocuments } from '../utils/docgen';
 import { DOC_NAMES, type DocId } from '../data/defaults';
 import { resolveActivePlan } from '../data/planConfigs';
 
@@ -19,12 +18,16 @@ export function useDocumentGeneration() {
   const [selectedDocs, setSelectedDocs] = useState<DocId[]>(() => activeDocs);
   const [generating, setGenerating] = useState(false);
 
-  // 切換審查類型或成果類別時，自動更新預選文件。
-  // 用 join 後的字串當依賴，避免 RHF watch 每次回傳新陣列導致 effect 反覆觸發。
+  // 切換審查類型或成果類別時，自動把預選文件重設成新的全集。
+  // 用 join 後的字串當比較 key，避免 RHF watch 每次回傳新陣列導致誤判。
+  // 採 React 官方「在 render 期間重設 state」模式（而非 useEffect + setState）：
+  // 少一次多餘的 render，也不會觸發 react-hooks/set-state-in-effect。
   const activeDocsKey = activeDocs.join(',');
-  useEffect(() => {
+  const [prevActiveDocsKey, setPrevActiveDocsKey] = useState(activeDocsKey);
+  if (prevActiveDocsKey !== activeDocsKey) {
+    setPrevActiveDocsKey(activeDocsKey);
     setSelectedDocs(activeDocs);
-  }, [activeDocsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const download = useCallback(async () => {
     if (selectedDocs.length === 0) {
@@ -33,6 +36,10 @@ export function useDocumentGeneration() {
     }
     setGenerating(true);
     try {
+      // docgen 連帶 docxtemplater / pizzip / jszip 約佔整包 JS 的三成，
+      // 但只有按下「下載」才會用到。用 dynamic import 讓 Vite 拆成獨立 chunk，
+      // 首頁不必先載這些；第一次按下載時才抓（之後瀏覽器會快取）。
+      const { generateAllDocuments } = await import('../utils/docgen');
       await generateAllDocuments(getValues(), selectedDocs);
       message.success(`已生成 ${selectedDocs.length} 份文件並下載 ZIP！`);
       if (selectedDocs.includes('DOC-2')) {

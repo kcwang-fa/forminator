@@ -6,7 +6,7 @@
 //   3. 研究成果處理類型
 // 子元件 / 共用樣式 / 通用小元件已抽到 ./Step5Database/ 子資料夾。
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Button, Card, Checkbox, Collapse, DatePicker, Form, Input, InputNumber, Radio, Tag, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Controller, useFieldArray, useWatch } from 'react-hook-form';
@@ -43,11 +43,12 @@ export default function Step5Database() {
   const outcomeTypes = useWatch({ control, name: 'outcome_type' }) || [];
   const outcomeTypeDetails = useWatch({ control, name: 'outcome_type_detail' }) || [];
   const databaseRequests = useWatch({ control, name: 'database_requests', defaultValue: [] as DatabaseRequest[] });
-  const [scopePreviewText, setScopePreviewText] = useState('');
-
-  useEffect(() => {
-    setScopePreviewText(buildDatabaseUsageScopePreview(databaseRequests));
-  }, [databaseRequests]);
+  // 預覽文字是 databaseRequests 的純函數，直接在 render 期間推導即可，
+  // 不需要經過 state + effect（那會多一次 render，且觸發 react-hooks/set-state-in-effect）。
+  const scopePreviewText = useMemo(
+    () => buildDatabaseUsageScopePreview(databaseRequests),
+    [databaseRequests],
+  );
 
   const updateOutcomeCount = (type: OutcomeType, count: number | null) => {
     setValue(

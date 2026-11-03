@@ -380,21 +380,50 @@ export function prepareCommonData(data: FormData) {
 
 // ===== 載入模板 =====
 
-async function loadTemplate(docId: string): Promise<PizZip> {
+// 模板原始 bytes 的快取：同一次生成裡，每個 docId 只 fetch 一次。
+// why：DOC-6 / DOC-7 是逐人文件，舊版每位人員都重新 fetch 一次同一份模板；
+//      DOC-8 內嵌字型高達 3.6 MB，重抓的代價尤其明顯。
+// 快取的是 ArrayBuffer 而非 PizZip 實例：docxtemplater 會就地改寫 zip 內容，
+// 每次渲染都必須從乾淨的 bytes 重建 PizZip，才不會把上一位人員的資料帶進下一份。
+type TemplateCache = Map<string, ArrayBuffer>;
+
+async function fetchTemplateBuffer(docId: string): Promise<ArrayBuffer> {
   // 網址帶 build id：新版部署後網址就變了，瀏覽器與 CDN 一定會重抓，
   // 不會拿到快取住的舊模板（Cloudflare 會把靜態檔快取覆寫成 4 小時，
   // 光靠 server.js 的 no-cache 標頭不保險）。__BUILD_ID__ 由 vite.config.ts 注入。
   const url = `/templates/${docId}.docx?v=${__BUILD_ID__}`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`無法載入模板 ${docId}: ${response.statusText}`);
-  const buffer = await response.arrayBuffer();
+  return response.arrayBuffer();
+}
+
+/** 平行預抓所有選中文件的模板，一次失敗就整批失敗（錯誤訊息帶 docId）。 */
+async function preloadTemplates(docIds: Iterable<string>): Promise<TemplateCache> {
+  const unique = Array.from(new Set(docIds));
+  const buffers = await Promise.all(unique.map(async (docId) => {
+    try {
+      return [docId, await fetchTemplateBuffer(docId)] as const;
+    } catch (err) {
+      throw new Error(`生成 ${DOC_NAMES[docId as DocId] || docId} 失敗：${err instanceof Error ? err.message : String(err)}`);
+    }
+  }));
+  return new Map(buffers);
+}
+
+function getTemplateZip(cache: TemplateCache, docId: string): PizZip {
+  const buffer = cache.get(docId);
+  if (!buffer) throw new Error(`模板 ${docId} 尚未載入`);
   return new PizZip(buffer);
 }
 
 // ===== 生成單份文件 =====
 
-async function generateDoc(docId: string, templateData: Record<string, unknown>): Promise<Blob> {
-  const zip = await loadTemplate(docId);
+async function generateDoc(
+  docId: string,
+  templateData: Record<string, unknown>,
+  cache: TemplateCache,
+): Promise<Blob> {
+  const zip = getTemplateZip(cache, docId);
   // 簽名圖嵌入模組。每次生成都建新的 instance，避免跨文件共用內部圖片狀態。
   //   getImage：data URL → 二進位 bytes
   //   getSize：讀 PNG 檔頭原始寬高 → 等比縮到簽章欄放得下的尺寸
@@ -413,6 +442,10 @@ async function generateDoc(docId: string, templateData: Record<string, unknown>)
   return doc.getZip().generate({
     type: 'blob',
     mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    // PizZip 預設 STORE（不壓縮）：產出的 .docx 內部 XML／字型全是原始大小，
+    // DOC-8 內嵌字型的情況下一份就 7 MB，整包 ZIP 將近 10 MB。
+    // Word 自己存檔一律 DEFLATE，這裡跟進可把整包縮到約一半，開檔行為不變。
+    compression: 'DEFLATE',
   });
 }
 
@@ -422,6 +455,7 @@ async function generatePerPersonDoc(
   docId: string,
   baseData: Record<string, unknown>,
   personnel: Personnel[],
+  cache: TemplateCache,
 ): Promise<{ filename: string; blob: Blob }[]> {
   const results: { filename: string; blob: Blob }[] = [];
 
@@ -446,7 +480,7 @@ async function generatePerPersonDoc(
       role_other:      !['pi', 'co_pi', 'researcher'].includes(person.role) ? '■' : '□',
     };
 
-    const blob = await generateDoc(docId, personData);
+    const blob = await generateDoc(docId, personData, cache);
     const docName = DOC_NAMES[docId as DocId] || docId;
     results.push({ filename: `${docName}（${person.name_zh}）.docx`, blob });
   }
@@ -461,17 +495,20 @@ export async function generateAllDocuments(
   selectedDocs: DocId[],
 ): Promise<void> {
   const commonData = prepareCommonData(data);
+  // 先平行抓齊所有模板（網路 I/O），再逐份渲染（CPU）。
+  // 渲染維持序列：docxtemplater 是同步、CPU-bound 的工作，在主執行緒上平行沒有好處。
+  const templates = await preloadTemplates(selectedDocs);
   const zip = new JSZip();
 
   for (const docId of selectedDocs) {
     try {
       if (PER_PERSON_DOCS.has(docId)) {
-        const results = await generatePerPersonDoc(docId, commonData, data.personnel);
+        const results = await generatePerPersonDoc(docId, commonData, data.personnel, templates);
         for (const { filename, blob } of results) {
           zip.file(filename, blob);
         }
       } else {
-        const blob = await generateDoc(docId, commonData);
+        const blob = await generateDoc(docId, commonData, templates);
         const docName = DOC_NAMES[docId] || docId;
         zip.file(`${docName}.docx`, blob);
       }
@@ -480,6 +517,7 @@ export async function generateAllDocuments(
     }
   }
 
+  // 外層 ZIP 維持 STORE：裡面的 .docx 已經各自 DEFLATE 過，再壓一次只花 CPU、幾乎不省空間。
   const zipBlob = await zip.generateAsync({ type: 'blob' });
   const projectName = data.project_title_zh.slice(0, 20) || '研究計畫';
   saveAs(zipBlob, `${projectName}_文件包.zip`);

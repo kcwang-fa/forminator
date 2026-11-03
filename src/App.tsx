@@ -1,6 +1,6 @@
 // ===== 研究計畫表單終結者 Forminator — 主應用 =====
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, lazy, Suspense } from 'react';
 import { ConfigProvider, Layout, Steps, Button, Space, Upload, Checkbox, Typography, Divider, Modal, Collapse, Card, Tag, Grid, App as AntApp } from 'antd';
 import { ExportOutlined, ImportOutlined, DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileTextOutlined, PlusOutlined, CompressOutlined, ExpandOutlined } from '@ant-design/icons';
 import zhTW from 'antd/locale/zh_TW';
@@ -25,7 +25,9 @@ import Step4IRB from './components/wizard/Step4IRB';
 import Step5Budget from './components/wizard/Step5Budget';
 import Step6Database from './components/wizard/Step5Database';
 import WorkflowGuide from './components/workflow/WorkflowGuide';
-import SignaturePanel from './components/signature/SignaturePanel';
+// 簽名面板只在結果頁出現，而且帶著 signature_pad / qrcode.react 這些只有簽名才用的套件，
+// 用 lazy 拆成獨立 chunk：填表階段不必先載，進結果頁才抓。
+const SignaturePanel = lazy(() => import('./components/signature/SignaturePanel'));
 
 import { DOC_NAMES, SDD_VERSION, defaultFormData, type DocId } from './data/defaults';
 import { resolveActivePlan, OUTPUT_CATEGORIES, OUTPUT_CATEGORY_CONFIGS, type WizardStepKey } from './data/planConfigs';
@@ -401,7 +403,9 @@ function AppInner({ form, llmSettings, setLLMSettings, contentRef }: AppInnerPro
             </div>
 
             {/* 簽名管理：先簽好再下載，docgen 會把簽名圖嵌進各文件簽章欄 */}
-            <SignaturePanel />
+            <Suspense fallback={<Card loading style={{ marginBottom: 24 }} />}>
+              <SignaturePanel />
+            </Suspense>
 
             <div style={{ background: '#F0EDE8', borderRadius: 8, padding: 24, marginBottom: 24 }}>
               <h4>選擇要產生的文件</h4>
